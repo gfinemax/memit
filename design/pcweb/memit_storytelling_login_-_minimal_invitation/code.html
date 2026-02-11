@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Memit Storytelling Login - Minimal Invitation</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Icons -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#8c2bee",
+                        "background-light": "#f7f6f8",
+                        "background-dark": "#191022",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'fade-in-up': 'fadeInUp 1s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom styles for smooth scrolling and transitions */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .story-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            scroll-snap-align: start;
+            position: relative;
+        }
+
+        .scroll-container {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+        }
+        
+        /* Hide scrollbar for cleaner look */
+        .scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+        .scroll-container {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .glow-effect {
+            box-shadow: 0 0 60px 20px rgba(140, 43, 238, 0.25);
+        }
+        
+        .text-glow {
+            text-shadow: 0 0 20px rgba(140, 43, 238, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-white font-display overflow-hidden">
+<!-- Background Elements -->
+<div class="fixed inset-0 z-0 pointer-events-none">
+<!-- Deep radial gradient -->
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-background-dark to-black opacity-80"></div>
+<!-- Subtle particles/texture -->
+<div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[100px] animate-pulse-slow"></div>
+<div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-primary/20 rounded-full blur-[80px] animate-pulse-slow delay-1000"></div>
+</div>
+<!-- Main Scroll Container -->
+<div class="scroll-container relative z-10">
+<!-- Section 1: Introduction -->
+<section class="story-section px-6" id="slide-1">
+<div class="max-w-4xl mx-auto text-center flex flex-col items-center">
+<!-- Brain Icon -->
+<div class="mb-12 relative animate-float">
+<div class="absolute inset-0 bg-primary rounded-full blur-[40px] opacity-40 animate-pulse"></div>
+<svg class="w-24 h-24 text-primary relative z-10" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3M3.343 15.657l1.414-1.414m13.486 1.414l1.414 1.414M6.343 4.636l-.707.707M16 17a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"></path>
+</svg>
+</div>
+<h1 class="text-3xl md:text-5xl lg:text-6xl font-light tracking-wide leading-tight mb-8 opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
+                    세상의 모든 숫자를<br/>
+<span class="text-primary font-normal text-glow">문장으로 바꾸는 마법.</span>
+</h1>
+<p class="text-gray-400 text-sm md:text-base tracking-[0.2em] uppercase opacity-0 animate-fade-in-up" style="animation-delay: 0.8s;">
+                    The magic of turning every number into a sentence
+                </p>
+<!-- Scroll Hint -->
+<a class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity cursor-pointer animate-bounce" href="#slide-2">
+<span class="text-xs tracking-widest uppercase">Explore</span>
+<span class="material-icons text-xl">expand_more</span>
+</a>
+</div>
+</section>
+<!-- Section 2: The Hook -->
+<section class="story-section px-6 bg-black/20 backdrop-blur-sm" id="slide-2">
+<div class="max-w-4xl mx-auto text-center flex flex-col items-center">
+<!-- Brain Icon Variant -->
+<div class="mb-10 relative">
+<div class="absolute inset-0 bg-primary rounded-full blur-[60px] opacity-20"></div>
+<svg class="w-16 h-16 text-white/80 relative z-10" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path>
+</svg>
+</div>
+<h2 class="text-2xl md:text-4xl lg:text-5xl font-light tracking-wide leading-tight mb-8">
+                    Memit과 함께라면<br/>
+<span class="text-white font-medium">당신은 절대 잊지 않습니다.</span>
+</h2>
+<div class="w-16 h-1 bg-primary/50 rounded-full mb-8"></div>
+<p class="text-gray-400 max-w-lg mx-auto leading-relaxed">
+                    기억의 궁전에 오신 것을 환영합니다. 당신의 두뇌를 확장하고, 불가능했던 기억력을 현실로 만들어보세요.
+                </p>
+<!-- Scroll Hint -->
+<a class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity cursor-pointer animate-bounce" href="#slide-3">
+<span class="text-xs tracking-widest uppercase">Begin</span>
+<span class="material-icons text-xl">expand_more</span>
+</a>
+</div>
+</section>
+<!-- Section 3: Login (The Gate) -->
+<section class="story-section px-6" id="slide-3">
+<div class="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 md:p-12 shadow-2xl relative overflow-hidden animate-fade-in-up">
+<!-- Decorative top gradient line -->
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent"></div>
+<div class="text-center mb-10">
+<div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/20 text-primary mb-4">
+<span class="material-icons">psychology</span>
+</div>
+<h3 class="text-2xl font-semibold mb-2">Memory Masters</h3>
+<p class="text-sm text-gray-400">입장하기 (Enter)</p>
+</div>
+<div class="space-y-4">
+<!-- Google Login -->
+<button class="w-full group relative flex justify-center py-3 px-4 border border-white/10 text-sm font-medium rounded-lg text-white bg-white/5 hover:bg-white/10 transition-all duration-200">
+<div class="absolute left-4 flex items-center">
+<svg class="h-5 w-5" height="24" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+<path d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z" fill="#4285F4"></path>
+<path d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z" fill="#34A853"></path>
+<path d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.724 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z" fill="#FBBC05"></path>
+<path d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z" fill="#EA4335"></path>
+</g>
+</svg>
+</div>
+                        Google로 계속하기
+                    </button>
+<!-- Apple Login -->
+<button class="w-full group relative flex justify-center py-3 px-4 border border-white/10 text-sm font-medium rounded-lg text-white bg-white/5 hover:bg-white/10 transition-all duration-200">
+<div class="absolute left-4 flex items-center">
+<svg class="h-5 w-5 fill-current" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.21-.93 3.69-.93.95 0 2.22.46 3.03 1.34-2.82 1.62-2.29 5.86.35 6.94-.65 1.76-1.55 3.51-2.15 4.88zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"></path>
+</svg>
+</div>
+                        Apple로 계속하기
+                    </button>
+</div>
+<div class="relative my-8">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-white/10"></div>
+</div>
+<div class="relative flex justify-center text-xs uppercase">
+<span class="px-2 bg-background-dark text-gray-500">Or enter with email</span>
+</div>
+</div>
+<form class="space-y-4">
+<div>
+<label class="sr-only" for="email">Email address</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-icons text-gray-500 text-sm">email</span>
+</div>
+<input autocomplete="email" class="block w-full pl-10 pr-3 py-3 border border-white/10 rounded-lg leading-5 bg-white/5 text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-white/10 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition-colors duration-200" id="email" name="email" placeholder="your@email.com" required="" type="email"/>
+</div>
+</div>
+<button class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background-dark transition-all duration-200 shadow-[0_0_20px_rgba(140,43,238,0.3)] hover:shadow-[0_0_30px_rgba(140,43,238,0.5)]" type="submit">
+                        매직 링크 받기
+                    </button>
+</form>
+<div class="mt-8 text-center">
+<p class="text-xs text-gray-500">
+                        계속 진행하면 Memit의 <a class="underline hover:text-gray-400" href="#">이용약관</a> 및 <a class="underline hover:text-gray-400" href="#">개인정보처리방침</a>에 동의하게 됩니다.
+                    </p>
+</div>
+</div>
+<footer class="absolute bottom-6 w-full text-center">
+<p class="text-xs text-gray-600 dark:text-gray-600 font-mono">© 2023 Memit Inc. All rights reserved.</p>
+</footer>
+</section>
+</div>
+<script>
+        // Simple script to handle adding active classes based on scroll position if desired for more complex animations
+        // For this minimal version, CSS scroll-snap handles the main interaction flow.
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100');
+                    entry.target.classList.remove('opacity-50');
+                } else {
+                   // Optional: fade out when leaving
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('section').forEach((section) => {
+            observer.observe(section);
+        });
+    </script>
+</body></html>

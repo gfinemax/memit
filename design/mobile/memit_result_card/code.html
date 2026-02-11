@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MEMIT Result Card</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Icons -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5048e5",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#121121",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom particle animation */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+        .particle {
+            position: absolute;
+            background: theme('colors.primary');
+            border-radius: 50%;
+            opacity: 0;
+            animation: float 3s ease-in-out infinite;
+        }
+        /* Staggered delays for particles */
+        .particle:nth-child(1) { left: 10%; width: 10px; height: 10px; animation-delay: 0s; animation-duration: 4s; }
+        .particle:nth-child(2) { left: 20%; width: 15px; height: 15px; animation-delay: 1s; animation-duration: 5s; background-color: #818cf8; }
+        .particle:nth-child(3) { left: 35%; width: 8px; height: 8px; animation-delay: 2s; animation-duration: 3.5s; }
+        .particle:nth-child(4) { left: 50%; width: 12px; height: 12px; animation-delay: 0.5s; animation-duration: 4.5s; background-color: #c7d2fe; }
+        .particle:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 1.5s; animation-duration: 5.5s; }
+        .particle:nth-child(6) { left: 80%; width: 9px; height: 9px; animation-delay: 0.8s; animation-duration: 4s; background-color: #818cf8; }
+        .particle:nth-child(7) { left: 90%; width: 14px; height: 14px; animation-delay: 2.5s; animation-duration: 3s; }
+
+        /* Custom scrollbar hide for clean look */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-slate-200 antialiased min-h-screen flex flex-col items-center justify-center overflow-hidden relative">
+<!-- Celebration Particles -->
+<div class="absolute inset-0 pointer-events-none z-0 overflow-hidden h-full w-full">
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+<div class="particle"></div>
+</div>
+<!-- Main Container - Mobile Form Factor -->
+<main class="w-full max-w-md mx-auto h-screen relative z-10 flex flex-col p-6 overflow-y-auto no-scrollbar">
+<!-- Header Section -->
+<header class="flex-none pt-8 pb-4 text-center">
+<div class="inline-flex items-center justify-center bg-primary/20 text-primary px-4 py-1 rounded-full mb-4">
+<span class="material-icons-round text-sm mr-1">auto_awesome</span>
+<span class="text-xs font-bold uppercase tracking-wider">AI Generated</span>
+</div>
+<h1 class="text-4xl font-extrabold text-slate-900 dark:text-white mb-2 tracking-tight">메밋 완료! 🎉</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm">성공적으로 기억이 변환되었습니다.</p>
+</header>
+<!-- Memory Card Component -->
+<div class="flex-grow flex flex-col justify-center py-4">
+<div class="relative bg-white dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-lg p-6 shadow-2xl transform transition-transform hover:scale-[1.02] duration-300">
+<!-- Card Header: Input -->
+<div class="flex items-center justify-between mb-6">
+<div class="flex flex-col">
+<span class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1">입력한 내용</span>
+<div class="flex items-center gap-2">
+<span class="text-2xl font-bold text-slate-900 dark:text-white">7082</span>
+<span class="bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 text-xs px-2 py-1 rounded-md font-medium">숫자</span>
+</div>
+</div>
+<div class="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+<span class="material-icons-round">vpn_key</span>
+</div>
+</div>
+<!-- Visual Illustration -->
+<div class="aspect-[4/3] w-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl mb-6 relative overflow-hidden group">
+<div class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
+<img alt="3D abstract illustration of a bullet hitting a target" class="w-full h-full object-cover mix-blend-overlay opacity-80" data-alt="3D abstract illustration of a bullet hitting a target" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsr9Q27yn85vl4Qx2BsqSIi_p5ml8-QW_YJ8sL1L17a5exurxtUObKUPJnWvhbF5YoFK1MlF4pKansKSkiYY-kWSYODuBhRhAS3aJBIdaPEOrSt7X-PFG09_3AmxbWHWY1K6nYxi8_mdADlNCI9WZxovFcGqGg6YJqnyUvFoXP2I8Bi0MrBEdOvRZ_gGJifLVOUkxbx1-AivGCrptma7GSH7Dov67O5BsF1l5QTLoSjsFb4pY7iTjOlmxd1mZbh8rCHGNiUwKgODb_"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-full shadow-lg">
+<span class="material-icons-round text-4xl text-white">psychology</span>
+</div>
+</div>
+</div>
+<!-- Story Text -->
+<div class="space-y-3">
+<span class="text-xs font-bold text-primary uppercase tracking-wide">기억 스토리</span>
+<p class="text-lg font-bold text-slate-800 dark:text-slate-100 leading-relaxed">
+<span class="text-primary">총알(70)</span>이 날아가 
+                        <span class="text-primary">파리(82)</span>를 정확히 
+                        맞추는 장면을 상상해보세요!
+                    </p>
+<div class="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 mt-2 border border-slate-100 dark:border-slate-700/50">
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-snug">
+                            💡 Tip: 총알의 속도감과 파리의 윙윙거리는 소리를 함께 떠올리면 기억이 더 오래갑니다.
+                        </p>
+</div>
+</div>
+<!-- Card Badge -->
+<div class="absolute -top-3 -right-3">
+<div class="bg-gradient-to-r from-primary to-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
+<span class="material-icons-round text-sm">bolt</span>
+                        SUPER MEMORY
+                    </div>
+</div>
+</div>
+</div>
+<!-- Action Stack -->
+<div class="flex-none pt-4 pb-8 space-y-3">
+<!-- Primary Action -->
+<button class="w-full bg-primary hover:bg-primary/90 active:scale-95 transition-all text-white font-bold text-lg py-4 rounded-full shadow-lg shadow-primary/30 flex items-center justify-center gap-2 group">
+<span class="material-icons-round group-hover:animate-bounce">save</span>
+                기억 저장하기
+            </button>
+<!-- Secondary Action -->
+<button class="w-full bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 active:scale-95 transition-all text-slate-800 dark:text-white font-semibold text-lg py-4 rounded-full flex items-center justify-center gap-2">
+<span class="material-icons-round text-slate-500 dark:text-slate-400">share</span>
+                커뮤니티에 공유하기
+            </button>
+<!-- Tertiary Action -->
+<button class="w-full text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary active:scale-95 transition-colors font-medium text-sm py-2 flex items-center justify-center gap-1">
+<span class="material-icons-round text-sm">refresh</span>
+                다시 메밋하기
+            </button>
+</div>
+</main>
+</body></html>

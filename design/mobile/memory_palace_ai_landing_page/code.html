@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MEMIT (메밋)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5048e5",
+                        "primary-dark": "#3f38b8",
+                        "primary-light": "#6f68f2",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#121121",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Noto Sans KR", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }.no-scrollbar {
+            -ms-overflow-style: none;scrollbar-width: none;}
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white antialiased selection:bg-primary/30">
+<header class="sticky top-0 z-50 w-full bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+<div class="max-w-md mx-auto px-5 h-16 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-icons-round text-xl">psychology</span>
+</div>
+<span class="font-bold text-lg tracking-tight">MEMIT (메밋)</span>
+</div>
+<button class="px-4 py-1.5 rounded-full border border-primary/30 text-primary dark:text-primary-light text-sm font-medium hover:bg-primary/5 transition-colors">
+                로그인
+            </button>
+</div>
+</header>
+<main class="max-w-md mx-auto pb-20">
+<section class="px-5 pt-8 pb-4">
+<h1 class="text-3xl font-bold leading-tight mb-2 text-gray-900 dark:text-white">
+                모든 순간을 기억하세요,<br/>
+<span class="text-primary">메밋</span>
+</h1>
+<p class="text-gray-500 dark:text-gray-400 mb-8 text-sm leading-relaxed">
+                무엇이든 3초 만에 메밋하세요.<br/>복잡한 정보도 나만의 이야기로 영구 저장됩니다.
+            </p>
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-primary/5 border border-gray-100 dark:border-gray-700 overflow-hidden relative">
+<div class="p-1.5 bg-gray-100/50 dark:bg-gray-900/50 m-4 rounded-xl flex gap-1">
+<button class="flex-1 py-2.5 px-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm text-primary font-semibold text-sm text-center transition-all">
+                        숫자 암기
+                    </button>
+<button class="flex-1 py-2.5 px-4 rounded-lg text-gray-500 dark:text-gray-400 font-medium text-sm text-center hover:text-gray-700 dark:hover:text-gray-300 transition-all">
+                        비밀번호 생성
+                    </button>
+</div>
+<div class="px-4 pb-4">
+<div class="relative">
+<textarea class="w-full h-32 bg-gray-50 dark:bg-gray-900 border-none rounded-xl p-4 text-base resize-none focus:ring-2 focus:ring-primary/20 placeholder-gray-400 dark:text-white" placeholder="암기하고 싶은 숫자나 단어를 입력하세요...
+(예: 3.141592, 은행 계좌번호 등)"></textarea>
+<div class="absolute bottom-3 right-3 text-xs text-gray-400 font-medium">0/500</div>
+</div>
+</div>
+<div class="px-4 pb-4">
+<button class="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-primary-light text-white font-bold text-lg shadow-lg shadow-primary/25 active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+<span class="material-icons-round text-yellow-200">auto_awesome</span>
+                        메밋 생성하기
+                    </button>
+</div>
+</div>
+</section>
+<section class="px-5 py-4">
+<button class="w-full group bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-primary dark:text-indigo-300">
+<span class="material-icons-round text-2xl">grid_view</span>
+</div>
+<div class="text-left">
+<h3 class="font-bold text-gray-900 dark:text-white text-lg">다른 암기 서비스 보기</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">보안, 비즈니스, 학습 등 더 많은 카테고리</p>
+</div>
+</div>
+<span class="material-icons-round text-gray-300 dark:text-gray-600 group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward_ios</span>
+</button>
+</section>
+<section class="py-6">
+<div class="px-5 mb-4">
+<h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+<span class="material-icons-round text-yellow-500">emoji_events</span>
+                    명예의 전당
+                </h2>
+<p class="text-xs text-gray-500 dark:text-gray-400">다른 사용자들이 생성한 놀라운 기억법을 확인하세요.</p>
+</div>
+<div class="flex overflow-x-auto gap-4 px-5 pb-4 no-scrollbar snap-x">
+<div class="min-w-[280px] snap-center bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-icons-round text-6xl text-primary">format_quote</span>
+</div>
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full object-cover border border-gray-200" data-alt="User profile picture of a young woman smiling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQp78p9_EmjD6tz8xlY-Ltf7WlxvNHUph5rcihBE6kJ237xfyvsc-pyyb1wysrWt5Q1YI22Duz-kY0AsA5pNnrvPm4qzpxUb-anyavJDjHYPp-nzf8XIP2bFf5soBv-e2veMVkl7plpi4xE9vDmadV0H2pXULaIcouBk3q45AdhdXm3UX8fo91TpWuGu-RNo9-KYWP_cPe_ZAQz-33P2bk7Qv52WkVj3QyyknwkFypiEC2-y3UndW1vlMoBZeWK9PAPqMFW9QNRIcR"/>
+<div>
+<div class="text-xs font-bold text-gray-800 dark:text-gray-200">김지수</div>
+<div class="text-[10px] text-gray-400">2시간 전</div>
+</div>
+</div>
+<div class="flex items-center text-rose-500 text-xs font-bold bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-full">
+<span class="material-icons-round text-sm mr-1">favorite</span>
+                            1.2k
+                        </div>
+</div>
+<h3 class="text-sm font-bold text-gray-900 dark:text-white mb-1">원주율 100자리 외우기</h3>
+<p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                        3.14159... 숫자를 거대한 우주 정거장의 방 번호로 바꿔서 기억했습니다. 첫 번째 방에는...
+                    </p>
+</div>
+<div class="min-w-[280px] snap-center bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-icons-round text-6xl text-primary">format_quote</span>
+</div>
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<img class="w-8 h-8 rounded-full object-cover border border-gray-200" data-alt="User profile picture of a young man looking serious" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-CBxnd15NTUZ8yBRN-cAQpts-Yt6p0VTIbPF-gjwhGO8-mrD8uDbct7OGY0LX1MdyVC-tcxXLSmTWFaRMT0sHylQYaox_aTBvKqenq4cdyd5RaYxgEuXGGmz33FMgIEUQayDVkFBwi2B-hDAiO_tRYQpS7dL4Gvbk_uTKuBXzzz83tjk6amhnK5GJ1XwdSBfzYFxASIhX0nOjERdyvnONl2lK3nNzcAwZeNFJuQ5cFZROHpCgxFFoakv3K1gBs54dMMfs3yjFvpll"/>
+<div>
+<div class="text-xs font-bold text-gray-800 dark:text-gray-200">박민준</div>
+<div class="text-[10px] text-gray-400">5시간 전</div>
+</div>
+</div>
+<div class="flex items-center text-rose-500 text-xs font-bold bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-full">
+<span class="material-icons-round text-sm mr-1">favorite</span>
+                            850
+                        </div>
+</div>
+<h3 class="text-sm font-bold text-gray-900 dark:text-white mb-1">한국사 연도표 암기</h3>
+<p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                        임진왜란 1592년을 '이리오 구이' 굽는 장면으로 연상해서 외우니까 절대 안 잊어버리네요!
+                    </p>
+</div>
+<div class="min-w-[280px] snap-center bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-icons-round text-6xl text-primary">format_quote</span>
+</div>
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">L</div>
+<div>
+<div class="text-xs font-bold text-gray-800 dark:text-gray-200">Lee01</div>
+<div class="text-[10px] text-gray-400">1일 전</div>
+</div>
+</div>
+<div class="flex items-center text-rose-500 text-xs font-bold bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-full">
+<span class="material-icons-round text-sm mr-1">favorite</span>
+                            432
+                        </div>
+</div>
+<h3 class="text-sm font-bold text-gray-900 dark:text-white mb-1">영어 단어 50개 한번에</h3>
+<p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                        어원별로 묶어서 스토리텔링을 만드니까 50개 단어가 하나의 영화처럼 느껴집니다.
+                    </p>
+</div>
+</div>
+</section>
+<section class="px-5 mt-4">
+<div class="relative w-full h-48 rounded-2xl overflow-hidden shadow-lg">
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10 flex flex-col justify-end p-5">
+<p class="text-white font-bold text-lg mb-1">기억의 궁전 체험하기</p>
+<p class="text-white/80 text-xs">지금 무료로 시작하고 뇌 잠재력을 깨우세요.</p>
+</div>
+<img class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700" data-alt="Abstract deep violet digital neural network background representing memory connection" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrjkqA0PK5F73_khPA8VvmE506ni8v1sVeR1FxG5nVj29YRvSwweDOn8TPn2546dAoz8RV3yg9ZZfqQgapNoV31cu2VsB4oeWNgcOabtXViGqVBAsJ-3Rm-9cYPbSqfywvaZr1wdNXID5KZCUHzfJLW8URVRr6itnw5QgKmCkzXf6Ejv6nGXug6V-NNEUYH1PKb3qM18aMmfQHeD_qvdneOaNDvzsAks0nge3-_2CShI8BWHrt1mq-Wyt31opi9wfGYpQikFDgohEu"/>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 w-full bg-white dark:bg-background-dark border-t border-gray-200 dark:border-gray-800 pb-safe z-50">
+<div class="max-w-md mx-auto flex justify-around items-center h-16 px-2">
+<button class="flex flex-col items-center justify-center w-full h-full text-primary">
+<span class="material-icons-round text-2xl">home</span>
+<span class="text-[10px] mt-0.5 font-medium">홈</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
+<span class="material-icons-round text-2xl">library_books</span>
+<span class="text-[10px] mt-0.5 font-medium">보관함</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
+<span class="material-icons-round text-2xl">person</span>
+<span class="text-[10px] mt-0.5 font-medium">마이페이지</span>
+</button>
+</div>
+</nav>
+<div class="h-20"></div>
+
+</body></html>

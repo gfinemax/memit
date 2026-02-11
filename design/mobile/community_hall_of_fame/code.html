@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MEMIT Community Hall of Fame</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Noto+Sans+KR:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5048e5",
+                        "primary-dark": "#3c35b5",
+                        "primary-light": "#eef2ff",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#121121",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1e1c30",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Noto Sans KR", "sans-serif"],
+                        "body": ["Inter", "Noto Sans KR", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 min-h-screen relative font-display pb-24">
+<header class="sticky top-0 z-50 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800">
+<div class="max-w-md mx-auto px-4 h-16 flex items-center justify-between">
+<button class="p-2 -ml-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-icons-outlined">arrow_back</span>
+</button>
+<div class="text-center">
+<h1 class="text-lg font-bold text-slate-900 dark:text-white">MEMIT 명예의 전당</h1>
+</div>
+<button class="p-2 -mr-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-icons-outlined">notifications</span>
+</button>
+</div>
+</header>
+<div class="max-w-md mx-auto px-4 py-4 space-y-4">
+<div class="text-center pb-2">
+<p class="text-sm text-primary font-medium">기억의 가치를 나누는 곳</p>
+</div>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-icons-outlined text-slate-400">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 rounded-xl border-none ring-1 ring-slate-200 dark:ring-slate-700 bg-white dark:bg-surface-dark placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary shadow-sm text-sm" placeholder="어떤 기억법을 찾고 계신가요?" type="text"/>
+</div>
+<div class="flex space-x-2 overflow-x-auto hide-scrollbar pb-1">
+<button class="flex-none px-4 py-2 rounded-full bg-primary text-white text-sm font-medium shadow-sm shadow-primary/30">
+            #전체
+        </button>
+<button class="flex-none px-4 py-2 rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:border-primary hover:text-primary transition-colors">
+            #숫자
+        </button>
+<button class="flex-none px-4 py-2 rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:border-primary hover:text-primary transition-colors">
+            #암기꿀팁
+        </button>
+<button class="flex-none px-4 py-2 rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:border-primary hover:text-primary transition-colors">
+            #역사
+        </button>
+<button class="flex-none px-4 py-2 rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:border-primary hover:text-primary transition-colors">
+            #영어단어
+        </button>
+</div>
+</div>
+<main class="max-w-md mx-auto px-4 space-y-4">
+<article class="bg-surface-light dark:bg-surface-dark rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center space-x-3">
+<img alt="Young man profile picture smiling" class="w-10 h-10 rounded-full border border-slate-100 dark:border-slate-700 object-cover" data-alt="Young man avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMASOdi2S9TCx2WGIc7aBy09E9kuKH4oxX_-xoOJ26M_ofO5AbxDbCBDcXWrVe5GjoweAHDAzezHlmFCKKUlPMvF1HITyHse4T_tQxecGhU9mf_BD8KRx10P3SznxQ02-tNpUm5QF70gl9fJcjHnOGzoHh7zJhsZncwa5x2jRmcYUPpGFvhYUi2GLpCPtAhYxEoQHpwan255FIt-Fi2FDajKGZ_qF1GZvKPP_3av9jB6fT3lMdn4ksiFSSZueImAQyXAQUPfWS7P3O"/>
+<div>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white">암기왕 김철수</h3>
+<p class="text-xs text-slate-500">2시간 전</p>
+</div>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-icons-outlined text-xl">more_horiz</span>
+</button>
+</div>
+<div class="mb-4">
+<div class="flex items-center space-x-2 mb-2">
+<span class="inline-block w-2 h-2 rounded-full bg-primary"></span>
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">원주율 100자리 3분컷 🚀</h2>
+</div>
+<p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed line-clamp-2">
+                기적의 장소법을 활용해서 원주율을 외워봤습니다. 제 기억의 궁전은 저희 집 거실부터 시작해서 부엌으로 이어지는...
+            </p>
+</div>
+<div class="w-full h-32 rounded-xl bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-slate-800 dark:to-slate-700 mb-4 overflow-hidden relative group">
+<img alt="Abstract neural network connection pattern" class="w-full h-full object-cover mix-blend-overlay opacity-60 group-hover:scale-105 transition-transform duration-500" data-alt="Abstract neural network pattern" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKFSEz853yhuIAgHJd-g5tpgRtFIFSptUmLZioKmwmAWzNm6wVln4Td5k3wIHiL77orR0X3Ibhc2wlYDI1BJVAXRSMqQ2IDqBruqQbGwvngmZJ8aaryFkEcYN2sCzqDtz0Ya_uPm4m6eOKi-LTaZTQT1wnanXtDv-hY3eoLyAo01WGWi3SzOVU-PhI3aoffOdQ5lAMV2DVFwMDvddbCu77NDCdWh9_SItLQNId41nZ-ST6BwkI1ATaZ3UbOJCA6a5gyd3MP_qksXxd"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="bg-white/90 dark:bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-lg flex items-center space-x-1">
+<span class="material-icons text-primary text-sm">play_circle</span>
+<span class="text-xs font-semibold text-primary dark:text-white">시나리오 보기</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+<div class="flex space-x-6">
+<button class="flex items-center space-x-1 text-slate-500 hover:text-red-500 group transition-colors">
+<span class="material-icons-outlined text-xl group-hover:scale-110 transition-transform">favorite_border</span>
+<span class="text-xs font-medium">1,240</span>
+</button>
+<button class="flex items-center space-x-1 text-slate-500 hover:text-primary group transition-colors">
+<span class="material-icons-outlined text-xl group-hover:scale-110 transition-transform">chat_bubble_outline</span>
+<span class="text-xs font-medium">58</span>
+</button>
+</div>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons-outlined text-xl">bookmark_border</span>
+</button>
+</div>
+</article>
+<article class="bg-surface-light dark:bg-surface-dark rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center space-x-3">
+<img alt="Woman profile picture smiling" class="w-10 h-10 rounded-full border border-slate-100 dark:border-slate-700 object-cover" data-alt="Young woman avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3pQdZjQ6GjSRwAQasEmaMvmOarXwCiVHN0sSIPPuWfqnrNu06Q8b_FdoaspQmJ3IW4b8fRRszBBTixH3IKDco3i_IZ9C7RKEJfSdGY5t-8KuOXpnhWE1Isjsc8xwnBU8d1NJz3uhsvrkxWeaWGQFUA00ttLYlHB-7AOTM9gjhrc2kVRv3uPAG-dWzDwX0hlBZsyc5LYYvhGf1AGUO4qSjsQfzEEUfnBtSZ0pQJQC9GV1h5pz3d-xS2kBi8l3Qhh2ij0Apo0U6t1HH"/>
+<div>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white">역사덕후 지민</h3>
+<p class="text-xs text-slate-500">5시간 전</p>
+</div>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-icons-outlined text-xl">more_horiz</span>
+</button>
+</div>
+<div class="mb-4">
+<div class="flex items-center space-x-2 mb-2">
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">조선 왕조 순서 5분 완성 👑</h2>
+</div>
+<p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed line-clamp-3">
+                태정태세문단세... 헷갈리시죠? 제 기억의 궁전 '경복궁'을 걸으며 왕들의 특징과 함께 외워보세요. 시각적 이미지로 확실하게 각인됩니다. #역사 #암기꿀팁
+            </p>
+</div>
+<div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+<div class="flex space-x-6">
+<button class="flex items-center space-x-1 text-slate-500 hover:text-red-500 group transition-colors">
+<span class="material-icons-outlined text-xl group-hover:scale-110 transition-transform">favorite_border</span>
+<span class="text-xs font-medium">856</span>
+</button>
+<button class="flex items-center space-x-1 text-slate-500 hover:text-primary group transition-colors">
+<span class="material-icons-outlined text-xl group-hover:scale-110 transition-transform">chat_bubble_outline</span>
+<span class="text-xs font-medium">32</span>
+</button>
+</div>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons-outlined text-xl">bookmark_border</span>
+</button>
+</div>
+</article>
+<article class="bg-surface-light dark:bg-surface-dark rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+                    MK
+                </div>
+<div>
+<h3 class="text-sm font-bold text-slate-900 dark:text-white">MemoryKing</h3>
+<p class="text-xs text-slate-500">1일 전</p>
+</div>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-icons-outlined text-xl">more_horiz</span>
+</button>
+</div>
+<div class="mb-4">
+<div class="flex items-center space-x-2 mb-2">
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">필수 영단어 100개 (수능대비)</h2>
+</div>
+<p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+                수능에 자주 나오는 빈출 단어 100개를 스토리텔링 기법으로 엮어보았습니다.
+            </p>
+<div class="flex gap-2 mt-3">
+<span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-xs text-slate-500 rounded-md">#영어단어</span>
+<span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-xs text-slate-500 rounded-md">#수능</span>
+</div>
+</div>
+<div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
+<div class="flex space-x-6">
+<button class="flex items-center space-x-1 text-slate-500 hover:text-red-500 group transition-colors">
+<span class="material-icons-outlined text-xl group-hover:scale-110 transition-transform">favorite_border</span>
+<span class="text-xs font-medium">420</span>
+</button>
+<button class="flex items-center space-x-1 text-slate-500 hover:text-primary group transition-colors">
+<span class="material-icons-outlined text-xl group-hover:scale-110 transition-transform">chat_bubble_outline</span>
+<span class="text-xs font-medium">15</span>
+</button>
+</div>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-icons-outlined text-xl">bookmark_border</span>
+</button>
+</div>
+</article>
+<div class="h-16"></div>
+</main>
+<div class="fixed bottom-24 right-4 z-40 max-w-md mx-auto w-full pointer-events-none flex justify-end px-4">
+<button class="pointer-events-auto bg-primary hover:bg-primary-dark text-white rounded-full px-5 py-4 shadow-lg shadow-primary/40 flex items-center space-x-2 transform hover:scale-105 transition-all duration-200">
+<span class="material-icons">add</span>
+<span class="font-bold text-sm tracking-wide">내 시나리오 자랑하기</span>
+</button>
+</div>
+<nav class="fixed bottom-0 left-0 right-0 bg-surface-light/90 dark:bg-surface-dark/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-50">
+<div class="max-w-md mx-auto px-6 h-20 flex justify-between items-start pt-3">
+<button class="flex flex-col items-center space-y-1 text-slate-400 hover:text-primary transition-colors w-16">
+<span class="material-icons-outlined text-2xl">home</span>
+<span class="text-[10px] font-medium">홈</span>
+</button>
+<button class="flex flex-col items-center space-y-1 text-primary w-16">
+<span class="material-icons text-2xl">emoji_events</span>
+<span class="text-[10px] font-medium">명예의 전당</span>
+</button>
+<button class="flex flex-col items-center space-y-1 text-slate-400 hover:text-primary transition-colors w-16">
+<span class="material-icons-outlined text-2xl">castle</span>
+<span class="text-[10px] font-medium">내 궁전</span>
+</button>
+<button class="flex flex-col items-center space-y-1 text-slate-400 hover:text-primary transition-colors w-16">
+<span class="material-icons-outlined text-2xl">person</span>
+<span class="text-[10px] font-medium">마이페이지</span>
+</button>
+</div>
+</nav>
+
+</body></html>

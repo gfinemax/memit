@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Memit Desktop Dashboard - Mnemonic Key</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined|Material+Icons+Round" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --primary: #6366F1;
+            --primary-hover: #4F46E5;
+            --accent-purple: #8B5CF6;
+            --surface-dark: #1E293B;
+            --surface-darker: #020617;
+            --background-dark: #0F172A;
+        }
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-input {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+        .circular-chart {
+            display: block;
+            margin: 0 auto;
+            max-width: 80%;
+            max-height: 250px;
+        }
+        .circle-bg {
+            fill: none;
+            stroke: #1e293b;
+            stroke-width: 2.5;
+        }
+        .circle {
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+        }
+        .mnemonic-card {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .mnemonic-card:hover {
+            border-color: rgba(139, 92, 246, 0.6);
+            background: rgba(139, 92, 246, 0.1);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+            transform: translateY(-2px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#6366F1",
+                        "primary-hover": "#4F46E5",
+                        "accent-purple": "#8B5CF6",
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#0F172A",
+                        "surface-dark": "#1E293B",
+                        "surface-darker": "#020617",
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+<body class="bg-background-dark text-white min-h-screen flex overflow-hidden selection:bg-primary selection:text-white transition-colors duration-300 dark">
+<aside class="w-20 lg:w-64 bg-surface-darker border-r border-slate-800 flex flex-col justify-between py-6 transition-all duration-300 z-20 shrink-0">
+<div class="px-4 lg:px-6 flex items-center justify-center lg:justify-start gap-3 mb-8">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center text-white shadow-lg shadow-primary/20">
+<span class="material-icons-round text-2xl">psychology</span>
+</div>
+<span class="text-xl font-bold tracking-tight hidden lg:block bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">MEMIT</span>
+</div>
+<nav class="flex-1 px-3 space-y-2">
+<a class="flex items-center gap-3 px-3 py-3 rounded-xl bg-primary/20 text-white border border-primary/20 transition-all group" href="#">
+<span class="material-icons-round text-xl lg:text-2xl">dashboard</span>
+<span class="hidden lg:block font-medium">대시보드</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-all group" href="#">
+<span class="material-icons-round text-xl lg:text-2xl">folder_shared</span>
+<span class="hidden lg:block font-medium">내 기억 저장소</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-all group" href="#">
+<span class="material-icons-round text-xl lg:text-2xl">school</span>
+<span class="hidden lg:block font-medium">학습 모드</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-all group" href="#">
+<span class="material-icons-round text-xl lg:text-2xl">auto_graph</span>
+<span class="hidden lg:block font-medium">분석 리포트</span>
+</a>
+<p class="hidden lg:block px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mt-6 mb-2">커뮤니티</p>
+<a class="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-all group" href="#">
+<span class="material-icons-round text-xl lg:text-2xl">groups</span>
+<span class="hidden lg:block font-medium">기억 공유</span>
+</a>
+</nav>
+<div class="px-3 lg:px-4">
+<button class="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800 transition-colors text-left group">
+<div class="relative">
+<img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-slate-700 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkUFYrxXKnHDCbNatRJnpFFmtzyy3GmK9KFU2cxNJywD5vOeoEayHHukbMSvwOnDD0hxHjEvmUmW9a5xcXoEXOZGcU5jHEwJGZAYFG1OTHvTwYnFL89mQNb_5i7iRORq0yQnKDkjP_ECykibF1QF1QUoLXzXOFZkADDMkkl4VFdgrNacsURBKuzZM2g95v2krh46hS-GSEsWNbNjNnG4XoVOXTcAZNLUJ0Jco0OubLc7K-KR0ueKOIUoIaMbupYKNiN9cOYLFEWiV6"/>
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-surface-darker rounded-full"></div>
+</div>
+<div class="hidden lg:block overflow-hidden">
+<p class="text-sm font-semibold truncate text-white group-hover:text-primary transition-colors">김민준</p>
+<p class="text-xs text-slate-500 truncate">Free Plan</p>
+</div>
+<span class="material-icons-round text-slate-400 ml-auto hidden lg:block">expand_more</span>
+</button>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+<div class="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-indigo-900/20 to-transparent pointer-events-none z-0"></div>
+<header class="h-16 flex items-center justify-between px-6 lg:px-10 border-b border-slate-800/50 backdrop-blur-sm z-10">
+<h1 class="text-xl font-bold text-white flex items-center gap-2">
+<span class="material-icons-outlined text-slate-400">home</span>
+<span class="text-slate-400">/</span>
+<span>대시보드</span>
+</h1>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<input class="w-64 bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all pl-10 text-slate-200" placeholder="기억 검색 (Ctrl+K)..." type="text"/>
+<span class="material-icons-outlined absolute left-3 top-2.5 text-slate-400 text-lg">search</span>
+</div>
+<button class="p-2 text-slate-400 hover:text-white transition-colors relative">
+<span class="material-icons-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+</button>
+<button class="p-2 text-slate-400 hover:text-white transition-colors">
+<span class="material-icons-outlined">settings</span>
+</button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-6 lg:p-10 z-10 scroll-smooth">
+<div class="grid grid-cols-12 gap-8">
+<div class="col-span-12 space-y-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<div class="lg:col-span-7 xl:col-span-8">
+<section class="glass-panel p-8 rounded-3xl relative overflow-hidden group h-full flex flex-col justify-center">
+<div class="absolute -right-20 -top-20 w-80 h-80 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/30 transition-all duration-700"></div>
+<div class="absolute -left-20 -bottom-20 w-64 h-64 bg-accent-purple/20 rounded-full blur-3xl group-hover:bg-accent-purple/30 transition-all duration-700"></div>
+<div class="relative z-10">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-primary to-accent-purple text-[11px] font-bold text-white mb-4 shadow-lg shadow-primary/25">
+<span class="material-icons-round text-xs">auto_awesome</span>
+                                        AI MEMORY GEN
+                                    </span>
+<h2 class="text-3xl lg:text-4xl font-bold mb-3 leading-tight text-white">
+                                        무엇을 기억하고 싶으신가요?<br/>
+<span class="text-slate-400 text-lg font-normal mt-2 block">숫자를 입력하면 한글 자음과 매칭하여 기억법을 생성합니다.</span>
+</h2>
+<div class="mt-8 relative">
+<div class="glass-input rounded-2xl p-2 flex flex-col md:flex-row items-center gap-2 shadow-2xl shadow-black/20 focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+<div class="flex-1 w-full relative">
+<textarea class="w-full bg-transparent border-none text-white placeholder-slate-500 focus:ring-0 resize-none py-3 px-4" placeholder="기억할 숫자나 문장을 입력하세요 (예: 010-1234-5678)" rows="1"></textarea>
+</div>
+<button class="w-full md:w-auto px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl font-medium transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2 whitespace-nowrap">
+<span class="material-icons-round text-lg">psychology</span>
+<span>변환하기</span>
+</button>
+</div>
+<div class="mt-3 flex items-center gap-4 text-xs text-slate-400 px-2">
+<span class="flex items-center gap-1 hover:text-white cursor-pointer transition-colors"><span class="material-icons-outlined text-sm">info</span> 기본 원칙 적용 중</span>
+<span class="ml-auto">Ctrl + Enter로 전송</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<div class="lg:col-span-5 xl:col-span-4">
+<section class="glass-panel p-6 rounded-3xl h-full border border-accent-purple/30">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-lg bg-accent-purple/20 flex items-center justify-center text-accent-purple">
+<span class="material-icons-round text-xl">key</span>
+</div>
+<h3 class="font-bold text-white">기억의 열쇠 <span class="text-slate-500 font-normal text-sm ml-1">Mnemonic Key</span></h3>
+</div>
+<button class="text-slate-500 hover:text-accent-purple transition-colors">
+<span class="material-icons-round text-sm">help_outline</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="mnemonic-card p-3 rounded-2xl flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-slate-900/80 border border-slate-700 flex flex-col items-center justify-center shrink-0">
+<span class="text-xs font-bold text-accent-purple leading-none">0</span>
+<span class="text-lg font-bold text-white leading-none">ㅇ</span>
+</div>
+<div>
+<p class="text-[10px] text-slate-500 font-medium">동그라미</p>
+<p class="text-xs text-slate-300">이응(ㅇ)</p>
+</div>
+</div>
+<div class="mnemonic-card p-3 rounded-2xl flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-slate-900/80 border border-slate-700 flex flex-col items-center justify-center shrink-0">
+<span class="text-xs font-bold text-accent-purple leading-none">1</span>
+<span class="text-lg font-bold text-white leading-none">ㄱ,ㅋ</span>
+</div>
+<div>
+<p class="text-[10px] text-slate-500 font-medium">가나다</p>
+<p class="text-xs text-slate-300">기역,키읔</p>
+</div>
+</div>
+<div class="mnemonic-card p-3 rounded-2xl flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-slate-900/80 border border-slate-700 flex flex-col items-center justify-center shrink-0">
+<span class="text-xs font-bold text-accent-purple leading-none">2</span>
+<span class="text-lg font-bold text-white leading-none">ㄴ,ㄹ</span>
+</div>
+<div>
+<p class="text-[10px] text-slate-500 font-medium">나르다</p>
+<p class="text-xs text-slate-300">니은,리을</p>
+</div>
+</div>
+<div class="mnemonic-card p-3 rounded-2xl flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-slate-900/80 border border-slate-700 flex flex-col items-center justify-center shrink-0">
+<span class="text-xs font-bold text-accent-purple leading-none">3</span>
+<span class="text-lg font-bold text-white leading-none">ㄷ,ㅌ</span>
+</div>
+<div>
+<p class="text-[10px] text-slate-500 font-medium">다트</p>
+<p class="text-xs text-slate-300">디귿,티읕</p>
+</div>
+</div>
+<div class="mnemonic-card p-3 rounded-2xl flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-slate-900/80 border border-slate-700 flex flex-col items-center justify-center shrink-0">
+<span class="text-xs font-bold text-accent-purple leading-none">4</span>
+<span class="text-lg font-bold text-white leading-none">ㅁ,ㅂ</span>
+</div>
+<div>
+<p class="text-[10px] text-slate-500 font-medium">마법</p>
+<p class="text-xs text-slate-300">미음,비읍</p>
+</div>
+</div>
+<div class="mnemonic-card p-3 rounded-2xl flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-slate-900/80 border border-slate-700 flex flex-col items-center justify-center shrink-0">
+<span class="text-xs font-bold text-accent-purple leading-none">5</span>
+<span class="text-lg font-bold text-white leading-none">ㅅ</span>
+</div>
+<div>
+<p class="text-[10px] text-slate-500 font-medium">산</p>
+<p class="text-xs text-slate-300">시옷</p>
+</div>
+</div>
+<div class="mnemonic-card p-3 rounded-2xl flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-slate-900/80 border border-slate-700 flex flex-col items-center justify-center shrink-0">
+<span class="text-xs font-bold text-accent-purple leading-none">6</span>
+<span class="text-lg font-bold text-white leading-none">ㅈ</span>
+</div>
+<div>
+<p class="text-[10px] text-slate-500 font-medium">자동차</p>
+<p class="text-xs text-slate-300">지읒</p>
+</div>
+</div>
+<div class="mnemonic-card p-3 rounded-2xl flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-slate-900/80 border border-slate-700 flex flex-col items-center justify-center shrink-0">
+<span class="text-xs font-bold text-accent-purple leading-none">7</span>
+<span class="text-lg font-bold text-white leading-none">ㅊ</span>
+</div>
+<div>
+<p class="text-[10px] text-slate-500 font-medium">칠보</p>
+<p class="text-xs text-slate-300">치읓</p>
+</div>
+</div>
+<div class="mnemonic-card p-3 rounded-2xl flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-slate-900/80 border border-slate-700 flex flex-col items-center justify-center shrink-0">
+<span class="text-xs font-bold text-accent-purple leading-none">8</span>
+<span class="text-lg font-bold text-white leading-none">ㅍ</span>
+</div>
+<div>
+<p class="text-[10px] text-slate-500 font-medium">팔</p>
+<p class="text-xs text-slate-300">피읍</p>
+</div>
+</div>
+<div class="mnemonic-card p-3 rounded-2xl flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-slate-900/80 border border-slate-700 flex flex-col items-center justify-center shrink-0">
+<span class="text-xs font-bold text-accent-purple leading-none">9</span>
+<span class="text-lg font-bold text-white leading-none">ㅎ</span>
+</div>
+<div>
+<p class="text-[10px] text-slate-500 font-medium">하늘</p>
+<p class="text-xs text-slate-300">히읗</p>
+</div>
+</div>
+</div>
+<p class="text-[10px] text-slate-500 mt-4 text-center">기본 원칙(Basic Principles)을 학습하며 입력해보세요.</p>
+</section>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+<div class="xl:col-span-8 space-y-8">
+<section>
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-xl font-bold text-white">주요 기능</h3>
+<a class="text-sm text-primary hover:text-accent-purple font-medium flex items-center gap-1 transition-colors" href="#">
+                                        전체보기 <span class="material-icons-round text-sm">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+<div class="bg-surface-dark border border-slate-800 p-6 rounded-2xl hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 group cursor-pointer">
+<div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-4 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+<span class="material-icons-round text-2xl">mic</span>
+</div>
+<h4 class="text-lg font-bold mb-2 text-white">발표 &amp; 스피치</h4>
+<p class="text-sm text-slate-400 leading-relaxed">발표의 핵심 내용을 흐름에 따라 자연스럽게 암기하세요.</p>
+</div>
+<div class="bg-surface-dark border border-slate-800 p-6 rounded-2xl hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 group cursor-pointer">
+<div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center mb-4 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+<span class="material-icons-round text-2xl">school</span>
+</div>
+<h4 class="text-lg font-bold mb-2 text-white">학습 &amp; 지식</h4>
+<p class="text-sm text-slate-400 leading-relaxed">복잡한 이론과 개념을 시각적 스토리로 재구성하세요.</p>
+</div>
+<div class="bg-surface-dark border border-slate-800 p-6 rounded-2xl hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 group cursor-pointer">
+<div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+<span class="material-icons-round text-2xl">security</span>
+</div>
+<h4 class="text-lg font-bold mb-2 text-white">보안 &amp; 금융</h4>
+<p class="text-sm text-slate-400 leading-relaxed">비밀번호와 핀 번호를 나만의 기억 지갑에 보관하세요.</p>
+</div>
+</div>
+</section>
+<section>
+<h3 class="text-xl font-bold text-white mb-6">최근 기억</h3>
+<div class="bg-surface-dark border border-slate-800 rounded-2xl overflow-hidden">
+<div class="p-4 flex items-center gap-4 hover:bg-slate-800/50 transition-colors border-b border-slate-800 group cursor-pointer">
+<div class="w-12 h-12 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0">
+<span class="material-icons-round">science</span>
+</div>
+<div class="flex-1 min-w-0">
+<h5 class="text-base font-semibold text-slate-200 truncate">양자 역학의 기본 원리</h5>
+<p class="text-xs text-slate-500 truncate">슈뢰딩거의 고양이 비유를 사용하여...</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-2 py-1 rounded-md bg-green-500/10 text-green-500 text-xs font-medium">85% 기억 유지율</span>
+<span class="text-xs text-slate-400">2분 전</span>
+<button class="w-8 h-8 rounded-full hover:bg-slate-700 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+<span class="material-icons-round text-lg">play_arrow</span>
+</button>
+</div>
+</div>
+<div class="p-4 flex items-center gap-4 hover:bg-slate-800/50 transition-colors border-b border-slate-800 group cursor-pointer">
+<div class="w-12 h-12 rounded-lg bg-orange-500/10 text-orange-500 flex items-center justify-center shrink-0">
+<span class="material-icons-round">shopping_cart</span>
+</div>
+<div class="flex-1 min-w-0">
+<h5 class="text-base font-semibold text-slate-200 truncate">오늘의 장보기 목록</h5>
+<p class="text-xs text-slate-500 truncate">사과, 우유, 계란, 파스타면...</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="px-2 py-1 rounded-md bg-orange-500/10 text-orange-500 text-xs font-medium">학습 필요</span>
+<span class="text-xs text-slate-400">3시간 전</span>
+<button class="w-8 h-8 rounded-full hover:bg-slate-700 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
+<span class="material-icons-round text-lg">play_arrow</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<div class="xl:col-span-4 space-y-6">
+<div class="bg-surface-dark border border-slate-800 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<span class="material-icons-outlined text-slate-600">more_horiz</span>
+</div>
+<h3 class="text-lg font-bold text-white mb-1">두뇌 트레이닝</h3>
+<p class="text-xs text-slate-500 mb-6">매일 10분, 뇌의 근육을 키워보세요.</p>
+<div class="relative w-40 h-40 mx-auto mb-6">
+<svg class="circular-chart" viewBox="0 0 36 36">
+<path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+<path class="circle stroke-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" stroke="#6366F1" stroke-dasharray="66, 100"></path>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+<span class="text-2xl font-bold text-white">66%</span>
+<span class="text-[10px] text-slate-500 uppercase font-medium tracking-wider">진척도</span>
+</div>
+</div>
+<button class="w-full py-3 bg-primary hover:bg-primary-hover text-white rounded-xl font-medium transition-all shadow-lg shadow-primary/25">
+                                    훈련 이어하기
+                                </button>
+</div>
+<div class="bg-surface-dark border border-slate-800 rounded-2xl p-6 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-lg font-bold text-white">오늘의 미션</h3>
+<span class="text-xs font-semibold bg-primary/10 text-primary px-2 py-1 rounded">2/3 완료</span>
+</div>
+<div class="space-y-3">
+<div class="flex items-center p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+<div class="w-8 h-8 rounded bg-primary text-white flex items-center justify-center mr-3">
+<span class="material-icons-round text-sm">check</span>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-semibold text-slate-500 line-through">카드 순서 외우기</h4>
+</div>
+</div>
+<div class="flex items-center p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+<div class="w-8 h-8 rounded bg-primary text-white flex items-center justify-center mr-3">
+<span class="material-icons-round text-sm">check</span>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-semibold text-slate-500 line-through">N-Back 게임</h4>
+</div>
+</div>
+<div class="flex items-center p-3 rounded-xl bg-surface-dark border border-primary/30 shadow-sm relative overflow-hidden group cursor-pointer hover:border-primary transition-colors">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="w-8 h-8 rounded-full border-2 border-slate-500 mr-3 flex items-center justify-center group-hover:border-primary transition-colors"></div>
+<div class="flex-1">
+<h4 class="text-sm font-semibold text-white group-hover:text-primary transition-colors">단어 연상 퀴즈</h4>
+</div>
+<span class="text-xs font-bold text-primary">NEXT</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<footer class="mt-12 mb-6 border-t border-slate-800 pt-6 flex flex-col md:flex-row justify-between items-center text-xs text-slate-500">
+<p>© 2024 Memit Inc. All rights reserved.</p>
+<div class="flex gap-4 mt-2 md:mt-0">
+<a class="hover:text-primary" href="#">개인정보처리방침</a>
+<a class="hover:text-primary" href="#">이용약관</a>
+<a class="hover:text-primary" href="#">도움말</a>
+</div>
+</footer>
+</div>
+<button class="fixed bottom-6 right-6 lg:hidden w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/40 flex items-center justify-center z-50">
+<span class="material-icons-round text-2xl">add</span>
+</button>
+</main>
+
+</body></html>

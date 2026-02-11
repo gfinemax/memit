@@ -1,26 +1,110 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-primary: #8c2bee;
+  --color-primary-dark: #6b1cb0;
+  --color-background-light: #f7f6f8;
+  --color-background-dark: #191022;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-display: var(--font-space-grotesk), sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --animate-twinkle: twinkle 5s infinite ease-in-out;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-fade-in: fadeIn 1.5s ease-out forwards;
+
+  @keyframes twinkle {
+
+    0%,
+    100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.8;
+      transform: scale(1.2);
+    }
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+
+    100% {
+      transform: translateY(0px);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom Utilities */
+@utility glass-panel {
+  background: rgba(25, 16, 34, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(140, 43, 238, 0.15);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+@utility star-particle {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: twinkle 5s infinite ease-in-out;
+}
+
+@utility fade-in-text {
+  opacity: 0;
+  animation: fadeIn 1.5s ease-out forwards;
+}
+
+@utility fade-in-delay-1 {
+  animation-delay: 0.5s;
+}
+
+@utility fade-in-delay-2 {
+  animation-delay: 1.5s;
+}
+
+@utility floating-element {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Landing Page Specific Utilities */
+.starry-bg {
+  background-image: radial-gradient(white, rgba(255, 255, 255, .2) 2px, transparent 3px),
+    radial-gradient(white, rgba(255, 255, 255, .15) 1px, transparent 2px),
+    radial-gradient(white, rgba(255, 255, 255, .1) 2px, transparent 3px);
+  background-size: 550px 550px, 350px 350px, 250px 250px;
+  background-position: 0 0, 40px 60px, 130px 270px;
+}
+
+.text-glow {
+  text-shadow: 0 0 20px rgba(140, 43, 238, 0.5);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
