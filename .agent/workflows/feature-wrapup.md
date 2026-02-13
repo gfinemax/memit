@@ -1,9 +1,9 @@
 ---
-description: Finalize a feature by updating PRD, User Manual, and creating a git commit
+description: Finalize a feature by updating PRD, User Manual, and creating a git commit/push
 ---
 # Feature Wrap-up Workflow
 
-This workflow helps you wrap up a development task by ensuring all documentation is synced and changes are committed.
+This workflow helps you wrap up a development task by ensuring all documentation is synced and changes are committed and pushed.
 
 ## Step 1: Review Changes
 1.  Analyze the code changes made in the recent task.
@@ -21,12 +21,13 @@ This workflow helps you wrap up a development task by ensuring all documentation
 3.  If yes, update the instructions in friendly language.
    - *Example: "You can now see a 'Secured' badge next to the owner's name."*
 
-## Step 4: Commit Changes
+## Step 4: Commit and Push Changes
 // turbo
-1.  Run the following commands to stage and commit:
+1.  Run the following commands to stage, commit, and push:
 ```powershell
 git add .
 git commit -m "feat: [Feature Name] - Finalize implementation and update docs"
+git push
 ```
 *(Replace [Feature Name] with the actual feature name).*
 

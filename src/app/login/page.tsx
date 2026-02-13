@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
 import {
     BookOpen,
     Fingerprint,
@@ -16,6 +17,38 @@ import {
 import StorytellingLanding from '@/components/landing/StorytellingLanding';
 
 export default function LoginPage() {
+    const router = useRouter();
+    const supabase = createClient();
+
+    const handleGoogleLogin = async () => {
+        if (!supabase) {
+            alert('Supabase 설정이 완료되지 않았습니다. .env.local 파일을 확인해주세요.');
+            return;
+        }
+
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`,
+                },
+            });
+            if (error) throw error;
+        } catch (error: any) {
+            console.error('Error logging in with Google:', error);
+            if (error.message && error.message.includes('provider is not enabled')) {
+                alert('Supabase 프로젝트에서 Google 로그인이 활성화되지 않았습니다.\nAuthentication > Providers > Google을 활성화해주세요.');
+            } else {
+                alert('구글 로그인 중 오류가 발생했습니다.');
+            }
+        }
+    };
+
+    const handleGuestLogin = () => {
+        // Guest Demo Mode
+        router.push('/dashboard');
+    };
+
     return (
         <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display min-h-screen flex flex-col overflow-x-hidden">
             {/* Top Fold: Split Screen Login */}
@@ -49,7 +82,7 @@ export default function LoginPage() {
 
                     {/* Decorative elements */}
                     <div className="absolute top-10 left-10 opacity-50 fade-in-text">
-                        <span className="text-xs tracking-[0.3em] uppercase text-primary font-bold">Memit • Palace OS v2.0</span>
+                        <span className="text-xs font-bold tracking-[0.2em] uppercase text-primary">MEMIT • PALACE OS V0.7</span>
                     </div>
                 </div>
 
@@ -121,11 +154,15 @@ export default function LoginPage() {
                                     </div>
                                 </div>
 
-                                <button className="w-full relative group overflow-hidden rounded-lg p-[1px]" type="button">
+                                <button
+                                    className="w-full relative group overflow-hidden rounded-lg p-[1px]"
+                                    type="button"
+                                    onClick={handleGuestLogin}
+                                >
                                     <div className="absolute inset-0 bg-gradient-to-r from-primary to-indigo-600 rounded-lg"></div>
                                     <div className="relative px-6 py-3.5 bg-background-dark rounded-lg group-hover:bg-opacity-0 transition-all duration-300 ease-out">
                                         <span className="relative flex items-center justify-center gap-2 text-white font-semibold tracking-wide group-hover:scale-105 transition-transform">
-                                            Start Your Journey
+                                            Guest Login (Demo)
                                             <ArrowRight className="w-5 h-5" />
                                         </span>
                                     </div>
@@ -139,7 +176,10 @@ export default function LoginPage() {
                             </div>
 
                             <div className="mt-6 grid grid-cols-2 gap-3">
-                                <button className="flex items-center justify-center px-4 py-2 border border-slate-700 rounded-lg bg-slate-800/30 hover:bg-slate-700/50 transition-colors text-slate-300 text-sm">
+                                <button
+                                    className="flex items-center justify-center px-4 py-2 border border-slate-700 rounded-lg bg-slate-800/30 hover:bg-slate-700/50 transition-colors text-slate-300 text-sm"
+                                    onClick={handleGoogleLogin}
+                                >
                                     <svg aria-hidden="true" className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"></path></svg>
                                     Google
                                 </button>
