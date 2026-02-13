@@ -260,7 +260,12 @@ export class OpenAIStoryService {
       **Story**: "${story}"
       **Context**: "${context || 'General Memory'}"
       
-      ${isQuad ? `**LAYOUT REQUIREMENT**: You MUST generate a "4-panel comic strip" or "quad-panel storyboard" layout. The image should be divided into 4 distinct quadrants (2x2 grid), each representing a different "beat" or "perspective" of the story. Ensure a consistent artistic style across all 4 panels.` : ''}
+      ${isQuad ? `**LAYOUT & STYLE REQUIREMENT**: 
+      1. Format the image as a "4-panel comic strip" or "quad-panel storyboard" (2x2 grid).
+      2. Use a "Vibrant Digital Comic/Manga" art style with clear black ink outlines.
+      3. Include distinct panel borders (thin white or black lines) separating the quadrants.
+      4. Each panel should represent a sequential beat of the story.
+      5. Add dynamic "action lines" or "motion blur" in relevant panels to emphasize movement and impact.` : ''}
 
       **Requirements**:
       1. **Safety First**: DALL-E 3 has strict safety filters. 
@@ -311,6 +316,27 @@ export class OpenAIStoryService {
             if (error.status === 400 && error.message?.includes('safety system')) {
                 throw new Error("SAFETY_FILTER_TRIGGERED");
             }
+            throw error;
+        }
+    }
+
+    async generateStoryResponse(prompt: string): Promise<any> {
+        try {
+            const completion = await openai.chat.completions.create({
+                messages: [
+                    { role: "system", content: "You are a helpful assistant. Return ONLY JSON." },
+                    { role: "user", content: prompt }
+                ],
+                model: "gpt-4o",
+                response_format: { type: "json_object" }
+            });
+
+            const content = completion.choices[0].message.content;
+            if (!content) throw new Error("No content generated");
+
+            return JSON.parse(content);
+        } catch (error) {
+            console.error("OpenAI JSON Error:", error);
             throw error;
         }
     }

@@ -173,26 +173,21 @@ Interaction:
 - `design/pcweb/3 memit_desktop_dashboard_-_variant_2_4` 기반 구현.
 - Glassmorphism & Glow 효과 적용.
 - 주요 위젯: AI Memory Gen, Mnemonic Key, Feature Cards, Brain Training.
+- **반응형 레이아웃**: 모든 메인 대시보드 페이지에 대해 PC 웹 및 모바일 최적화 레이아웃 구현 완료.
 
 10. 로드맵 (Roadmap)
-Phase 1: MVP (W1 ~ W2)
-프로젝트 세팅 (Next.js + Supabase).
+Phase 1: MVP (W1 ~ W2) [COMPLETED]
+- 프로젝트 세팅 (Next.js + Supabase).
+- [핵심] 0~100 변환 로직(JS) 구현.
+- 메인 화면 UI (양방향 변환기) 구현.
+- 보안/금융 카테고리 단일 기능 완성.
 
-[핵심] 0~100 변환 로직(JS) 구현.
-
-메인 화면 UI (양방향 변환기) 구현.
-
-보안/금융 카테고리 단일 기능 완성.
-
-Phase 2: AI & Expansion (W3 ~ W4)
-OpenAI API 연동 (스토리 자동 생성).
-
-인맥/장보기 등 나머지 카테고리 UI 확장.
-
-'My Memit' 보관함 및 데이터 저장 기능 구현.
+Phase 2: AI & Expansion (W3 ~ W4) [IN PROGRESS/COMPLETED]
+- OpenAI API 연동 (스토리 자동 생성).
+- 6대 카테고리 UI 확장 및 데스크탑 레이아웃 구현 [COMPLETED].
+- 'My Memit' 보관함 및 데이터 저장 기능 구현 [IN PROGRESS].
 
 Phase 3: Community & App (W5 ~ )
 명예의 전당(커뮤니티) 기능 추가.
 
 Capacitor를 이용한 Android/iOS 앱 패키징 및 출시.
-

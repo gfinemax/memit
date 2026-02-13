@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, Search, Bell, Settings } from 'lucide-react';
+import { Home, Search, Bell, Settings, ChevronDown } from 'lucide-react';
 
 export default function Header() {
     return (
@@ -27,8 +27,19 @@ export default function Header() {
                     <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
 
-                <button className="p-2 text-slate-400 hover:text-white transition-colors">
-                    <Settings className="w-5 h-5" />
+
+                <button className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-slate-800 transition-colors text-left group border border-transparent hover:border-slate-700">
+                    <div className="relative">
+                        <div className="w-8 h-8 rounded-full border border-slate-700 bg-slate-800 overflow-hidden">
+                            <div className="w-full h-full flex items-center justify-center text-slate-500 font-bold text-xs">U</div>
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#020617] rounded-full"></div>
+                    </div>
+                    <div className="hidden lg:block overflow-hidden">
+                        <p className="text-sm font-semibold truncate text-white group-hover:text-primary transition-colors leading-tight">User Name</p>
+                        <p className="text-[10px] text-slate-500 truncate leading-tight">Free Plan</p>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-slate-400 ml-1 hidden lg:block" />
                 </button>
             </div>
         </header>

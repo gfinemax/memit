@@ -1,4 +1,4 @@
-import { MemoryService, SystemCodeMap, SystemType } from './memory-service';
+import { MemoryService, SystemCodeMap, SystemType, UserMemory } from './memory-service';
 import digits2Data from '../../digits_2_full.json';
 import digits3Data from '../../digits_3_full.json';
 
@@ -124,6 +124,19 @@ export class LocalMemoryService implements MemoryService {
         }
 
         return result;
+    }
+
+    async saveMemory(memoryData: Omit<UserMemory, 'id' | 'created_at'>): Promise<UserMemory | null> {
+        console.log("Mock saved memory:", memoryData);
+        return {
+            ...memoryData,
+            id: 'mock-id-' + Date.now(),
+            created_at: new Date().toISOString()
+        };
+    }
+
+    async getMemories(): Promise<UserMemory[]> {
+        return [];
     }
 }
 

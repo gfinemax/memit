@@ -5,16 +5,16 @@ import { Key, HelpCircle } from 'lucide-react';
 
 export default function MnemonicKey({ activeNumber, isExpanded }: { activeNumber?: string, isExpanded?: boolean }) {
     const mnemonics = [
-        { num: '0', sound: 'ㅇ', word: '동그라미', consonants: '이응(ㅇ)' },
-        { num: '1', sound: 'ㄱ,ㅋ', word: '가나다', consonants: '기역,키읔' },
-        { num: '2', sound: 'ㄴ,ㄹ', word: '나르다', consonants: '니은,리을' },
-        { num: '3', sound: 'ㄷ,ㅌ', word: '다트', consonants: '디귿,티읕' },
-        { num: '4', sound: 'ㅁ,ㅂ', word: '마법', consonants: '미음,비읍' },
+        { num: '0', sound: 'ㅇ', word: '알', consonants: '이응(ㅇ)' },
+        { num: '1', sound: 'ㄱ,ㅋ', word: '감', consonants: '기역,키읔' },
+        { num: '2', sound: 'ㄴ,ㄹ', word: '논', consonants: '니은,리을' },
+        { num: '3', sound: 'ㄷ,ㅌ', word: '달', consonants: '디귿,티읕' },
+        { num: '4', sound: 'ㅁ,ㅂ', word: '물', consonants: '미음,비읍' },
         { num: '5', sound: 'ㅅ', word: '산', consonants: '시옷' },
-        { num: '6', sound: 'ㅈ', word: '자동차', consonants: '지읒' },
-        { num: '7', sound: 'ㅊ', word: '칠보', consonants: '치읓' },
-        { num: '8', sound: 'ㅍ', word: '팔', consonants: '피읍' },
-        { num: '9', sound: 'ㅎ', word: '하늘', consonants: '히읗' },
+        { num: '6', sound: 'ㅈ', word: '종', consonants: '지읒' },
+        { num: '7', sound: 'ㅊ', word: '차', consonants: '치읓' },
+        { num: '8', sound: 'ㅍ', word: '파', consonants: '피읍' },
+        { num: '9', sound: 'ㅎ', word: '해', consonants: '히읗' },
     ];
 
     return (
@@ -45,12 +45,16 @@ export default function MnemonicKey({ activeNumber, isExpanded }: { activeNumber
                                     }
                                 `}
                             >
+                                <span className={`text-xs font-bold leading-none mb-1 ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                                    {item.num}
+                                </span>
                                 <div className={`
-                                    w-10 h-10 rounded-xl flex flex-col items-center justify-center shrink-0 transition-colors
-                                    ${isActive ? 'bg-[#8B5CF6] text-white' : 'bg-slate-900/80 border border-slate-700 bg-slate-900/80 text-[#8B5CF6]'}
+                                    w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors
+                                    ${isActive ? 'bg-[#8B5CF6] text-white shadow-lg' : 'bg-slate-900/80 border border-slate-700 text-[#8B5CF6]'}
                                 `}>
-                                    <span className="text-xs font-bold leading-none">{item.num}</span>
-                                    <span className="text-lg font-bold leading-none mt-0.5">{item.sound}</span>
+                                    <span className="text-lg font-bold leading-none tracking-tight">
+                                        {item.sound.replace(/,/g, '')}
+                                    </span>
                                 </div>
                                 <div className="text-center">
                                     <p className={`text-[10px] font-medium transition-colors ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>{item.word}</p>

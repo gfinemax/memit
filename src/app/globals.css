@@ -108,3 +108,43 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ─── Lighting Border Animation ─── */
+@property --lighting-angle {
+  syntax: "<angle>";
+  initial-value: 315deg;
+  inherits: false;
+}
+
+@keyframes rotate-lighting {
+  from {
+    --lighting-angle: 315deg;
+  }
+
+  to {
+    --lighting-angle: 675deg;
+  }
+}
+
+.lighting-border {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.lighting-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: conic-gradient(from var(--lighting-angle),
+      transparent 0deg,
+      transparent 60deg,
+      #A855F7 120deg,
+      #FFFFFF 180deg,
+      #A855F7 240deg,
+      transparent 300deg,
+      transparent 360deg);
+  animation: rotate-lighting 3s linear infinite;
+}

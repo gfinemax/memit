@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import MnemonicKey from './MnemonicKey';
-import { Sparkles, Brain, Info, Copy, Check, ChevronDown, ChevronUp, Pin, Lock, Unlock } from 'lucide-react';
+import { Sparkles, Brain, Info, Copy, Check, ChevronDown, ChevronUp, Lock, Unlock, Bookmark } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { convertNumberAction } from '@/app/actions';
+import { convertNumberAction, saveMemoryAction, generatePasswordFromStoryAction } from '@/app/actions';
 import { openAIStoryService } from '@/lib/openai-story-service';
 
-export default function MemoryGenerator() {
+export default function MemoryGenerator({ onMemorySaved }: { onMemorySaved?: () => void }) {
     const [activeTab, setActiveTab] = useState<'memory' | 'password'>('memory');
     const [isKeyExpanded, setIsKeyExpanded] = useState(false);
 
@@ -19,7 +19,6 @@ export default function MemoryGenerator() {
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [generatingImage, setGeneratingImage] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [copied, setCopied] = useState(false);
     const [strategy, setStrategy] = useState<'SCENE' | 'PAO' | 'STORY_BEAT'>('SCENE');
     const [isSelecting, setIsSelecting] = useState(false);
     const [revealedCount, setRevealedCount] = useState(0);
@@ -29,6 +28,9 @@ export default function MemoryGenerator() {
     const [isModified, setIsModified] = useState(false);
     const [lastConvertedInput, setLastConvertedInput] = useState('');
     const [lockedIndices, setLockedIndices] = useState<number[]>([]);
+    const [saving, setSaving] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    const [isEditingStory, setIsEditingStory] = useState(false);
 
     // Password State
     const [passwordLength, setPasswordLength] = useState(12);
@@ -36,50 +38,38 @@ export default function MemoryGenerator() {
     const [includeNumbers, setIncludeNumbers] = useState(true);
     const [passwordResult, setPasswordResult] = useState('');
     const [passwordCopied, setPasswordCopied] = useState(false);
+    const [passwordStory, setPasswordStory] = useState('');
+    const [passwordMapping, setPasswordMapping] = useState<{ word: string, code: string }[]>([]);
+    const [generatingStoryPassword, setGeneratingStoryPassword] = useState(false);
 
 
     const handleConvert = async () => {
         if (!input.trim() || loading) return;
         const isSameInput = input.trim() === lastConvertedInput;
 
-        // Reset and start animation
         setLoading(true);
         setIsSelecting(true);
         setRevealedCount(0);
 
-        // Reset everything if input is different, EXCEPT locked indices
         if (!isSameInput) {
             setResult(null);
             setCandidates([]);
             setIsModified(false);
-            setLockedIndices([]); // Decide: clear locks on fresh input? User might want to keep the "positions" locked.
-            // Better to clear ALL locks if input length changes radically,
-            // but for now let's clear them on input change to avoid confusion.
+            setLockedIndices([]);
         }
 
         setStory(null);
         setImageUrl(null);
         setActivePopoverIndex(null);
+        setIsEditingStory(false);
 
-        // 1. Basic Conversion
         const res = await convertNumberAction(input);
         if (res.success && res.data) {
             const currentCandidates = res.candidates || [];
             setCandidates(currentCandidates as { chunk: string, words: string[] }[]);
 
-            // 2. AI Story Generation
             if (process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
                 try {
-                    // Use currently selected words if same input OR if specifically locked
-                    const manualKeywords = result ? result.map((word, idx) => {
-                        if (isSameInput || lockedIndices.includes(idx)) return word;
-                        return undefined;
-                    }).filter((w): w is string => w !== undefined) : undefined;
-
-                    // Actually, if we want to preserve ONLY specific indices, we need to handle that in the prompt.
-                    // Let's refine manualKeywords to be the full array but with nulls for AI to fill.
-                    // But generateStory takes string[]. Let's pass the full 'result' if we want to fix it.
-
                     const data = await openAIStoryService.generateStory(input, {
                         candidates: currentCandidates,
                         context,
@@ -87,21 +77,14 @@ export default function MemoryGenerator() {
                         manualKeywords: (isSameInput || lockedIndices.length > 0) ? result || undefined : undefined
                     });
 
-                    // Start Reveal Animation
-                    // CRITICAL: result must have the same length as candidates (chunks)
-                    // If AI returned fewer keywords, pad with candidates' first words
                     const finalKeywords = Array(currentCandidates.length).fill('').map((_, idx) => {
-                        // Priority 1: Locked keyword
                         if (lockedIndices.includes(idx) && result && result[idx]) return result[idx];
-                        // Priority 2: AI returned keyword
                         if (data.keywords && data.keywords[idx]) return data.keywords[idx];
-                        // Priority 3: Candidate fallback
                         return currentCandidates[idx].words[0] || '???';
                     });
 
                     setResult(finalKeywords);
 
-                    // Sequentially reveal words
                     for (let i = 1; i <= finalKeywords.length; i++) {
                         await new Promise(r => setTimeout(r, 400));
                         setRevealedCount(i);
@@ -139,7 +122,6 @@ export default function MemoryGenerator() {
         setResult(newResult);
         setIsModified(true);
         setActivePopoverIndex(null);
-        // Automatically lock if user manually picked?
         if (!lockedIndices.includes(index)) {
             setLockedIndices([...lockedIndices, index]);
         }
@@ -154,24 +136,12 @@ export default function MemoryGenerator() {
         }
     };
 
-    const handleRefreshStory = async () => {
-        if (!input.trim() || loading || !isModified || !result) return;
-        setLoading(true);
-        try {
-            const data = await openAIStoryService.generateStory(input, {
-                candidates,
-                context,
-                strategy,
-                manualKeywords: result
-            });
-            setStory(data.story);
-            setIsModified(false);
-            setImageUrl(null); // Story changed, old image might be invalid
-        } catch (error) {
-            console.error("Story refresh failed:", error);
-            setStory("스토리 재생성 중 오류가 발생했습니다.");
-        } finally {
-            setLoading(false);
+    const toggleAllLocks = () => {
+        if (!result) return;
+        if (lockedIndices.length === result.length) {
+            setLockedIndices([]);
+        } else {
+            setLockedIndices(result.map((_, i) => i));
         }
     };
 
@@ -192,6 +162,33 @@ export default function MemoryGenerator() {
         setGeneratingImage(false);
     };
 
+    const handleSaveMemory = async () => {
+        if (!result || !story || saving || isSaved) return;
+        setSaving(true);
+        try {
+            const res = await saveMemoryAction({
+                input_number: lastConvertedInput || input,
+                keywords: result,
+                story: story,
+                image_url: imageUrl || undefined,
+                context: context || undefined,
+                strategy: strategy
+            });
+            if (res.success) {
+                setIsSaved(true);
+                if (onMemorySaved) onMemorySaved();
+                setTimeout(() => setIsSaved(false), 3000);
+            } else {
+                alert(res.error || "저장에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("Save error:", error);
+            alert("저장 중 오류가 발생했습니다.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const generatePassword = () => {
         const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
         const nums = "0123456789";
@@ -209,13 +206,6 @@ export default function MemoryGenerator() {
         setPasswordResult(password);
     };
 
-    const copyToClipboard = () => {
-        if (!result) return;
-        navigator.clipboard.writeText(result.join(' '));
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
     const copyPassword = () => {
         if (!passwordResult) return;
         navigator.clipboard.writeText(passwordResult);
@@ -229,7 +219,6 @@ export default function MemoryGenerator() {
             <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-[#8B5CF6]/20 rounded-full blur-3xl group-hover:bg-[#8B5CF6]/30 transition-all duration-700 pointer-events-none"></div>
 
             <div className="relative z-10 w-full flex flex-col h-full">
-                {/* Header & Tabs */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                     <div>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-primary to-[#8B5CF6] text-[11px] font-bold text-white mb-2 shadow-lg shadow-primary/25">
@@ -240,8 +229,16 @@ export default function MemoryGenerator() {
                             {activeTab === 'memory' ? '무엇을 기억하고 싶으신가요?' : '강력한 암호를 생성하세요'}
                         </h2>
                     </div>
+                </div>
 
-                    <div className="bg-slate-800/50 p-1 rounded-xl flex self-start md:self-center backdrop-blur-md border border-slate-700/50">
+                <div className="flex-1 flex flex-col justify-center">
+                    <p className="text-slate-400 text-lg font-normal mb-4 leading-relaxed">
+                        {activeTab === 'memory'
+                            ? '숫자를 입력하면 한글 자음과 매칭하여 기억법을 생성합니다.'
+                            : '기억하고 싶은 스토리나 맥락을 입력하세요. AI가 기억법과 매칭되는 보안 숫자를 생성합니다.'}
+                    </p>
+
+                    <div className="bg-slate-800/50 p-1 rounded-xl flex self-start backdrop-blur-md border border-slate-700/50 mb-6">
                         <button
                             onClick={() => setActiveTab('memory')}
                             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'memory' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
@@ -255,45 +252,41 @@ export default function MemoryGenerator() {
                             비밀번호 생성
                         </button>
                     </div>
-                </div>
 
-                <div className="flex-1 flex flex-col justify-center">
                     {activeTab === 'memory' ? (
-                        /* Memory Generator UI */
                         <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-500 z-10">
-                            <p className="text-slate-400 text-lg font-normal mb-8 leading-relaxed">
-                                숫자를 입력하면 한글 자음과 매칭하여<br className="hidden md:block" /> 기억법을 생성합니다.
-                            </p>
 
                             <div className="flex flex-col gap-3 mb-8">
-                                <div className="glass-panel border-slate-700/50 rounded-2xl p-2 flex flex-col md:flex-row items-center gap-2 shadow-2xl shadow-black/20 focus-within:ring-2 focus-within:ring-primary/50 transition-all">
-                                    <div className="flex-1 w-full relative">
-                                        <textarea
-                                            className="w-full bg-transparent border-none text-white placeholder-slate-500 focus:ring-0 resize-none py-6 px-4 focus:outline-none min-h-[100px] text-center text-4xl font-bold tracking-widest placeholder:text-lg placeholder:font-normal placeholder:tracking-normal"
-                                            placeholder="기억할 숫자를 입력하세요"
-                                            rows={1}
-                                            value={input}
-                                            onChange={(e) => setInput(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && !e.shiftKey) {
-                                                    e.preventDefault();
-                                                    handleConvert();
-                                                }
-                                            }}
-                                        ></textarea>
+                                <div className="lighting-border group p-[4px] rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.15)]">
+                                    <div className="relative z-10 bg-white rounded-2xl p-2 flex flex-col md:flex-row items-center gap-2 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)] transition-all overflow-hidden focus-within:shadow-[inset_0_2px_15px_rgba(168,85,247,0.15)]">
+                                        <div className="flex-1 w-full relative">
+                                            <textarea
+                                                className="w-full bg-transparent border-none text-slate-900 placeholder-slate-400 focus:ring-0 resize-none py-6 px-4 focus:outline-none min-h-[100px] text-center text-4xl font-bold tracking-widest placeholder:text-lg placeholder:font-normal placeholder:tracking-normal font-mono"
+                                                placeholder="기억할 숫자를 입력하세요"
+                                                rows={1}
+                                                value={input}
+                                                onChange={(e) => setInput(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        handleConvert();
+                                                    }
+                                                }}
+                                            ></textarea>
+                                        </div>
+                                        <button
+                                            disabled={loading}
+                                            onClick={handleConvert}
+                                            className="w-full md:w-auto px-8 py-4 bg-primary hover:bg-[#6b1cb0] text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 active:scale-95"
+                                        >
+                                            {loading ? (
+                                                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                            ) : (
+                                                <Brain className="w-5 h-5" />
+                                            )}
+                                            <span>{loading ? '변환 중...' : '변환하기'}</span>
+                                        </button>
                                     </div>
-                                    <button
-                                        disabled={loading}
-                                        onClick={handleConvert}
-                                        className="w-full md:w-auto px-6 py-4 bg-primary hover:bg-[#6b1cb0] text-white rounded-xl font-medium transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50"
-                                    >
-                                        {loading ? (
-                                            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                                        ) : (
-                                            <Brain className="w-5 h-5" />
-                                        )}
-                                        <span>{loading ? '변환 중...' : '변환하기'}</span>
-                                    </button>
                                 </div>
 
                                 <div className="mb-4">
@@ -325,11 +318,36 @@ export default function MemoryGenerator() {
 
                             {result && (
                                 <div className="mt-6 p-5 rounded-2xl bg-primary/10 border border-primary/20 relative animate-in fade-in slide-in-from-top-4 duration-500">
-                                    <div className="flex items-center justify-between mb-4">
+                                    <div className="flex justify-between items-center mb-4">
                                         <span className="text-[10px] font-bold text-primary tracking-widest uppercase">Generated Result</span>
-                                        <button onClick={copyToClipboard} className="text-slate-400 hover:text-white transition-colors">
-                                            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-                                        </button>
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={toggleAllLocks}
+                                                className="p-1.5 rounded-md hover:bg-white/10 transition-colors group/masterlock flex items-center justify-center"
+                                                title={lockedIndices.length === result.length ? "전체 고정 해제" : "전체 단어 고정"}
+                                            >
+                                                {lockedIndices.length === result.length ? (
+                                                    <Lock className="w-4 h-4 text-primary" />
+                                                ) : (
+                                                    <Unlock className="w-4 h-4 text-slate-500 hover:text-slate-300 transform -scale-x-100 -rotate-[20deg]" />
+                                                )}
+                                            </button>
+
+                                            <button
+                                                onClick={handleSaveMemory}
+                                                disabled={saving || isSaved}
+                                                className={`p-1.5 rounded-md transition-all flex items-center justify-center ${isSaved ? 'text-green-400' : 'text-slate-500 hover:text-white hover:bg-white/10'}`}
+                                                title="내 컬렉션에 저장"
+                                            >
+                                                {saving ? (
+                                                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                                ) : isSaved ? (
+                                                    <Check className="w-4 h-4" />
+                                                ) : (
+                                                    <Bookmark className="w-4 h-4" />
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div className="flex flex-wrap gap-3 mb-6 min-h-[60px] justify-center items-center">
@@ -369,15 +387,14 @@ export default function MemoryGenerator() {
                                                                     </motion.span>
                                                                     <div
                                                                         onClick={(e) => toggleLock(e, i)}
-                                                                        className={`p-1 rounded-md transition-all hover:bg-white/10 ${isLocked ? 'text-primary opacity-100' : 'text-slate-500 opacity-0 group-hover/card:opacity-100'}`}
+                                                                        className={`p-1 rounded-md transition-all hover:bg-white/10 flex items-center justify-center ${isLocked ? 'text-primary' : 'text-slate-500/60 hover:text-slate-400'}`}
                                                                     >
-                                                                        {isLocked ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                                                                        {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
                                                                     </div>
                                                                 </>
                                                             )}
                                                         </motion.div>
 
-                                                        {/* Selection Popover */}
                                                         <AnimatePresence>
                                                             {isMenuOpen && (
                                                                 <>
@@ -415,12 +432,24 @@ export default function MemoryGenerator() {
 
                                     {story && (
                                         <div className="pt-4 border-t border-primary/20">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Sparkles className={`w-3 h-3 ${story.includes('⚠️') ? 'text-red-400' : 'text-yellow-300'}`} />
-                                                <span className={`text-xs font-bold ${story.includes('⚠️') ? 'text-red-400' : 'text-yellow-300'}`}>
-                                                    {story.includes('⚠️') ? 'SYSTEM NOTICE' : 'AI Story'}
-                                                </span>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Sparkles className={`w-3 h-3 ${story.includes('⚠️') ? 'text-red-400' : 'text-yellow-300'}`} />
+                                                    <span className={`text-xs font-bold ${story.includes('⚠️') ? 'text-red-400' : 'text-yellow-300'}`}>
+                                                        {story.includes('⚠️') ? 'SYSTEM NOTICE' : 'AI Story'}
+                                                    </span>
+                                                </div>
+
+                                                {!isSelecting && !story.includes('⚠️') && (
+                                                    <button
+                                                        onClick={() => setIsEditingStory(!isEditingStory)}
+                                                        className={`text-[10px] font-bold px-2 py-0.5 rounded transition-all flex items-center gap-1 ${isEditingStory ? 'bg-primary text-white' : 'text-slate-500 hover:text-primary hover:bg-primary/10'}`}
+                                                    >
+                                                        {isEditingStory ? '수정 완료' : '스토리 수정'}
+                                                    </button>
+                                                )}
                                             </div>
+
                                             <div className={`text-sm leading-relaxed font-medium ${story.includes('⚠️') ? 'text-red-300' : 'text-white/90'}`}>
                                                 {isSelecting ? (
                                                     <div className="flex gap-1">
@@ -428,6 +457,13 @@ export default function MemoryGenerator() {
                                                         <motion.div initial={{ opacity: 0.3 }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }} className="w-2 h-4 bg-primary/40 rounded-sm" />
                                                         <motion.div initial={{ opacity: 0.3 }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }} className="w-2 h-4 bg-primary/40 rounded-sm" />
                                                     </div>
+                                                ) : isEditingStory ? (
+                                                    <textarea
+                                                        value={story}
+                                                        onChange={(e) => setStory(e.target.value)}
+                                                        className="w-full bg-slate-900/60 border border-primary/30 rounded-xl p-4 text-sm text-white/90 focus:outline-none focus:ring-1 focus:ring-primary/50 min-h-[100px] resize-none leading-relaxed transition-all"
+                                                        placeholder="나만의 스토리로 수정해 보세요..."
+                                                    />
                                                 ) : (
                                                     <TypewriterText text={story} />
                                                 )}
@@ -496,33 +532,121 @@ export default function MemoryGenerator() {
                             </div>
                         </div>
                     ) : (
-                        /* Password Generator UI */
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <p className="text-slate-400 text-lg font-normal mb-8 leading-relaxed">안전한 비밀번호를 생성하고<br className="hidden md:block" /> 메밋으로 쉽게 기억하세요.</p>
-                            <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6 mb-6">
-                                <div className="flex flex-col gap-6">
-                                    <div>
-                                        <div className="flex justify-between mb-2"><label className="text-sm font-medium text-slate-300">비밀번호 길이</label><span className="text-sm font-bold text-[#8B5CF6]">{passwordLength}자</span></div>
-                                        <input type="range" min="8" max="32" value={passwordLength} onChange={(e) => setPasswordLength(parseInt(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#8B5CF6]" />
+
+                            <div className="flex flex-col gap-3 mb-8">
+                                <div className="lighting-border group p-[3px] rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.15)]">
+                                    <div className="relative z-10 bg-white rounded-2xl p-2 flex flex-col items-center gap-2 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)] transition-all overflow-hidden focus-within:shadow-[inset_0_2px_15px_rgba(168,85,247,0.15)]">
+                                        <div className="flex-1 w-full relative">
+                                            <textarea
+                                                className="w-full bg-transparent border-none text-slate-900 placeholder-slate-400 focus:ring-0 resize-none py-6 px-6 focus:outline-none min-h-[120px] text-center text-xl font-medium leading-relaxed placeholder:text-lg placeholder:font-normal"
+                                                placeholder="예: 우리 집 강아지 해피의 생일과 좋아하는 간식"
+                                                rows={2}
+                                                value={passwordStory}
+                                                onChange={(e) => setPasswordStory(e.target.value)}
+                                            ></textarea>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-4">
-                                        <label className="flex items-center gap-2 cursor-pointer group"><div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${includeNumbers ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-slate-500 group-hover:border-slate-400'}`}>{includeNumbers && <Check className="w-3.5 h-3.5 text-white" />}</div><input type="checkbox" checked={includeNumbers} onChange={() => setIncludeNumbers(!includeNumbers)} className="hidden" /><span className="text-sm text-slate-300 group-hover:text-white transition-colors">숫자 포함</span></label>
-                                        <label className="flex items-center gap-2 cursor-pointer group"><div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${includeSpecial ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-slate-500 group-hover:border-slate-400'}`}>{includeSpecial && <Check className="w-3.5 h-3.5 text-white" />}</div><input type="checkbox" checked={includeSpecial} onChange={() => setIncludeSpecial(!includeSpecial)} className="hidden" /><span className="text-sm text-slate-300 group-hover:text-white transition-colors">특수문자 포함</span></label>
+                                </div>
+
+                                <button
+                                    onClick={async () => {
+                                        if (!passwordStory.trim() || generatingStoryPassword) return;
+                                        setGeneratingStoryPassword(true);
+                                        const res = await generatePasswordFromStoryAction(passwordStory);
+                                        if (res.success && res.data) {
+                                            setPasswordResult(res.data.password);
+                                            setPasswordMapping(res.data.mapping);
+                                        } else {
+                                            alert(res.error || '실패했습니다.');
+                                        }
+                                        setGeneratingStoryPassword(false);
+                                    }}
+                                    disabled={generatingStoryPassword}
+                                    className="w-full py-4 bg-[#8B5CF6] hover:bg-[#7c4dff] text-white rounded-xl font-bold transition-all shadow-lg shadow-[#8B5CF6]/30 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                                >
+                                    {generatingStoryPassword ? (
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <Sparkles className="w-5 h-5 text-yellow-300" />
+                                    )}
+                                    <span>{generatingStoryPassword ? '분석 중...' : '스토리로 비밀번호 만들기'}</span>
+                                </button>
+                            </div>
+
+                            {passwordResult && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                                    <div className="p-6 rounded-2xl bg-white shadow-xl border border-primary/10 relative">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Generated Password</span>
+                                                <div className="font-mono text-4xl text-slate-900 font-black tracking-[0.2em]">
+                                                    {passwordResult}
+                                                </div>
+                                            </div>
+                                            <button onClick={copyPassword} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-primary transition-all active:scale-90 border border-slate-100">
+                                                {passwordCopied ? <Check className="w-6 h-6 text-green-500" /> : <Copy className="w-6 h-6" />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {passwordMapping.length > 0 && (
+                                        <div className="bg-slate-900/50 backdrop-blur-md rounded-2xl p-5 border border-primary/20">
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <Brain className="w-4 h-4 text-primary" />
+                                                <span className="text-xs font-bold text-primary-light uppercase tracking-wider">기억 가이드 (Recall Helper)</span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {passwordMapping.map((item, idx) => (
+                                                    <div key={idx} className="flex items-center bg-slate-800 rounded-lg px-3 py-2 border border-white/5">
+                                                        <span className="text-slate-300 text-sm mr-2">{item.word}</span>
+                                                        <span className="text-primary font-mono font-bold text-lg leading-none">{item.code}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <p className="mt-4 text-[11px] text-slate-500 italic">
+                                                * 스토리 속 단어들을 순서대로 기억하면 번호가 자동으로 떠오릅니다.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="mt-8 pt-8 border-t border-slate-800/50">
+                                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <Info className="w-3 h-3" /> 기존 방식 (보안 전문가 추천)
+                                </h4>
+                                <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6">
+                                    <div className="flex flex-col gap-6">
+                                        <div>
+                                            <div className="flex justify-between mb-2"><label className="text-sm font-medium text-slate-300">비밀번호 길이</label><span className="text-sm font-bold text-[#8B5CF6]">{passwordLength}자</span></div>
+                                            <input type="range" min="8" max="32" value={passwordLength} onChange={(e) => setPasswordLength(parseInt(e.target.value))} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#8B5CF6]" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <label className="flex items-center gap-2 cursor-pointer group bg-slate-900/50 p-3 rounded-xl border border-white/5 hover:border-primary/30 transition-all">
+                                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${includeNumbers ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-slate-500 group-hover:border-slate-400'}`}>
+                                                    {includeNumbers && <Check className="w-3.5 h-3.5 text-white" />}
+                                                </div>
+                                                <input type="checkbox" checked={includeNumbers} onChange={() => setIncludeNumbers(!includeNumbers)} className="hidden" />
+                                                <span className="text-sm text-slate-300 group-hover:text-white transition-colors">숫자 포함</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer group bg-slate-900/50 p-3 rounded-xl border border-white/5 hover:border-primary/30 transition-all">
+                                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${includeSpecial ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-slate-500 group-hover:border-slate-400'}`}>
+                                                    {includeSpecial && <Check className="w-3.5 h-3.5 text-white" />}
+                                                </div>
+                                                <input type="checkbox" checked={includeSpecial} onChange={() => setIncludeSpecial(!includeSpecial)} className="hidden" />
+                                                <span className="text-sm text-slate-300 group-hover:text-white transition-colors">특수문자 포함</span>
+                                            </label>
+                                        </div>
+                                        <button onClick={generatePassword} className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-bold transition-all border border-white/5">랜덤 생성하기</button>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex gap-2"><button onClick={generatePassword} className="flex-1 py-4 bg-[#8B5CF6] hover:bg-[#7c4dff] text-white rounded-xl font-bold transition-all shadow-lg shadow-[#8B5CF6]/30 flex items-center justify-center gap-2 active:scale-[0.98]"><Sparkles className="w-5 h-5 text-yellow-300" /><span>비밀번호 생성하기</span></button></div>
-                            {passwordResult && (
-                                <div className="mt-6 p-5 rounded-2xl bg-[#8B5CF6]/10 border border-[#8B5CF6]/20 relative animate-in fade-in slide-in-from-top-4 duration-500">
-                                    <div className="flex items-center justify-between gap-4"><div className="font-mono text-xl sm:text-2xl text-white font-bold tracking-wider break-all">{passwordResult}</div><button onClick={copyPassword} className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors">{passwordCopied ? <Check className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5" />}</button></div>
-                                    <div className="mt-2 text-xs text-[#8B5CF6] font-medium">✨ 안전한 비밀번호가 생성되었습니다.</div>
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>
             </div>
-        </section>
+        </section >
     );
 }
 

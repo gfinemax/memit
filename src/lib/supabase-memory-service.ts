@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/client';
-import { MemoryService, SystemCodeMap, SystemType } from './memory-service';
+import { MemoryService, SystemCodeMap, SystemType, UserMemory } from './memory-service';
 
 export class SupabaseMemoryService implements MemoryService {
     async getMapping(type: SystemType, code: string): Promise<SystemCodeMap | null> {
@@ -110,6 +110,120 @@ export class SupabaseMemoryService implements MemoryService {
         }
 
         return result;
+    }
+
+    async saveMemory(memoryData: Omit<UserMemory, 'id' | 'created_at'>): Promise<UserMemory | null> {
+        const supabase = createClient();
+        if (!supabase) {
+            console.error("Supabase client not initialized");
+            return null;
+        }
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            console.error("No authenticated user found");
+            return null;
+        }
+
+        // Proactively ensure profile exists to avoid FK errors
+        try {
+            await supabase.from('profiles').upsert({
+                id: user.id,
+                email: user.email,
+                updated_at: new Date().toISOString()
+            });
+        } catch (e) {
+            console.warn("Profile sync warning:", e);
+        }
+
+        const insertData = {
+            user_id: user.id,
+            input_data: memoryData.input_number,
+            encoded_data: {
+                story: memoryData.story,
+                keywords: memoryData.keywords,
+                strategy: memoryData.strategy
+            },
+            image_url: memoryData.image_url,
+            metadata: {
+                context: memoryData.context
+            },
+            source_type: 'AI_GENERATED'
+        };
+
+        const { data, error } = await supabase
+            .from('memories')
+            .insert(insertData)
+            .select()
+            .single();
+
+        if (error || !data) {
+            console.error("Save memory FAILED", {
+                code: error?.code,
+                message: error?.message,
+                hint: error?.hint,
+                details: error?.details
+            });
+            return null;
+        }
+
+        return {
+            id: data.id,
+            input_number: data.input_data,
+            keywords: data.encoded_data.keywords,
+            story: data.encoded_data.story,
+            image_url: data.image_url,
+            context: data.metadata?.context,
+            strategy: data.encoded_data.strategy,
+            created_at: data.created_at
+        };
+    }
+
+    async getMemories(): Promise<UserMemory[]> {
+        const supabase = createClient();
+        if (!supabase) return [];
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        const { data, error } = await supabase
+            .from('memories')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+        if (error || !data) {
+            console.error("Get memories FAILED", error);
+            return [];
+        }
+
+        return data.map(item => ({
+            id: item.id,
+            input_number: item.input_data,
+            keywords: item.encoded_data?.keywords || [],
+            story: item.encoded_data?.story || '',
+            image_url: item.image_url,
+            context: item.metadata?.context,
+            strategy: item.encoded_data?.strategy || 'SCENE',
+            created_at: item.created_at
+        }));
+    }
+
+    async deleteMemory(id: string): Promise<boolean> {
+        const supabase = createClient();
+        if (!supabase) return false;
+
+        const { error } = await supabase
+            .from('memories')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error("Delete memory FAILED", error);
+            return false;
+        }
+
+        return true;
     }
 }
 

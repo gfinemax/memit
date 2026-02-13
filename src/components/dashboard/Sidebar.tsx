@@ -10,7 +10,8 @@ import {
     GraduationCap,
     BarChart2,
     Users,
-    ChevronDown
+    ChevronDown,
+    Settings
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -46,8 +47,8 @@ export default function Sidebar() {
                         key={item.href}
                         href={item.href}
                         className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${isActive(item.href)
-                                ? 'bg-primary/20 text-white border border-primary/20'
-                                : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+                            ? 'bg-primary/20 text-white border border-primary/20'
+                            : 'hover:bg-slate-800 text-slate-400 hover:text-white'
                             }`}
                     >
                         <item.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${isActive(item.href) ? 'text-white' : ''}`} />
@@ -64,8 +65,8 @@ export default function Sidebar() {
                         key={item.href}
                         href={item.href}
                         className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${isActive(item.href)
-                                ? 'bg-primary/20 text-white border border-primary/20'
-                                : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+                            ? 'bg-primary/20 text-white border border-primary/20'
+                            : 'hover:bg-slate-800 text-slate-400 hover:text-white'
                             }`}
                     >
                         <item.icon className="w-5 h-5 lg:w-6 lg:h-6" />
@@ -74,21 +75,17 @@ export default function Sidebar() {
                 ))}
             </nav>
 
-            <div className="px-3 lg:px-4">
-                <button className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800 transition-colors text-left group">
-                    <div className="relative">
-                        <div className="w-10 h-10 rounded-full border-2 border-slate-700 bg-slate-800 overflow-hidden">
-                            {/* Placeholder for user avatar */}
-                            <div className="w-full h-full flex items-center justify-center text-slate-500 font-bold">U</div>
-                        </div>
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#020617] rounded-full"></div>
-                    </div>
-                    <div className="hidden lg:block overflow-hidden">
-                        <p className="text-sm font-semibold truncate text-white group-hover:text-primary transition-colors">User Name</p>
-                        <p className="text-xs text-slate-500 truncate">Free Plan</p>
-                    </div>
-                    <ChevronDown className="w-4 h-4 text-slate-400 ml-auto hidden lg:block" />
-                </button>
+            <div className="px-3 lg:px-4 mt-auto border-t border-slate-800 pt-6">
+                <Link
+                    href="/dashboard/settings"
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${isActive('/dashboard/settings')
+                        ? 'bg-primary/20 text-white border border-primary/20'
+                        : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                >
+                    <Settings className={`w-5 h-5 lg:w-6 lg:h-6 ${isActive('/dashboard/settings') ? 'text-white' : ''}`} />
+                    <span className="hidden lg:block font-medium">설정</span>
+                </Link>
             </div>
         </aside>
     );

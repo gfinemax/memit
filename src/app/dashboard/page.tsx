@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import MemoryGenerator from '@/components/dashboard/MemoryGenerator';
 import FeatureCards from '@/components/dashboard/FeatureCards';
 import RecentMemories from '@/components/dashboard/RecentMemories';
@@ -7,6 +9,12 @@ import DailyMission from '@/components/dashboard/DailyMission';
 import MobileHome from '@/components/mobile/MobileHome';
 
 export default function DashboardPage() {
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    const handleMemorySaved = () => {
+        setRefreshKey(prev => prev + 1);
+    };
+
     return (
         <>
             {/* Desktop Dashboard View */}
@@ -15,7 +23,7 @@ export default function DashboardPage() {
                     <div className="col-span-12 space-y-8">
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                             <div className="lg:col-span-12 xl:col-span-12">
-                                <MemoryGenerator />
+                                <MemoryGenerator onMemorySaved={handleMemorySaved} />
                             </div>
                         </div>
 
@@ -23,7 +31,7 @@ export default function DashboardPage() {
                             {/* Major Features & Recent Memories */}
                             <div className="xl:col-span-8 space-y-8">
                                 <FeatureCards />
-                                <RecentMemories />
+                                <RecentMemories key={refreshKey} />
                             </div>
 
                             {/* Right Sidebar Widgets */}
