@@ -27,23 +27,51 @@ export default function LoginPage() {
         }
 
         try {
+            // Capacitor Native Platform check
+            const { Capacitor } = await import('@capacitor/core');
+            const isNative = Capacitor.isNativePlatform();
             const origin = typeof window !== 'undefined' ? window.location.origin : '';
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: `${origin}/auth/callback`,
-                    queryParams: {
-                        prompt: 'consent',
-                    }
-                },
-            });
-            if (error) throw error;
+
+            if (isNative) {
+                // Mobile: Use @capacitor/browser to avoid "disallowed_useragent"
+                const { Browser } = await import('@capacitor/browser');
+
+                // 1. Get OAuth URL from Supabase (skipBrowserRedirect: true)
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `com.memit.app://auth/callback`, // Deep link scheme
+                        skipBrowserRedirect: true,
+                        queryParams: {
+                            prompt: 'consent',
+                        }
+                    },
+                });
+
+                if (error) throw error;
+                if (data?.url) {
+                    // 2. Open System Browser
+                    await Browser.open({ url: data.url });
+                }
+            } else {
+                // Web: Standard Redirect
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${origin}/auth/callback`,
+                        queryParams: {
+                            prompt: 'consent',
+                        }
+                    },
+                });
+                if (error) throw error;
+            }
         } catch (error: any) {
             console.error('Error logging in with Google:', error);
             if (error.message && error.message.includes('provider is not enabled')) {
                 alert('Supabase 프로젝트에서 Google 로그인이 활성화되지 않았습니다.\nAuthentication > Providers > Google을 활성화해주세요.');
             } else {
-                alert('구글 로그인 중 오류가 발생했습니다.');
+                alert(`구글 로그인 중 오류가 발생했습니다: ${error.message}`);
             }
         }
     };
@@ -135,6 +163,7 @@ export default function LoginPage() {
                                             className="block w-full pl-10 pr-3 py-3 bg-background-dark/50 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300"
                                             id="email"
                                             placeholder="nomad@memit.ai"
+                                            type="email"
                                             type="email"
                                         />
                                     </div>
