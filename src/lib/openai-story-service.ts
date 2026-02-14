@@ -255,28 +255,32 @@ export class OpenAIStoryService {
     private async refineImagePrompt(story: string, context?: string, isQuad: boolean = false): Promise<string> {
         const refinementPrompt = `
       You are an expert prompt engineer for DALL-E 3.
-      Take the following story and its context, then merge and rephrase them into a single vivid, surreal, and high-quality image generation prompt.
+      Take the following story and its context, then transform and expand them into a single, highly detailed, and visually descriptive English prompt optimized for DALL-E 3.
       
       **Story**: "${story}"
       **Context**: "${context || 'General Memory'}"
       
-      ${isQuad ? `**LAYOUT & STYLE REQUIREMENT**: 
-      1. Format the image as a "4-panel comic strip" or "quad-panel storyboard" (2x2 grid).
-      2. Use a "Vibrant Digital Comic/Manga" art style with clear black ink outlines.
-      3. Include distinct panel borders (thin white or black lines) separating the quadrants.
-      4. Each panel should represent a sequential beat of the story.
-      5. Add dynamic "action lines" or "motion blur" in relevant panels to emphasize movement and impact.` : ''}
-
-      **Requirements**:
-      1. **Safety First**: DALL-E 3 has strict safety filters. 
-         - Transform "violent/scary/sensitive" words into "mystical/grand/artistic" metaphors.
-         - Transform terms like "password", "bank", "locked", "secret" into objects like "ancient glowing scrolls", "celestial gate", "mysterious floating key".
-      2. **Maintain Impact**: The image should feel remarkable and surreal.
-      3. **Visual Depth**: Describe lighting, atmosphere, and cinematic composition.
-      4. **No Text**: Do not include any text or numbers in the image.
-      5. **Language**: Output the prompt in English only.
+      **DALL-E 3 PROMPT STRUCTURE**:
+      - **Type**: Specify if it is a photo, digital art, oil painting, or 3D render.
+      - **Subject**: Describe the main characters or objects in vivid detail.
+      - **Features**: Add specific attributes (textures, materials, facial expressions).
+      - **Setting/Composition**: Describe the background, foreground, and specific placement of elements. Mention camera angles (e.g., wide-angle, macro, low-angle) and lighting (e.g., cinematic lighting, volumetric fog, golden hour).
+      - **Mood/Style**: Define the emotional tone and consistent artistic style.
       
-      Return ONLY the refined English prompt string.
+      ${isQuad ? `**SEQUENTIAL COMIC REQUIREMENTS (Mnemonic Optimized)**: 
+      1. Layout: 4-panel sequential comic grid (2x2).
+      2. Style: "Vibrant, High-Quality Educational Manga Style" with clean, sharp ink outlines and bright, distinct colors.
+      3. Mnemonic Focus: Ensure the subject of each panel is highly prominent and exaggerated for easier memorization.
+      4. Narrative: Each panel must represent a clear, logical step of the "story beats", structured like a visual learning guide.
+      5. Framing: Use simple, uncluttered backgrounds to keep the focus on the primary objects and their interactions.` : ''}
+
+      **CRITICAL PRINCIPLES**:
+      1. **Expand, Don't Just Translate**: Turn simple nouns into descriptive phrases (e.g., instead of "apple", use "a glistening, crystalline apple pulsing with inner crimson light").
+      2. **Safety Transformation**: Rephrase any sensitive or violent concepts into epic, mystical, or grand metaphors to avoid safety filters.
+      3. **No Text**: Explicitly forbid any alphanumeric characters, signs, or text within the image.
+      4. **Visual Depth**: Use 5-7 descriptive adjectives per major element to ensure high fidelity and unique interpretation.
+      
+      Return ONLY the final English prompt string.
     `;
 
         try {
@@ -305,11 +309,14 @@ export class OpenAIStoryService {
                 n: 1,
                 size: "1024x1024",
                 quality: "hd",
+                response_format: "b64_json" // Changed to skip CORS fetch later
             });
 
-            const url = response.data?.[0]?.url;
-            if (!url) throw new Error("No image URL returned from OpenAI");
-            return url;
+            const b64Data = response.data?.[0]?.b64_json;
+            if (!b64Data) throw new Error("No image data returned from OpenAI");
+
+            // Return data URL so image shows up immediately on UI
+            return `data:image/png;base64,${b64Data}`;
         } catch (error: any) {
             console.error("OpenAI Image Generation Error:", error);
             // Handle safety filter error specially

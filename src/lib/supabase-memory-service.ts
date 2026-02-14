@@ -6,11 +6,8 @@ export class SupabaseMemoryService implements MemoryService {
         const supabase = createClient();
         if (!supabase) return null;
 
-        // Get user session to check for overrides
         const { data: { user } } = await supabase.auth.getUser();
 
-        // Query prioritizing user custom rows (Layered logic)
-        // Ordering by user_id NULLS LAST to get the user's override first if it exists
         const { data, error } = await supabase
             .from('system_code_maps')
             .select('*')
@@ -38,17 +35,14 @@ export class SupabaseMemoryService implements MemoryService {
 
         const { data: { user } } = await supabase.auth.getUser();
 
-        // This is a complex query to handle layering in keyword search
-        // For now, we fetch both and deduplicate in code or use a clever query
         const { data, error } = await supabase
             .from('system_code_maps')
             .select('*')
-            .contains('keywords', [query]) // Simple contains check
+            .contains('keywords', [query])
             .or(`user_id.is.null,user_id.eq.${user?.id || '00000000-0000-0000-0000-000000000000'}`);
 
         if (error || !data) return [];
 
-        // Deduplicate: User override wins
         const resultMap = new Map<string, any>();
         data.forEach(item => {
             const key = `${item.type}-${item.code}`;
@@ -72,8 +66,6 @@ export class SupabaseMemoryService implements MemoryService {
 
         while (remaining.length > 0) {
             let match: SystemCodeMap | null = null;
-
-            // Try 3 digits
             if (remaining.length >= 3) {
                 const chunk = remaining.substring(0, 3);
                 match = await this.getMapping('3D', chunk);
@@ -83,8 +75,6 @@ export class SupabaseMemoryService implements MemoryService {
                     continue;
                 }
             }
-
-            // Try 2 digits
             if (remaining.length >= 2) {
                 const chunk = remaining.substring(0, 2);
                 match = await this.getMapping('2D', chunk);
@@ -94,8 +84,6 @@ export class SupabaseMemoryService implements MemoryService {
                     continue;
                 }
             }
-
-            // Fallback for 1 digit
             if (remaining.length === 1) {
                 const chunk = '0' + remaining;
                 match = await this.getMapping('2D', chunk);
@@ -105,10 +93,8 @@ export class SupabaseMemoryService implements MemoryService {
                 remaining = remaining.substring(1);
                 continue;
             }
-
             remaining = remaining.substring(1);
         }
-
         return result;
     }
 
@@ -125,7 +111,6 @@ export class SupabaseMemoryService implements MemoryService {
             return null;
         }
 
-        // Proactively ensure profile exists to avoid FK errors
         try {
             await supabase.from('profiles').upsert({
                 id: user.id,
@@ -136,6 +121,18 @@ export class SupabaseMemoryService implements MemoryService {
             console.warn("Profile sync warning:", e);
         }
 
+        let finalImageUrl = memoryData.image_url;
+        const isExternalUrl = (finalImageUrl?.startsWith('http') || finalImageUrl?.startsWith('data:')) &&
+            !finalImageUrl.includes('.supabase.co/storage/v1/object/public/');
+
+        if (isExternalUrl) {
+            const fileName = `${user.id}/${Date.now()}.png`;
+            const uploadedUrl = await this.uploadImage(finalImageUrl!, fileName);
+            if (uploadedUrl) {
+                finalImageUrl = uploadedUrl;
+            }
+        }
+
         const insertData = {
             user_id: user.id,
             input_data: memoryData.input_number,
@@ -144,9 +141,11 @@ export class SupabaseMemoryService implements MemoryService {
                 keywords: memoryData.keywords,
                 strategy: memoryData.strategy
             },
-            image_url: memoryData.image_url,
+            image_url: finalImageUrl,
             metadata: {
-                context: memoryData.context
+                context: memoryData.context,
+                category: memoryData.category,
+                isFavorite: memoryData.isFavorite || false
             },
             source_type: 'AI_GENERATED'
         };
@@ -158,12 +157,7 @@ export class SupabaseMemoryService implements MemoryService {
             .single();
 
         if (error || !data) {
-            console.error("Save memory FAILED", {
-                code: error?.code,
-                message: error?.message,
-                hint: error?.hint,
-                details: error?.details
-            });
+            console.error("Save memory FAILED", error);
             return null;
         }
 
@@ -174,9 +168,57 @@ export class SupabaseMemoryService implements MemoryService {
             story: data.encoded_data.story,
             image_url: data.image_url,
             context: data.metadata?.context,
+            category: data.metadata?.category,
+            isFavorite: data.metadata?.isFavorite || false,
             strategy: data.encoded_data.strategy,
             created_at: data.created_at
         };
+    }
+
+    async uploadImage(url: string, path: string): Promise<string | null> {
+        const supabase = createClient();
+        if (!supabase) {
+            console.error("Supabase client not found in uploadImage");
+            return null;
+        }
+
+        const BUCKET_NAME = 'memory-images';
+
+        try {
+            console.log(`Attempting to persist image: ${url.startsWith('data:') ? 'Base64/DataURL' : url} -> ${path}`);
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error(`Failed to fetch remote image: ${response.status} ${response.statusText}`);
+                throw new Error('Failed to fetch image');
+            }
+            const blob = await response.blob();
+            console.log(`Image fetched successfully. Size: ${blob.size} bytes`);
+
+            const { data, error } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(path, blob, {
+                    contentType: 'image/png',
+                    upsert: true
+                });
+
+            if (error) {
+                console.error("Supabase Storage upload error:", error);
+                if (error.message.includes('bucket not found')) {
+                    console.error(`CRITICAL: '${BUCKET_NAME}' bucket is missing in Supabase!`);
+                }
+                throw error;
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(path);
+
+            console.log(`Image persisted successfully. Public URL: ${publicUrl}`);
+            return publicUrl;
+        } catch (error) {
+            console.error("Image persistence pipeline FAILED", error);
+            return null;
+        }
     }
 
     async getMemories(): Promise<UserMemory[]> {
@@ -189,7 +231,7 @@ export class SupabaseMemoryService implements MemoryService {
         const { data, error } = await supabase
             .from('memories')
             .select('*')
-            .eq('user_id', user.id)
+            .is('deleted_at', null)
             .order('created_at', { ascending: false });
 
         if (error || !data) {
@@ -204,26 +246,56 @@ export class SupabaseMemoryService implements MemoryService {
             story: item.encoded_data?.story || '',
             image_url: item.image_url,
             context: item.metadata?.context,
+            category: item.metadata?.category,
+            isFavorite: item.metadata?.isFavorite || false,
             strategy: item.encoded_data?.strategy || 'SCENE',
             created_at: item.created_at
         }));
     }
 
-    async deleteMemory(id: string): Promise<boolean> {
+    async deleteMemory(id: string): Promise<{ success: boolean; error?: string }> {
         const supabase = createClient();
-        if (!supabase) return false;
+        if (!supabase) return { success: false, error: 'Supabase not initialized' };
 
         const { error } = await supabase
             .from('memories')
-            .delete()
+            .update({ deleted_at: new Date().toISOString() })
             .eq('id', id);
 
         if (error) {
-            console.error("Delete memory FAILED", error);
-            return false;
+            console.error("Delete memory (soft) FAILED", error);
+            return { success: false, error: error.message };
         }
 
-        return true;
+        return { success: true };
+    }
+
+    async toggleFavorite(id: string, isFavorite: boolean): Promise<{ success: boolean; error?: string }> {
+        const supabase = createClient();
+        if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+        const { data: memory, error: fetchError } = await supabase
+            .from('memories')
+            .select('metadata')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !memory) {
+            return { success: false, error: fetchError?.message || 'Memory not found' };
+        }
+
+        const newMetadata = {
+            ...(memory.metadata || {}),
+            isFavorite: isFavorite
+        };
+
+        const { error: updateError } = await supabase
+            .from('memories')
+            .update({ metadata: newMetadata })
+            .eq('id', id);
+
+        if (updateError) return { success: false, error: updateError.message };
+        return { success: true };
     }
 }
 

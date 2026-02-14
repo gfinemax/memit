@@ -16,6 +16,9 @@ export interface UserMemory {
     image_url?: string;
     context?: string;
     strategy: string;
+    category?: string;
+    isFavorite?: boolean;
+    deleted_at?: string | null;
     created_at?: string;
 }
 
@@ -25,5 +28,6 @@ export interface MemoryService {
     convertNumberToKeywords(number: string): Promise<string[]>;
     saveMemory(memory: Omit<UserMemory, 'id' | 'created_at'>): Promise<UserMemory | null>;
     getMemories(): Promise<UserMemory[]>;
-    deleteMemory(id: string): Promise<boolean>;
+    deleteMemory(id: string): Promise<{ success: boolean; error?: string }>;
+    uploadImage(url: string, path: string): Promise<string | null>;
 }

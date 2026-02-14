@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { convertNumberAction, saveMemoryAction, generatePasswordFromStoryAction } from '@/app/actions';
 import { openAIStoryService } from '@/lib/openai-story-service';
 
-export default function MemoryGenerator({ onMemorySaved }: { onMemorySaved?: () => void }) {
+export default function MemoryGenerator({ onMemorySaved, category = 'general' }: { onMemorySaved?: () => void, category?: string }) {
     const [activeTab, setActiveTab] = useState<'memory' | 'password'>('memory');
     const [isKeyExpanded, setIsKeyExpanded] = useState(false);
 
@@ -145,12 +145,54 @@ export default function MemoryGenerator({ onMemorySaved }: { onMemorySaved?: () 
         }
     };
 
+    const [generatingMessageIndex, setGeneratingMessageIndex] = useState(0);
+    const [generationProgress, setGenerationProgress] = useState(0);
+
+    const generationMessages = [
+        "스토리에서 핵심 이미지를 추출하는 중...",
+        "캔버스에 기억의 조각들을 배치 중...",
+        "AI가 초안 스케치를 진행하고 있습니다...",
+        "DALL-E가 정교한 붓 터치를 시작합니다...",
+        "공간의 깊이와 조명 효과를 불어넣는 중...",
+        "마지막 디테일과 질감을 다듬고 있습니다...",
+        "거의 다 되었습니다! 이미지를 현상 중..."
+    ];
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        let msgInterval: NodeJS.Timeout;
+
+        if (generatingImage) {
+            setGenerationProgress(0);
+            setGeneratingMessageIndex(0);
+
+            // Progress bar logic (roughly 30 seconds)
+            interval = setInterval(() => {
+                setGenerationProgress(prev => {
+                    if (prev >= 95) return prev; // Hold at 95% until done
+                    return prev + (100 / (30 * 10)); // ~30 seconds for 100%
+                });
+            }, 100);
+
+            // Message rotation logic
+            msgInterval = setInterval(() => {
+                setGeneratingMessageIndex(prev => (prev + 1) % generationMessages.length);
+            }, 4000);
+        }
+
+        return () => {
+            clearInterval(interval);
+            clearInterval(msgInterval);
+        };
+    }, [generatingImage]);
+
     const handleGenerateImage = async () => {
         if (!story || generatingImage) return;
         setGeneratingImage(true);
         try {
             const url = await openAIStoryService.generateImage(story, context, imageType === 'quad');
             setImageUrl(url);
+            setGenerationProgress(100);
         } catch (error: any) {
             console.error("Image generation failed:", error);
             if (error.message === "SAFETY_FILTER_TRIGGERED") {
@@ -172,7 +214,8 @@ export default function MemoryGenerator({ onMemorySaved }: { onMemorySaved?: () 
                 story: story,
                 image_url: imageUrl || undefined,
                 context: context || undefined,
-                strategy: strategy
+                strategy: strategy,
+                category: category
             });
             if (res.success) {
                 setIsSaved(true);
@@ -214,9 +257,12 @@ export default function MemoryGenerator({ onMemorySaved }: { onMemorySaved?: () 
     };
 
     return (
-        <section className="glass-panel p-8 rounded-3xl relative overflow-hidden group h-full flex flex-col justify-center transition-all duration-500">
-            <div className="absolute -right-20 -top-20 w-80 h-80 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/30 transition-all duration-700 pointer-events-none"></div>
-            <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-[#8B5CF6]/20 rounded-full blur-3xl group-hover:bg-[#8B5CF6]/30 transition-all duration-700 pointer-events-none"></div>
+        <section className="glass-panel p-8 rounded-3xl relative group h-full flex flex-col justify-center transition-all duration-500">
+            {/* Background Decorations Container - to prevent blobs from overflowing but allow popovers to show */}
+            <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+                <div className="absolute -right-20 -top-20 w-80 h-80 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/30 transition-all duration-700"></div>
+                <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-[#8B5CF6]/20 rounded-full blur-3xl group-hover:bg-[#8B5CF6]/30 transition-all duration-700"></div>
+            </div>
 
             <div className="relative z-10 w-full flex flex-col h-full">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
@@ -403,20 +449,20 @@ export default function MemoryGenerator({ onMemorySaved }: { onMemorySaved?: () 
                                                                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                                                         exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                                                                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 bg-slate-900/95 backdrop-blur-xl border border-primary/30 rounded-xl shadow-2xl overflow-hidden min-w-[120px]"
+                                                                        className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 bg-slate-900/95 backdrop-blur-xl border border-primary/30 rounded-xl shadow-2xl overflow-hidden min-w-[180px]"
                                                                     >
                                                                         <div className="p-1 px-2 border-b border-primary/10 bg-primary/5">
                                                                             <span className="text-[10px] text-primary/60 font-bold uppercase tracking-wider">단어 교체</span>
                                                                         </div>
-                                                                        <div className="p-1">
+                                                                        <div className="p-1 grid grid-cols-2 gap-1">
                                                                             {candidates[i]?.words.map((candidate) => (
                                                                                 <button
                                                                                     key={candidate}
                                                                                     onClick={() => handleSingleWordChange(i, candidate)}
-                                                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between group ${candidate === word ? 'bg-primary/20 text-primary-light' : 'text-slate-300 hover:bg-white/5'}`}
+                                                                                    className={`w-full text-left px-2 py-2 rounded-lg text-sm transition-colors flex items-center justify-between group ${candidate === word ? 'bg-primary/20 text-primary-light' : 'text-slate-300 hover:bg-white/5'}`}
                                                                                 >
-                                                                                    <span>{candidate}</span>
-                                                                                    {candidate === word && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
+                                                                                    <span className="truncate">{candidate}</span>
+                                                                                    {candidate === word && <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 ml-1 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />}
                                                                                 </button>
                                                                             ))}
                                                                         </div>
@@ -430,7 +476,7 @@ export default function MemoryGenerator({ onMemorySaved }: { onMemorySaved?: () 
                                         </AnimatePresence>
                                     </div>
 
-                                    {story && (
+                                    {story !== null && (
                                         <div className="pt-4 border-t border-primary/20">
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex items-center gap-2">
@@ -472,7 +518,7 @@ export default function MemoryGenerator({ onMemorySaved }: { onMemorySaved?: () 
                                     )}
 
                                     <div className="mt-4 pt-4 border-t border-primary/20">
-                                        {!imageUrl ? (
+                                        {!imageUrl && !generatingImage ? (
                                             <div className="space-y-4">
                                                 <div className="flex gap-2">
                                                     <button
@@ -490,27 +536,82 @@ export default function MemoryGenerator({ onMemorySaved }: { onMemorySaved?: () 
                                                 </div>
                                                 <button
                                                     onClick={handleGenerateImage}
-                                                    disabled={generatingImage}
-                                                    className="w-full py-3 bg-gradient-to-r from-purple-600/50 to-pink-600/50 hover:from-purple-600 hover:to-pink-600 border border-white/10 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2 group"
+                                                    className="w-full py-3 bg-gradient-to-r from-purple-600/50 to-pink-600/50 hover:from-purple-600 hover:to-pink-600 border border-white/10 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2 group active:scale-[0.98]"
                                                 >
-                                                    {generatingImage ? (
-                                                        <>
-                                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                                            <span>AI가 {imageType === 'quad' ? '4컷 ' : ''}그림을 그리는 중... (약 10초)</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <span className="text-lg group-hover:scale-110 transition-transform">🎨</span>
-                                                            <span>이 장면을 {imageType === 'quad' ? '4컷 ' : ''}그림으로 보기 (DALL-E 3)</span>
-                                                        </>
-                                                    )}
+                                                    <span className="text-lg group-hover:scale-110 transition-transform">🎨</span>
+                                                    <span>이 장면을 {imageType === 'quad' ? '4컷 ' : ''}그림으로 보기 (DALL-E 3)</span>
                                                 </button>
                                             </div>
+                                        ) : generatingImage ? (
+                                            <div className="space-y-4 animate-in fade-in duration-500">
+                                                <div className="relative h-64 w-full bg-slate-900/60 rounded-2xl border border-primary/20 overflow-hidden flex flex-col items-center justify-center p-6 text-center">
+                                                    {/* Scanning Effect */}
+                                                    <motion.div
+                                                        animate={{ top: ['0%', '100%', '0%'] }}
+                                                        transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                                                        className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent z-10"
+                                                        style={{ top: '0%' }}
+                                                    />
+
+                                                    <div className="relative z-20 space-y-4">
+                                                        <div className="flex justify-center flex-wrap gap-2">
+                                                            <motion.div
+                                                                animate={{ rotate: 360 }}
+                                                                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                                                                className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full mb-2"
+                                                            />
+                                                        </div>
+
+                                                        <AnimatePresence mode="wait">
+                                                            <motion.div
+                                                                key={generatingMessageIndex}
+                                                                initial={{ opacity: 0, y: 10 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                exit={{ opacity: 0, y: -10 }}
+                                                                className="h-12 flex flex-col items-center justify-center"
+                                                            >
+                                                                <p className="text-sm font-bold text-white/90 drop-shadow-sm">
+                                                                    {generationMessages[generatingMessageIndex]}
+                                                                </p>
+                                                                <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest animate-pulse">
+                                                                    Processing Memory Frame...
+                                                                </p>
+                                                            </motion.div>
+                                                        </AnimatePresence>
+                                                    </div>
+
+                                                    <div className="absolute bottom-6 left-6 right-6 space-y-2">
+                                                        <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                                                            <span>Developing Image</span>
+                                                            <span>{Math.round(generationProgress)}%</span>
+                                                        </div>
+                                                        <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden border border-white/5">
+                                                            <motion.div
+                                                                className="h-full bg-gradient-to-r from-primary via-[#8B5CF6] to-pink-500"
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${generationProgress}%` }}
+                                                                transition={{ duration: 0.3 }}
+                                                            />
+                                                        </div>
+                                                        <p className="text-[10px] text-primary/60 font-medium">최신 DALL-E 3 모델을 사용하여 약 30초가 소요됩니다.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         ) : (
-                                            <div className="relative rounded-xl overflow-hidden shadow-2xl border border-white/10 group">
-                                                <img src={imageUrl} alt="AI Generated Mnemonic" className="w-full h-auto animate-in fade-in duration-700" />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                                <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-white/80 font-medium">Generated by DALL-E 3</div>
+                                            <div className="relative rounded-xl overflow-hidden shadow-2xl border border-white/10 group animate-in zoom-in-95 duration-700">
+                                                <img src={imageUrl!} alt="AI Generated Mnemonic" className="w-full h-auto" />
+                                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity flex justify-between items-end">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-white/60 font-bold tracking-widest uppercase">Generated Artwork</span>
+                                                        <span className="text-xs text-white font-medium">By DALL-E 3 (High Quality)</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setImageUrl(null)}
+                                                        className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white/80 transition-colors text-xs"
+                                                    >
+                                                        다시 그리기
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
                                     </div>

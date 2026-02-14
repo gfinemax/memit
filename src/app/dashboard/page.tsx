@@ -23,7 +23,7 @@ export default function DashboardPage() {
                     <div className="col-span-12 space-y-8">
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                             <div className="lg:col-span-12 xl:col-span-12">
-                                <MemoryGenerator onMemorySaved={handleMemorySaved} />
+                                <MemoryGenerator onMemorySaved={handleMemorySaved} category="general" />
                             </div>
                         </div>
 

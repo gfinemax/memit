@@ -100,6 +100,12 @@ Action: 랭킹 시스템 및 데일리 챌린지.
 ├── 📂 My Memit (Storage)
 │   ├── 저장된 기억 목록 (검색/필터 지원)
 │   └── 복습 테스트 (가리고 맞추기)
+### 6. My Memory Storage
+- **Categorization**: memories are automatically tagged by category (`security`, `learning`, `daily`, etc.) based on the page where they were generated.
+- **Favorites**: Users can toggle favorite status for quick filtering.
+- **Search & Filtering**: Search by content or filter by category via a responsive tab interface.
+- **Persistent Image Storage**: All AI-generated images (OpenAI Base64) are automatically uploaded to Supabase Storage (`memory-images` bucket) for permanent retention.
+- **Enhanced UX**: Animated grid layout, cinema-inspired image generation loading experience (30s progress bar + status messages).
 ├── ⚙️ Settings
 │   ├── 나만의 0~100 리스트 편집 (Customizing)
 │   └── 알림 설정

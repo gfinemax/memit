@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Mic, GraduationCap, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export default function FeatureCards() {
@@ -35,9 +36,9 @@ export default function FeatureCards() {
         <section>
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-white font-display">주요 기능</h3>
-                <a href="#" className="text-sm text-primary hover:text-[#8B5CF6] font-medium flex items-center gap-1 transition-colors">
+                <Link href="/dashboard/services" className="text-sm text-primary hover:text-[#8B5CF6] font-medium flex items-center gap-1 transition-colors">
                     전체보기 <ArrowRight className="w-4 h-4" />
-                </a>
+                </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

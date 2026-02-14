@@ -112,8 +112,8 @@ export async function getMemoriesAction() {
 
 export async function deleteMemoryAction(id: string) {
     try {
-        const success = await supabaseMemoryService.deleteMemory(id);
-        return { success };
+        const result = await supabaseMemoryService.deleteMemory(id);
+        return result;
     } catch (error) {
         console.error("Delete memory action error:", error);
         return { success: false, error: '삭제 중 오류가 발생했습니다.' };
@@ -183,5 +183,15 @@ export async function generatePasswordFromStoryAction(story: string) {
     } catch (error) {
         console.error("Story password generation error:", error);
         return { success: false, error: '비밀번호 생성 중 오류가 발생했습니다.' };
+    }
+}
+
+export async function toggleFavoriteAction(id: string, isFavorite: boolean) {
+    try {
+        const result = await supabaseMemoryService.toggleFavorite(id, isFavorite);
+        return result;
+    } catch (error) {
+        console.error("Toggle favorite action error:", error);
+        return { success: false, error: '실패했습니다.' };
     }
 }
