@@ -9,25 +9,39 @@ export default function Header() {
     const [profile, setProfile] = useState<any>(null);
 
     useEffect(() => {
-        const fetchUser = async () => {
-            const supabase = createClient();
-            if (!supabase) return;
+        const supabase = createClient();
+        if (!supabase) return;
 
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-
-            if (user) {
-                // Try to fetch profile if exists (optional)
-                const { data } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single();
-                setProfile(data);
-            }
+        const fetchProfile = async (userId: string) => {
+            const { data } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+            if (data) setProfile(data);
         };
 
-        fetchUser();
+        // 1. Initial check (getSession is faster/better for implicit flow than getUser often)
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) {
+                setUser(session.user);
+                fetchProfile(session.user.id);
+            }
+        });
+
+        // 2. Listen for changes (Login, Logout, Token Refresh)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                fetchProfile(session.user.id);
+            } else {
+                setProfile(null);
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     // Display Name Logic: Profile Name -> User Meta Name -> Email -> 'Guest'
