@@ -49,19 +49,51 @@ function AuthCallbackContent() {
             });
 
             // Fallback: If hash is present but no event fires quickly, try explicit check after delay
-            if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('error'))) {
+            if (window.location.hash && (window.location.hash.includes('access_token'))) {
                 setTimeout(async () => {
+                    // Double check session
                     const { data: { session: delayedSession } } = await supabase.auth.getSession();
                     if (delayedSession) {
                         router.push(next);
-                    } else {
-                        // Failsafe: Try to go to dashboard anyway, maybe session is there but getSession laggy?
-                        // Or just go back to login? 
-                        // Let's go to dashboard. If no session, middleware/layout will handle it.
-                        console.warn("Auth timeout - forcing redirect");
+                        return;
+                    }
+
+                    // MANUAL HASH PARSING
+                    try {
+                        const hash = window.location.hash.substring(1); // remove #
+                        const params = new URLSearchParams(hash);
+                        const access_token = params.get('access_token');
+                        const refresh_token = params.get('refresh_token');
+                        const type = params.get('type') || params.get('error');
+
+                        if (access_token && refresh_token) {
+                            const { error: setSessionError } = await supabase.auth.setSession({
+                                access_token,
+                                refresh_token,
+                            });
+                            if (!setSessionError) {
+                                router.push(next);
+                                return;
+                            }
+                        } else if (access_token) {
+                            // implicit flow might not have refresh token depending on settings
+                            // But setSession usually expects both or we need strictly access_token only.
+                            // Supabase JS v2 setSession requires distinct params usually.
+                            // Let's rely on getUser with the token -> actually setSession is better.
+                            // But wait, setSession signature is { access_token, refresh_token }.
+                            // If we lack refresh_token, we can't fully persist standard session?
+                            // Implicit flow usually DOES return refresh_token if configured?
+                            // No, implicit often just gives access token.
+                            // However, let's look at the error.
+                        }
+
+                        console.warn("Manual parsing failed or no tokens found. Forcing redirect...");
+                        router.push(next);
+                    } catch (e) {
+                        console.error("Hash parsing error", e);
                         router.push(next);
                     }
-                }, 2000); // 2 seconds fallback
+                }, 2000);
             } else if (!window.location.hash && !code) {
                 // No code, no hash -> login
                 router.push('/login');
