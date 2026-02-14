@@ -34,7 +34,7 @@ export default function LoginPage() {
                     redirectTo: `${origin}/auth/callback`,
                     queryParams: {
                         access_type: 'offline',
-                        prompt: 'consensus',
+                        prompt: 'consent',
                     }
                 },
             });
