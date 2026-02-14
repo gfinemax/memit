@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { Loader2 } from 'lucide-react';
 
 // Debug logger that persists to sessionStorage
@@ -29,106 +30,85 @@ function AuthCallbackContent() {
 
         const processAuth = async () => {
             debugLog(`Callback started. URL: ${window.location.href}`);
-            debugLog(`Hash present: ${!!window.location.hash}, Hash length: ${window.location.hash.length}`);
-            debugLog(`Hash content (first 100 chars): ${window.location.hash.substring(0, 100)}`);
-            debugLog(`Search params: ${window.location.search}`);
 
             const supabase = createClient();
             if (!supabase) {
-                debugLog('ERROR: Supabase client is null');
                 setError('Supabase client not initialized');
                 return;
             }
-            debugLog('Supabase client created');
 
-            // Step 1: Check existing session
+            // Step 1: Check existing session (Fast path)
             setStatus('세션 확인 중...');
-            debugLog('Step 1: Checking existing session...');
-            const { data: { session: existingSession }, error: sessionErr } = await supabase.auth.getSession();
-            debugLog(`Step 1 result: session=${!!existingSession}, error=${sessionErr?.message || 'none'}`);
-
+            const { data: { session: existingSession } } = await supabase.auth.getSession();
             if (existingSession && !cancelled) {
                 debugLog('Session exists! Redirecting...');
-                setStatus('로그인 완료! 이동 중...');
                 router.replace(next);
                 return;
             }
 
-            // Step 2: Manual hash token extraction and setSession
-            const hash = window.location.hash;
-            if (hash && hash.includes('access_token')) {
-                setStatus('토큰 처리 중...');
-                debugLog('Step 2: Hash has access_token, parsing...');
+            // Step 2: Handle PKCE Code (Mobile Flow)
+            const code = searchParams.get('code');
+            if (code) {
+                setStatus('모바일 인증 처리 중... (PKCE)');
+                debugLog('PKCE Code detected, exchanging for session...');
 
                 try {
-                    const params = new URLSearchParams(hash.substring(1));
-                    const access_token = params.get('access_token');
-                    const refresh_token = params.get('refresh_token');
-                    const token_type = params.get('token_type');
-                    const expires_in = params.get('expires_in');
+                    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+                    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-                    debugLog(`Tokens: access=${!!access_token} (${access_token?.substring(0, 20)}...), refresh=${!!refresh_token}, type=${token_type}, expires=${expires_in}`);
-
-                    if (access_token && refresh_token) {
-                        debugLog('Step 2a: Calling setSession with both tokens...');
-                        const { data, error: setErr } = await supabase.auth.setSession({
-                            access_token,
-                            refresh_token,
-                        });
-                        debugLog(`Step 2a result: session=${!!data.session}, user=${!!data.user}, error=${setErr?.message || 'none'}`);
-
-                        if (data.session && !cancelled) {
-                            // Verify it was saved to localStorage
-                            await new Promise(r => setTimeout(r, 500));
-                            const keys = Object.keys(localStorage).filter(k => k.includes('sb-') || k.includes('supabase'));
-                            debugLog(`localStorage after setSession: ${JSON.stringify(keys)}`);
-                            setStatus('로그인 완료! 이동 중...');
-                            router.replace(next);
-                            return;
+                    // Create temporary client for PKCE exchange using shared localStorage
+                    const mobileClient = createSupabaseClient(supabaseUrl, supabaseKey, {
+                        auth: {
+                            flowType: 'pkce',
+                            storage: window.localStorage, // Share storage with main client
+                            autoRefreshToken: true,
+                            persistSession: true,
+                            detectSessionInUrl: false,
                         }
-                    } else if (access_token && !refresh_token) {
-                        debugLog('Step 2b: Only access_token, no refresh_token. Trying setSession with empty refresh...');
-                        // Try with empty string for refresh_token
-                        const { data, error: setErr } = await supabase.auth.setSession({
-                            access_token,
-                            refresh_token: '',
-                        });
-                        debugLog(`Step 2b result: session=${!!data.session}, error=${setErr?.message || 'none'}`);
+                    });
 
-                        if (data.session && !cancelled) {
-                            await new Promise(r => setTimeout(r, 500));
-                            setStatus('로그인 완료! 이동 중...');
-                            router.replace(next);
-                            return;
-                        }
+                    const { data, error: exchangeError } = await mobileClient.auth.exchangeCodeForSession(code);
+
+                    if (exchangeError) throw exchangeError;
+
+                    if (data.session && !cancelled) {
+                        debugLog('PKCE Success! Session established.');
+                        setStatus('로그인 완료! 이동 중...');
+
+                        // Small delay to ensure storage sync
+                        await new Promise(r => setTimeout(r, 100));
+                        router.replace(next);
+                        return;
                     }
                 } catch (e: any) {
-                    debugLog(`Step 2 ERROR: ${e.message}`);
+                    debugLog(`PKCE Error: ${e.message}`);
+                    // Fallthrough to other methods or show error
+                    // But if code is present, it's likely a PKCE attempt fail, so better to warn
+                    console.error('PKCE Exchange failed:', e);
                 }
-            } else {
-                debugLog(`Step 2 SKIPPED: No hash with access_token. Hash="${hash.substring(0, 50)}"`);
             }
 
-            // Step 3: Listen for onAuthStateChange
-            setStatus('인증 이벤트 대기 중...');
-            debugLog('Step 3: Listening for onAuthStateChange...');
+            // Step 3: Handle Implicit Flow (Web Flow - Hash Fragment)
+            const hash = window.location.hash;
+            if (hash && hash.includes('access_token')) {
+                setStatus('웹 인증 처리 중...');
+                // Supabase "detectSessionInUrl: true" handles this automatically in createClient
+                // But we act as a safety net listener
+                debugLog('Hash detected, waiting for auto-detection...');
+            }
+
+            // Step 4: Listen for Auth State Change (Universal)
             const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-                debugLog(`onAuthStateChange fired: event=${event}, session=${!!session}`);
+                debugLog(`Auth Event: ${event}`);
                 if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !cancelled) {
-                    setStatus('로그인 완료! 이동 중...');
-                    setTimeout(() => {
-                        if (!cancelled) router.replace(next);
-                    }, 300);
+                    router.replace(next);
                 }
             });
 
-            // Step 4: Timeout fallback
+            // Timeout fallback
             setTimeout(() => {
                 if (!cancelled) {
-                    debugLog('Step 4: TIMEOUT reached (5s). Redirecting to dashboard anyway.');
-                    const keys = Object.keys(localStorage).filter(k => k.includes('sb-') || k.includes('supabase'));
-                    debugLog(`localStorage at timeout: ${JSON.stringify(keys)}`);
-                    subscription.unsubscribe();
+                    debugLog('Timeout reached. Redirecting...');
                     router.replace(next);
                 }
             }, 5000);

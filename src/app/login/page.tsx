@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'; // Import factory
 import {
     BookOpen,
     Fingerprint,
@@ -33,14 +34,27 @@ export default function LoginPage() {
             const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
             if (isNative) {
-                // Mobile: Use @capacitor/browser to avoid "disallowed_useragent"
+                // Mobile: Use PKCE Flow with separate client instance
+                // alert('Debug: Starting Mobile PKCE Flow...');
+
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+                const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+                // Create temporary client with PKCE flow
+                const mobileClient = createSupabaseClient(supabaseUrl, supabaseKey, {
+                    auth: {
+                        flowType: 'pkce',
+                        detectSessionInUrl: false,
+                    }
+                });
+
                 const { Browser } = await import('@capacitor/browser');
 
-                // 1. Get OAuth URL from Supabase (skipBrowserRedirect: true)
-                const { data, error } = await supabase.auth.signInWithOAuth({
+                // 1. Get OAuth URL (PKCE)
+                const { data, error } = await mobileClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: `com.memit.app://auth/callback`, // Deep link scheme
+                        redirectTo: `com.memit.app://auth/callback`,
                         skipBrowserRedirect: true,
                         queryParams: {
                             prompt: 'consent',
@@ -50,11 +64,17 @@ export default function LoginPage() {
 
                 if (error) throw error;
                 if (data?.url) {
+                    // alert(`Debug: Opening Browser (PKCE) with URL: ${data.url.substring(0, 30)}...`);
                     // 2. Open System Browser
                     await Browser.open({ url: data.url });
+
+                    // Important: We don't wait here. The app will go background.
+                    // When it comes back via deep link, AuthCallbackPage will handle the code exchange.
+                } else {
+                    alert('Debug: No URL returned from Supabase (PKCE)');
                 }
             } else {
-                // Web: Standard Redirect
+                // Web: Standard Implicit Flow (Existing)
                 const { error } = await supabase.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
