@@ -1,22 +1,131 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     ArrowLeft, User, Bell, Lock, HelpCircle, LogOut,
-    ChevronRight, Moon, Shield, Mail, Info, FileText
+    ChevronRight, Moon, Shield, Mail, Info, FileText, X, Check
 } from 'lucide-react';
+import { createClient } from '@/utils/supabase/client';
 
 export default function SettingsPage() {
     const router = useRouter();
     const [darkMode, setDarkMode] = useState<'system' | 'dark' | 'light'>('system');
+    const [user, setUser] = useState<any>(null);
+    const [profile, setProfile] = useState<any>(null);
+    const [editOpen, setEditOpen] = useState(false);
+    const [editName, setEditName] = useState('');
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        const supabase = createClient();
+        if (!supabase) return;
+
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) {
+                setUser(session.user);
+                supabase.from('profiles').select('*').eq('id', session.user.id).single()
+                    .then(({ data }) => { if (data) setProfile(data); });
+            }
+        });
+    }, []);
+
+    const displayName = profile?.username ||
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        user?.email?.split('@')[0] || '게스트 사용자';
+    const displayEmail = user?.email || 'guest@memit.com (Demo)';
+    const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+
+    const handleSaveName = async () => {
+        const supabase = createClient();
+        if (!supabase || !user) return;
+        setSaving(true);
+        try {
+            await supabase.from('profiles').upsert({
+                id: user.id,
+                username: editName,
+                updated_at: new Date().toISOString(),
+            });
+            setProfile((prev: any) => ({ ...prev, username: editName }));
+            setEditOpen(false);
+        } catch (e) {
+            console.error('Profile update failed', e);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleSignOut = async () => {
+        const supabase = createClient();
+        if (supabase) {
+            await supabase.auth.signOut();
+            window.location.href = '/login';
+        }
+    };
+
+    const openEdit = () => {
+        setEditName(displayName);
+        setEditOpen(true);
+    };
 
     return (
         <>
+            {/* Edit Modal */}
+            {editOpen && (
+                <>
+                    <div className="fixed inset-0 bg-black/60 z-[60]" onClick={() => setEditOpen(false)}></div>
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                        <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-white">프로필 편집</h3>
+                                <button onClick={() => setEditOpen(false)} className="p-1 hover:bg-slate-800 rounded-lg transition-colors">
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-3xl shrink-0 overflow-hidden ring-2 ring-primary/40">
+                                    {avatarUrl ? (
+                                        <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span>{displayName.charAt(0).toUpperCase()}</span>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm text-slate-400 truncate">{displayEmail}</p>
+                                </div>
+                            </div>
+                            <div className="space-y-2 mb-6">
+                                <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">표시 이름</label>
+                                <input
+                                    type="text"
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                                    placeholder="표시할 이름을 입력하세요"
+                                />
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setEditOpen(false)}
+                                    className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                                >취소</button>
+                                <button
+                                    onClick={handleSaveName}
+                                    disabled={saving || !editName.trim()}
+                                    className="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-primary hover:bg-primary/80 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {saving ? '저장 중...' : <><Check className="w-4 h-4" /> 저장</>}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
             {/* ─── Desktop View ─── */}
             <div className="hidden md:block p-6 lg:p-10">
                 <div className="max-w-3xl mx-auto">
-                    {/* Page Header */}
                     <div className="mb-10">
                         <h1 className="text-3xl font-bold text-white font-display">설정</h1>
                         <p className="text-slate-400 mt-1">계정, 앱 환경, 지원 옵션을 관리하세요.</p>
@@ -24,78 +133,73 @@ export default function SettingsPage() {
 
                     {/* Profile Card */}
                     <div className="flex items-center gap-5 p-6 bg-[#1e1c30] rounded-2xl border border-slate-800 mb-10 group hover:border-primary/30 transition-all">
-                        <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-3xl shrink-0 ring-2 ring-slate-700 group-hover:ring-primary/40 transition-all">
-                            🐶
+                        <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-3xl shrink-0 ring-2 ring-slate-700 group-hover:ring-primary/40 transition-all overflow-hidden">
+                            {avatarUrl ? (
+                                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <span>{displayName.charAt(0).toUpperCase()}</span>
+                            )}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h2 className="text-xl font-bold text-white">게스트 사용자</h2>
+                            <h2 className="text-xl font-bold text-white">{displayName}</h2>
                             <p className="text-sm text-slate-400 flex items-center gap-1.5 mt-0.5">
                                 <Mail className="w-3.5 h-3.5" />
-                                guest@memit.com (Demo)
+                                {displayEmail}
                             </p>
                         </div>
-                        <button className="px-4 py-2 text-sm font-bold text-primary hover:bg-primary/10 rounded-xl transition-colors">
+                        <button onClick={openEdit} className="px-4 py-2 text-sm font-bold text-primary hover:bg-primary/10 rounded-xl transition-colors">
                             편집
                         </button>
                     </div>
 
-                    {/* ─── 계정 Section ─── */}
                     <SettingsSection title="계정">
-                        <SettingItem icon={User} title="개인 정보" description="이름, 이메일, 프로필 이미지 변경" />
+                        <SettingItem icon={User} title="개인 정보" description="이름, 이메일, 프로필 이미지 변경" onClick={openEdit} />
                         <SettingItem icon={Lock} title="비밀번호 및 보안" description="비밀번호 변경, 2단계 인증" />
                         <SettingItem icon={Bell} title="알림 설정" description="푸시 알림, 이메일 알림 관리" isLast />
                     </SettingsSection>
 
-                    {/* ─── 앱 설정 Section ─── */}
                     <SettingsSection title="앱 설정">
-                        <SettingItem
-                            icon={Moon}
-                            title="다크 모드"
-                            description="화면 테마를 설정합니다"
-                            value={darkMode === 'system' ? '시스템 설정' : darkMode === 'dark' ? '다크' : '라이트'}
-                        />
+                        <SettingItem icon={Moon} title="다크 모드" description="화면 테마를 설정합니다"
+                            value={darkMode === 'system' ? '시스템 설정' : darkMode === 'dark' ? '다크' : '라이트'} />
                         <SettingItem icon={Shield} title="프라이버시" description="데이터 수집, 개인정보 관리" isLast />
                     </SettingsSection>
 
-                    {/* ─── 지원 Section ─── */}
                     <SettingsSection title="지원">
                         <SettingItem icon={HelpCircle} title="도움말 및 지원" description="FAQ, 문의하기" />
                         <SettingItem icon={FileText} title="이용 약관" description="서비스 이용약관 및 정책" />
                         <SettingItem icon={Info} title="앱 정보" description="MEMIT v1.0.0" />
-                        <SettingItem icon={LogOut} title="로그아웃" isDanger isLast />
+                        <SettingItem icon={LogOut} title="로그아웃" isDanger isLast onClick={handleSignOut} />
                     </SettingsSection>
                 </div>
             </div>
 
             {/* ─── Mobile View ─── */}
             <div className="block md:hidden bg-background-dark min-h-screen flex flex-col text-white pb-24">
-                {/* Mobile Header */}
                 <header className="px-4 py-4 sticky top-0 bg-background-dark/95 backdrop-blur-sm z-10 flex items-center gap-4">
-                    <button
-                        onClick={() => router.back()}
-                        className="p-2 -ml-2 rounded-full hover:bg-slate-800 transition-colors"
-                    >
+                    <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-slate-800 transition-colors">
                         <ArrowLeft className="w-6 h-6" />
                     </button>
                     <h1 className="text-xl font-bold">설정</h1>
                 </header>
 
                 <main className="px-4 py-2 space-y-6">
-                    {/* Mobile Profile */}
                     <div className="flex items-center gap-4 p-4 bg-[#1e1c30] rounded-2xl">
-                        <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-2xl">
-                            🐶
+                        <div className="w-16 h-16 rounded-full bg-slate-700 flex items-center justify-center text-2xl overflow-hidden">
+                            {avatarUrl ? (
+                                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <span>{displayName.charAt(0).toUpperCase()}</span>
+                            )}
                         </div>
                         <div className="flex-1">
-                            <h2 className="text-lg font-bold">게스트 사용자</h2>
-                            <p className="text-xs text-slate-500">guest@memit.com (Demo)</p>
+                            <h2 className="text-lg font-bold">{displayName}</h2>
+                            <p className="text-xs text-slate-500">{displayEmail}</p>
                         </div>
-                        <button className="text-primary text-sm font-medium">편집</button>
+                        <button onClick={openEdit} className="text-primary text-sm font-medium">편집</button>
                     </div>
 
-                    {/* Mobile Setting Groups */}
                     <MobileSettingsSection title="계정">
-                        <MobileSettingItem icon={User} title="개인 정보" />
+                        <MobileSettingItem icon={User} title="개인 정보" onClick={openEdit} />
                         <MobileSettingItem icon={Lock} title="비밀번호 및 보안" />
                         <MobileSettingItem icon={Bell} title="알림 설정" isLast />
                     </MobileSettingsSection>
@@ -107,7 +211,7 @@ export default function SettingsPage() {
 
                     <MobileSettingsSection title="지원">
                         <MobileSettingItem icon={HelpCircle} title="도움말 및 지원" />
-                        <MobileSettingItem icon={LogOut} title="로그아웃" isLast isDanger />
+                        <MobileSettingItem icon={LogOut} title="로그아웃" isLast isDanger onClick={handleSignOut} />
                     </MobileSettingsSection>
                 </main>
             </div>
@@ -129,12 +233,12 @@ function SettingsSection({ title, children }: { title: string; children: React.R
 }
 
 function SettingItem({
-    icon: Icon, title, description, value, isLast, isDanger
+    icon: Icon, title, description, value, isLast, isDanger, onClick
 }: {
-    icon: any; title: string; description?: string; value?: string; isLast?: boolean; isDanger?: boolean;
+    icon: any; title: string; description?: string; value?: string; isLast?: boolean; isDanger?: boolean; onClick?: () => void;
 }) {
     return (
-        <div className={`flex items-center p-5 hover:bg-slate-800/40 transition-colors cursor-pointer group
+        <div onClick={onClick} className={`flex items-center p-5 hover:bg-slate-800/40 transition-colors cursor-pointer group
             ${!isLast ? 'border-b border-slate-800/60' : ''}`}
         >
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-4 transition-colors
@@ -171,12 +275,12 @@ function MobileSettingsSection({ title, children }: { title: string; children: R
 }
 
 function MobileSettingItem({
-    icon: Icon, title, value, isLast, isDanger
+    icon: Icon, title, value, isLast, isDanger, onClick
 }: {
-    icon: any; title: string; value?: string; isLast?: boolean; isDanger?: boolean;
+    icon: any; title: string; value?: string; isLast?: boolean; isDanger?: boolean; onClick?: () => void;
 }) {
     return (
-        <div className={`flex items-center p-4 hover:bg-slate-800/50 transition-colors cursor-pointer
+        <div onClick={onClick} className={`flex items-center p-4 hover:bg-slate-800/50 transition-colors cursor-pointer
             ${!isLast ? 'border-b border-slate-800' : ''}`}
         >
             <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3
