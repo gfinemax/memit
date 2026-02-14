@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { Loader2 } from 'lucide-react';
@@ -10,8 +10,13 @@ function AuthCallbackContent() {
     const searchParams = useSearchParams();
     const [error, setError] = useState<string | null>(null);
 
+    const processingRef = useRef(false);
+
     useEffect(() => {
         const handleCallback = async () => {
+            // Prevent double-invocation in Strict Mode or rapid re-renders
+            if (processingRef.current) return;
+
             const code = searchParams.get('code');
             const next = searchParams.get('next') ?? '/dashboard';
 
@@ -29,6 +34,7 @@ function AuthCallbackContent() {
             }
 
             if (code) {
+                processingRef.current = true; // Mark as processing
                 try {
                     console.log('Exchanging code for session...', { code });
                     const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -37,6 +43,7 @@ function AuthCallbackContent() {
                 } catch (err: any) {
                     console.error('Auth error during code exchange:', err);
                     setError(err.message || 'Authentication failed');
+                    processingRef.current = false; // Reset on error to allow retry if needed
                 }
             } else {
                 // If no code and no session, maybe it's an error or implicit flow redirect
