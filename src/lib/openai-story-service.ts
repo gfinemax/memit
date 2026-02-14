@@ -284,18 +284,22 @@ export class OpenAIStoryService {
       - **Setting/Composition**: Describe the background, foreground, and specific placement of elements. Mention camera angles (e.g., wide-angle, macro, low-angle) and lighting (e.g., cinematic lighting, volumetric fog, golden hour).
       - **Mood/Style**: Define the emotional tone and consistent artistic style.
       
-      ${isQuad ? `**SEQUENTIAL COMIC REQUIREMENTS (Mnemonic Optimized)**: 
-      1. Layout: 4-panel sequential comic grid (2x2).
-      2. Style: "Vibrant, High-Quality Educational Manga Style" with clean, sharp ink outlines and bright, distinct colors.
-      3. Mnemonic Focus: Ensure the subject of each panel is highly prominent and exaggerated for easier memorization.
-      4. Narrative: Each panel must represent a clear, logical step of the "story beats", structured like a visual learning guide.
-      5. Framing: Use simple, uncluttered backgrounds to keep the focus on the primary objects and their interactions.` : ''}
+      ${isQuad ? `**CRITICAL: 4-PANEL LAYOUT REQUIREMENTS**: 
+      1. COMPOSITION: The image MUST be split into EXACTLY four equal-sized panels arranged in a 2x2 grid. Each panel represents a different moment in the story.
+      2. VISUAL STYLE: "Vibrant, high-quality manga/webtoon style" with clean ink lines and distinct, saturated colors. Maintain perfect character and object consistency across all panels.
+      3. MNEMONIC FOCUS: In each panel, the primary object or action MUST be the absolute central focus, drawn with dramatic exaggeration for memorability.
+      4. PANELS NARRATIVE: 
+         - Top-left: Introduction of the first key element.
+         - Top-right: Development or first interaction.
+         - Bottom-left: The climax or surprising twist.
+         - Bottom-right: The resolution or final impactful scene.
+      5. FRAMING: Clean backgrounds with high contrast to make the primary mnemonic objects pop.` : ''}
 
-      **CRITICAL PRINCIPLES**:
-      1. **Expand, Don't Just Translate**: Turn simple nouns into descriptive phrases (e.g., instead of "apple", use "a glistening, crystalline apple pulsing with inner crimson light").
-      2. **Safety Transformation**: Rephrase any sensitive or violent concepts into epic, mystical, or grand metaphors to avoid safety filters.
-      3. **No Text**: Explicitly forbid any alphanumeric characters, signs, or text within the image.
-      4. **Visual Depth**: Use 5-7 descriptive adjectives per major element to ensure high fidelity and unique interpretation.
+      **STRICT PRINCIPLES**:
+      1. **Keyword Priority (Koreans to English)**: Identify words surrounded by **double asterisks** in the story. These are the "Memory Keys". You MUST translate them accurately and make them the most prominent visual elements in the prompt. Do NOT omit or change these objects.
+      2. **Vivid Expansion**: Transform simple nouns into hyper-descriptive phrases to give DALL-E 3 rich detail.
+      3. **Safety Transformation**: Rephrase any sensitive or violent concepts into epic, mystical, or grand metaphors (e.g., "explosion" -> "erupting supernova of stardust").
+      4. **Absolutely No Text**: Do not include any speech bubbles, labels, text, or letters in the image.
       
       Return ONLY the final English prompt string.
     `;
@@ -314,7 +318,9 @@ export class OpenAIStoryService {
                 ],
                 model: "gpt-4o",
             });
-            return completion.choices[0].message.content || story;
+            const refined = completion.choices[0].message.content || story;
+            console.log("[DALL-E Prompt]:", refined); // For verification
+            return refined;
         } catch (error) {
             console.error("Prompt Refinement Error:", error);
             return story; // Fallback to raw story
