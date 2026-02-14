@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Brain, ArrowRight, Zap, Play, Grid, ChevronRight, Quote, Heart, TrophyIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { convertNumberAction } from '@/app/actions';
+import { openAIStoryService } from '@/lib/openai-story-service';
 import ResultCard from './ResultCard';
 
 export default function MobileHome() {
@@ -12,15 +13,84 @@ export default function MobileHome() {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<string[] | null>(null);
+    const [story, setStory] = useState<string>('');
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+    // Advanced Generation States
+    const [generatingImage, setGeneratingImage] = useState(false);
+    const [generatingMessageIndex, setGeneratingMessageIndex] = useState(0);
+    const [generationProgress, setGenerationProgress] = useState(0);
+
+    const generationMessages = [
+        "스토리에서 핵심 이미지를 추출하는 중...",
+        "캔버스에 기억의 조각들을 배치 중...",
+        "AI가 초안 스케치를 진행하고 있습니다...",
+        "DALL-E가 정교한 붓 터치를 시작합니다...",
+        "공간의 깊이와 조명 효과를 불어넣는 중...",
+        "마지막 디테일과 질감을 다듬고 있습니다...",
+        "거의 다 되었습니다! 이미지를 현상 중..."
+    ];
+
+    React.useEffect(() => {
+        let interval: NodeJS.Timeout;
+        let msgInterval: NodeJS.Timeout;
+
+        if (generatingImage) {
+            setGenerationProgress(0);
+            setGeneratingMessageIndex(0);
+
+            // Progress bar logic (roughly 30 seconds)
+            interval = setInterval(() => {
+                setGenerationProgress(prev => {
+                    if (prev >= 95) return prev;
+                    return prev + (100 / (30 * 10));
+                });
+            }, 100);
+
+            // Message rotation logic
+            msgInterval = setInterval(() => {
+                setGeneratingMessageIndex(prev => (prev + 1) % generationMessages.length);
+            }, 4000);
+        }
+
+        return () => {
+            clearInterval(interval);
+            clearInterval(msgInterval);
+        };
+    }, [generatingImage]);
 
     const handleConvert = async () => {
-        if (!input.trim() || loading) return;
+        if (!input.trim() || loading || generatingImage) return;
         setLoading(true);
-        const res = await convertNumberAction(input);
-        if (res.success && res.data) {
-            setResult(res.data);
+        setResult(null);
+        setStory('');
+        setImageUrl(null);
+
+        try {
+            // Step 1: Keywords
+            const res = await convertNumberAction(input);
+            if (res.success && res.data) {
+                setResult(res.data);
+
+                // Step 2: Story (Auto-generate for mobile simple flow)
+                const storyRes = await openAIStoryService.generateStory(input, {
+                    manualKeywords: res.data
+                });
+                setStory(storyRes.story);
+
+                // Step 3: Image (Advanced UX starts here)
+                setGeneratingImage(true);
+                const url = await openAIStoryService.generateImage(storyRes.story, "Mobile App Memory");
+                setImageUrl(url);
+                setGenerationProgress(100);
+            }
+        } catch (error) {
+            console.error("Mobile conversion failed:", error);
+            alert("처리 중 오류가 발생했습니다. 다시 시도해 주세요.");
+        } finally {
+            setLoading(false);
+            setGeneratingImage(false);
         }
-        setLoading(false);
     };
 
     return (
@@ -90,9 +160,57 @@ export default function MobileHome() {
                             <ResultCard
                                 input={input}
                                 keywords={result}
+                                story={{ text: story, highlighted: [] }}
+                                imageUrl={imageUrl || undefined}
                                 onSave={() => { }}
-                                onReset={() => setResult(null)}
+                                onReset={() => {
+                                    setResult(null);
+                                    setStory('');
+                                    setImageUrl(null);
+                                    setInput('');
+                                }}
                             />
+                        </div>
+                    )}
+
+                    {/* Advanced Generation UI Overlay */}
+                    {generatingImage && (
+                        <div className="fixed inset-0 z-[100] bg-black/9Center overflow-hidden flex flex-col items-center justify-center p-6 backdrop-blur-xl">
+                            <div className="w-full max-w-sm space-y-8 text-center">
+                                {/* Cinema-style Loading Animation */}
+                                <div className="relative aspect-square w-full max-w-[280px] mx-auto overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 animate-pulse"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="relative">
+                                            <div className="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                                            <Brain className="absolute inset-0 m-auto w-8 h-8 text-primary animate-pulse" />
+                                        </div>
+                                    </div>
+                                    {/* Scanning Light Effect */}
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_15px_rgba(79,70,229,0.8)] animate-scan-y opacity-50"></div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-xl font-bold text-white tracking-tight animate-pulse">
+                                        {generationMessages[generatingMessageIndex]}
+                                    </h3>
+                                    <p className="text-slate-400 text-sm">기억의 퍼즐을 맞추는 중입니다...</p>
+                                </div>
+
+                                {/* Progress Bar */}
+                                <div className="w-full space-y-2">
+                                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-primary transition-all duration-300 ease-out shadow-[0_0_10px_rgba(79,70,229,0.5)]"
+                                            style={{ width: `${generationProgress}%` }}
+                                        ></div>
+                                    </div>
+                                    <div className="flex justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+                                        <span>Initialising AI</span>
+                                        <span>{Math.round(generationProgress)}%</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </section>
