@@ -19,7 +19,8 @@ export function createClient() {
             detectSessionInUrl: true,
             storageKey: 'memit-auth-v1',
             storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-            flowType: 'pkce'
+            flowType: 'pkce',
+            debug: process.env.NODE_ENV === 'development',
         }
     });
 

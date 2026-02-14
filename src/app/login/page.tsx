@@ -27,10 +27,15 @@ export default function LoginPage() {
         }
 
         try {
+            const origin = typeof window !== 'undefined' ? window.location.origin : '';
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: `${origin}/auth/callback`,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consensus',
+                    }
                 },
             });
             if (error) throw error;
