@@ -164,7 +164,6 @@ export default function LoginPage() {
                                             id="email"
                                             placeholder="nomad@memit.ai"
                                             type="email"
-                                            type="email"
                                         />
                                     </div>
                                 </div>
