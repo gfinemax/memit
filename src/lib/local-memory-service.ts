@@ -135,6 +135,18 @@ export class LocalMemoryService implements MemoryService {
         };
     }
 
+    async toggleFavorite(id: string, isFavorite: boolean): Promise<boolean> {
+        return true;
+    }
+
+    async deleteMemory(id: string): Promise<{ success: boolean; error?: string }> {
+        return { success: true };
+    }
+
+    async uploadImage(url: string, path: string): Promise<string | null> {
+        return url;
+    }
+
     async getMemories(): Promise<UserMemory[]> {
         return [];
     }
