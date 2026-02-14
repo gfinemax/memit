@@ -41,7 +41,10 @@ function AuthCallbackContent() {
             // If no session yet, listen for the auth state change which happens after hash parsing
             const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_IN' && session) {
-                    router.push(next);
+                    // Small delay to ensure localStorage is flushed
+                    setTimeout(() => {
+                        router.push(next);
+                    }, 100);
                 }
             });
 
@@ -49,9 +52,16 @@ function AuthCallbackContent() {
             if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('error'))) {
                 setTimeout(async () => {
                     const { data: { session: delayedSession } } = await supabase.auth.getSession();
-                    if (delayedSession) router.push(next);
-                    // If error in hash, we might want to show it, but for now redirecting to login on fail
-                }, 1000);
+                    if (delayedSession) {
+                        router.push(next);
+                    } else {
+                        // Failsafe: Try to go to dashboard anyway, maybe session is there but getSession laggy?
+                        // Or just go back to login? 
+                        // Let's go to dashboard. If no session, middleware/layout will handle it.
+                        console.warn("Auth timeout - forcing redirect");
+                        router.push(next);
+                    }
+                }, 2000); // 2 seconds fallback
             } else if (!window.location.hash && !code) {
                 // No code, no hash -> login
                 router.push('/login');
