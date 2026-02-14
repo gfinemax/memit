@@ -286,14 +286,14 @@ export class OpenAIStoryService {
       
       ${isQuad ? `**CRITICAL: 4-PANEL LAYOUT REQUIREMENTS**: 
       1. COMPOSITION: The image MUST be split into EXACTLY four equal-sized panels arranged in a 2x2 grid. Each panel represents a different moment in the story.
-      2. VISUAL STYLE: "Vibrant, high-quality manga/webtoon style" with clean ink lines and distinct, saturated colors. Maintain perfect character and object consistency across all panels.
+      2. VISUAL STYLE: "Studio Ghibli Animation Style" (Hayao Miyazaki style). Use soft, painterly watercolor backgrounds, vibrant but natural color palettes, hand-drawn aesthetics, and whimsical details. High-quality, cinematic anime finish.
       3. MNEMONIC FOCUS: In each panel, the primary object or action MUST be the absolute central focus, drawn with dramatic exaggeration for memorability.
       4. PANELS NARRATIVE: 
          - Top-left: Introduction of the first key element.
          - Top-right: Development or first interaction.
          - Bottom-left: The climax or surprising twist.
          - Bottom-right: The resolution or final impactful scene.
-      5. FRAMING: Clean backgrounds with high contrast to make the primary mnemonic objects pop.` : ''}
+      5. FRAMING: Clean, lush backgrounds (e.g., blue skies with fluffy clouds, grassy fields) to make the primary objects pop.` : ''}
 
       **STRICT PRINCIPLES**:
       1. **Keyword Priority (Koreans to English)**: Identify words surrounded by **double asterisks** in the story. These are the "Memory Keys". You MUST translate them accurately and make them the most prominent visual elements in the prompt. Do NOT omit or change these objects.
