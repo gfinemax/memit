@@ -2,13 +2,24 @@
 import OpenAI from 'openai';
 import { supabaseMemoryService } from './supabase-memory-service';
 
-// Initialize OpenAI client
-// NOTE: In a real production app with static export, this should be behind a proxy or Edge Function
-// to protect the API key. For this implementation, we use client-side call with env var.
-const openai = new OpenAI({
-    apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-    dangerouslyAllowBrowser: true
-});
+// OpenAI instance cache
+let _openai: OpenAI | null = null;
+
+function getOpenAIClient() {
+    if (_openai) return _openai;
+
+    const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    if (!apiKey || apiKey === 'undefined' || apiKey === '') {
+        // Return null instead of throwing to avoid build-time crashes during prerendering
+        return null;
+    }
+
+    _openai = new OpenAI({
+        apiKey,
+        dangerouslyAllowBrowser: true
+    });
+    return _openai;
+}
 
 export interface StorySegment {
     number: string;
@@ -225,7 +236,13 @@ export class OpenAIStoryService {
     `;
 
         try {
-            const completion = await openai.chat.completions.create({
+            const client = getOpenAIClient();
+            if (!client) {
+                console.warn("OpenAI client not initialized (missing API key). Skipping story generation.");
+                return { story: "스토리 생성 서비스가 현재 비활성화되어 있습니다.", keywords: [] };
+            }
+
+            const completion = await client.chat.completions.create({
                 messages: [
                     { role: "system", content: "You are a creative memory mnemonist. Return only JSON." },
                     { role: "user", content: prompt }
@@ -284,7 +301,13 @@ export class OpenAIStoryService {
     `;
 
         try {
-            const completion = await openai.chat.completions.create({
+            const client = getOpenAIClient();
+            if (!client) {
+                console.warn("OpenAI client not initialized. Skipping prompt refinement.");
+                return story;
+            }
+
+            const completion = await client.chat.completions.create({
                 messages: [
                     { role: "system", content: "You are a specialized prompt engineer. Return ONLY text." },
                     { role: "user", content: refinementPrompt }
@@ -303,7 +326,12 @@ export class OpenAIStoryService {
         const safeFinalPrompt = await this.refineImagePrompt(story, context, isQuad);
 
         try {
-            const response = await openai.images.generate({
+            const client = getOpenAIClient();
+            if (!client) {
+                throw new Error("OPENAI_CLIENT_NOT_INITIALIZED");
+            }
+
+            const response = await client.images.generate({
                 model: "dall-e-3",
                 prompt: safeFinalPrompt,
                 n: 1,
@@ -329,7 +357,12 @@ export class OpenAIStoryService {
 
     async generateStoryResponse(prompt: string): Promise<any> {
         try {
-            const completion = await openai.chat.completions.create({
+            const client = getOpenAIClient();
+            if (!client) {
+                throw new Error("OPENAI_CLIENT_NOT_INITIALIZED");
+            }
+
+            const completion = await client.chat.completions.create({
                 messages: [
                     { role: "system", content: "You are a helpful assistant. Return ONLY JSON." },
                     { role: "user", content: prompt }
