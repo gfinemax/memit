@@ -26,39 +26,38 @@ function AuthCallbackContent() {
                 return;
             }
 
-            // Check if we already have a session (e.g. from detectSessionInUrl)
+
+            // With implicit flow, detectSessionInUrl: true in createClient will automatically
+            // parse the hash and set the session when the client is initialized.
+            // We just need to wait a brief moment for that to happen.
+
+            // Check for session immediately
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
                 router.push(next);
                 return;
             }
 
-            if (code) {
-                processingRef.current = true; // Mark as processing
-                try {
-                    console.log('Exchanging code for session...', { code });
-                    const { error } = await supabase.auth.exchangeCodeForSession(code);
-                    if (error) throw error;
+            // If no session yet, listen for the auth state change which happens after hash parsing
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN' && session) {
                     router.push(next);
-                } catch (err: any) {
-                    console.error('Auth error during code exchange:', err);
-                    setError(err.message || 'Authentication failed');
-                    processingRef.current = false; // Reset on error to allow retry if needed
                 }
-            } else {
-                // If no code and no session, maybe it's an error or implicit flow redirect
-                const hash = window.location.hash;
-                if (hash && (hash.includes('access_token') || hash.includes('error'))) {
-                    // detectSessionInUrl should handle this, but let's wait a bit
-                    setTimeout(async () => {
-                        const { data: { session: delayedSession } } = await supabase.auth.getSession();
-                        if (delayedSession) router.push(next);
-                        else router.push('/login');
-                    }, 500);
-                } else {
-                    router.push('/login');
-                }
+            });
+
+            // Fallback: If hash is present but no event fires quickly, try explicit check after delay
+            if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('error'))) {
+                setTimeout(async () => {
+                    const { data: { session: delayedSession } } = await supabase.auth.getSession();
+                    if (delayedSession) router.push(next);
+                    // If error in hash, we might want to show it, but for now redirecting to login on fail
+                }, 1000);
+            } else if (!window.location.hash && !code) {
+                // No code, no hash -> login
+                router.push('/login');
             }
+
+            return () => subscription.unsubscribe();
         };
 
         handleCallback();

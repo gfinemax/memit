@@ -16,10 +16,10 @@ export function createClient() {
         auth: {
             persistSession: true,
             autoRefreshToken: true,
-            detectSessionInUrl: true,
+            detectSessionInUrl: true, // Enable for implicit flow hash parsing
             storageKey: 'memit-auth-v1',
             storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-            flowType: 'pkce',
+            flowType: 'implicit',
             debug: process.env.NODE_ENV === 'development',
         }
     });
