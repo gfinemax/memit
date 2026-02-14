@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Home, Search, Bell, Settings, ChevronDown, LogOut } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 
 export default function Header() {
+    const router = useRouter();
     const [user, setUser] = useState<any>(null);
     const [profile, setProfile] = useState<any>(null);
 
@@ -124,10 +126,16 @@ export default function Header() {
                                     <p className="text-xs text-slate-400 truncate mt-0.5">{displayEmail}</p>
                                 </div>
                                 <div className="p-1">
-                                    <button className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 hover:text-white rounded-lg transition-colors flex items-center gap-2.5">
+                                    <button
+                                        onClick={() => { setDropdownOpen(false); router.push('/dashboard/settings'); }}
+                                        className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 hover:text-white rounded-lg transition-colors flex items-center gap-2.5"
+                                    >
                                         <Settings className="w-4 h-4 text-slate-400" /> <span>내 프로필 설정</span>
                                     </button>
-                                    <button className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 hover:text-white rounded-lg transition-colors flex items-center gap-2.5">
+                                    <button
+                                        onClick={() => { setDropdownOpen(false); router.push('/dashboard/settings'); }}
+                                        className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 hover:text-white rounded-lg transition-colors flex items-center gap-2.5"
+                                    >
                                         <Bell className="w-4 h-4 text-slate-400" /> <span>알림 설정</span>
                                     </button>
                                     <div className="h-px bg-slate-700/50 my-1 mx-2"></div>
