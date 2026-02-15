@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+// Define available modes
 export type FilterMode = 'password' | 'number' | 'speech' | 'study';
 
 interface MobileModeTabsProps {
