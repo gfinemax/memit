@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// immport { FilterMode } from './MobileModeTabs'; // Removed to fix build error
 export type FilterMode = 'password' | 'number' | 'speech' | 'study';
+// import { FilterMode } from './MobileModeTabs'; // Removed to fix build error
 
 interface MobileMagicInputProps {
     value: string;
