@@ -60,13 +60,15 @@ export default function MobileProfileSheet({ isOpen, onClose }: MobileProfileShe
 
     useEffect(() => {
         const supabase = createClient();
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session?.user) {
-                setUser(session.user);
-                fetchProfile(session.user.id);
-            }
-        });
-    }, []);
+        if (supabase) {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+
+                if (session?.user) {
+                    setUser(session.user);
+                    fetchProfile(session.user.id);
+                }
+            });
+        }, []);
 
     const fetchProfile = async (userId: string) => {
         const supabase = createClient();
