@@ -9,7 +9,7 @@ export class SupabaseMemoryService implements MemoryService {
         const { data: { user } } = await supabase.auth.getUser();
 
         const { data, error } = await supabase
-            .from('system_code_maps')
+            .from('memory_maps')
             .select('*')
             .eq('type', type)
             .eq('code', code)
@@ -36,7 +36,7 @@ export class SupabaseMemoryService implements MemoryService {
         const { data: { user } } = await supabase.auth.getUser();
 
         const { data, error } = await supabase
-            .from('system_code_maps')
+            .from('memory_maps')
             .select('*')
             .contains('keywords', [query])
             .or(`user_id.is.null,user_id.eq.${user?.id || '00000000-0000-0000-0000-000000000000'}`);
@@ -326,6 +326,65 @@ export class SupabaseMemoryService implements MemoryService {
             .eq('id', id);
 
         if (updateError) return { success: false, error: updateError.message };
+        return { success: true };
+    }
+
+    async saveCustomKeyword(code: string, word: string, type: SystemType = '2D'): Promise<{ success: boolean; error?: string }> {
+        const supabase = createClient();
+        if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { success: false, error: 'Authentication required' };
+
+        // Check if there's already a user-specific mapping for this code
+        const { data: existing, error: fetchError } = await supabase
+            .from('memory_maps')
+            .select('*')
+            .eq('type', type)
+            .eq('code', code)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        if (fetchError) {
+            console.error('Fetch existing mapping FAILED', fetchError);
+            return { success: false, error: fetchError.message };
+        }
+
+        if (existing) {
+            // Update existing keywords array
+            const currentKeywords = existing.keywords as string[];
+            if (currentKeywords.includes(word)) return { success: true }; // Already exists
+
+            const { error: updateError } = await supabase
+                .from('memory_maps')
+                .update({
+                    keywords: [...currentKeywords, word],
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', existing.id);
+
+            if (updateError) {
+                console.error('Update mapping FAILED', updateError);
+                return { success: false, error: updateError.message };
+            }
+        } else {
+            // Create new user-specific mapping
+            const { error: insertError } = await supabase
+                .from('memory_maps')
+                .insert({
+                    user_id: user.id,
+                    type: type,
+                    code: code,
+                    keywords: [word],
+                    description: 'User custom keyword'
+                });
+
+            if (insertError) {
+                console.error('Insert mapping FAILED', insertError);
+                return { success: false, error: insertError.message };
+            }
+        }
+
         return { success: true };
     }
 }

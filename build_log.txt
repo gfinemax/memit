@@ -1,0 +1,31 @@
+
+> my-app@0.1.0 build C:\workspace\antigravity\memit
+> next build
+
+??Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\workspace\bun.lock as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\workspace\antigravity\memit\pnpm-lock.yaml
+
+??Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+??Compiled successfully in 6.2s
+  Running TypeScript ...
+Failed to compile.
+
+./src/components/mobile/MobileProfileSheet.tsx:83:15
+Type error: 'supabase' is possibly 'null'.
+
+  81 |     const handleSignOut = async () => {
+  82 |         const supabase = createClient();
+> 83 |         await supabase.auth.signOut();
+     |               ^
+  84 |         window.location.href = '/login';
+  85 |     };
+  86 |
+Next.js build worker exited with code: 1 and signal: null
+?덭LIFECYCLE??Command failed with exit code 1.

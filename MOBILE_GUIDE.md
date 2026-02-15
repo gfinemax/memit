@@ -70,6 +70,25 @@ npx cap open android
     *   화면 아래쪽 `Redirect URLs` 섹션을 찾습니다.
     *   **Add URL** 버튼을 클릭합니다.
     *   입력란에 `com.memit.app://auth/callback` 을 정확히 입력합니다. (중요!)
+
+### 주요 변경 사항
+- **New Branding**: '기억법' → **'두뇌 OS'** (확장성 있는 개념 도입)
+- **Typography**:
+  - 히어로 타이틀에 **'Pretendard'** 적용 (가독성 및 주목도 향상)
+  - `break-keep`, `tracking-tight` 적용으로 가독성 개선
+- **Layout**:
+  - Hero Section 상단 여백 최소화 (`pt-1`)
+  - 메뉴 확장 (암호, 숫자, 스피치, 학습) 및 직관적인 가이드 텍스트 제공
+
+### 1. 모바일 전용 페이지 (`/mobile`)
+- **경로**: `src/app/page.tsx` (User Agent 감지 후 리다이렉트)
+- **구성 요소**:
+  - `MobileHome.tsx`: 메인 홈 (히어로, 입력, 메뉴)
+  - `MobileTopBar.tsx`: 글로벌 상단바 (프로필 포함)
+  - `MobileFilterChips.tsx`: 4가지 모드 선택 (가로 스크롤)
+  - `MobileMagicInput.tsx`: 모드별 맞춤형 입력창
+  - `MobileCoverFlow.tsx`: 명예의 전당 (가로 커버플로우)
+
     *   **Add URL** 버튼을 눌러 저장합니다.
 
 > **확인**: 목록에 `com.memit.app://auth/callback`이 추가되었는지 확인하세요. 이제 앱에서 구글 로그인을 다시 시도하면 됩니다!

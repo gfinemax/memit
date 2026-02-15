@@ -205,3 +205,13 @@ export async function toggleFavoriteAction(id: string, isFavorite: boolean) {
         return { success: false, error: '실패했습니다.' };
     }
 }
+
+export async function saveCustomKeywordAction(code: string, word: string) {
+    try {
+        const result = await supabaseMemoryService.saveCustomKeyword(code, word);
+        return result;
+    } catch (error) {
+        console.error("Save custom keyword action error:", error);
+        return { success: false, error: '시스템 오류가 발생했습니다.' };
+    }
+}

@@ -7,18 +7,29 @@ import { useRouter } from 'next/navigation';
 import { convertNumberAction } from '@/app/actions';
 import { openAIStoryService } from '@/lib/openai-story-service';
 import ResultCard from './ResultCard';
-import MobileFilterChips, { FilterMode } from './MobileFilterChips';
+import MobileModeTabs, { FilterMode } from './MobileModeTabs';
 import MobileMagicInput from './MobileMagicInput';
 import MobileCoverFlow from './MobileCoverFlow';
 
+import { supabaseMemoryService } from '@/lib/supabase-memory-service';
+import { createClient } from '@/utils/supabase/client';
+
+export interface KeywordItem {
+    word: string;
+    code: string;
+    candidates: string[];
+    isLocked?: boolean;
+}
+
 export default function MobileHome() {
     const router = useRouter();
-    const [currentMode, setCurrentMode] = useState<FilterMode>('number');
+    const [currentMode, setCurrentMode] = useState<FilterMode>('password');
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState<string[] | null>(null);
+    const [result, setResult] = useState<KeywordItem[] | null>(null);
     const [story, setStory] = useState<string>('');
     const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [user, setUser] = useState<any>(null);
 
     // Advanced Generation States
     const [generatingImage, setGeneratingImage] = useState(false);
@@ -34,6 +45,17 @@ export default function MobileHome() {
         "마지막 디테일과 질감을 다듬고 있습니다...",
         "거의 다 되었습니다! 이미지를 현상 중..."
     ];
+
+    React.useEffect(() => {
+        const checkUser = async () => {
+            const supabase = createClient();
+            if (supabase) {
+                const { data: { user } } = await supabase.auth.getUser();
+                setUser(user);
+            }
+        };
+        checkUser();
+    }, []);
 
     React.useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -73,8 +95,14 @@ export default function MobileHome() {
         try {
             // Step 1: Keywords
             const res = await convertNumberAction(input);
-            if (res.success && res.data) {
-                setResult(res.data);
+            if (res.success && res.data && res.candidates) {
+                // Map to structured KeywordItem
+                const structuredResult: KeywordItem[] = res.candidates.map(candidate => ({
+                    word: candidate.words[0], // Default to first word
+                    code: candidate.chunk,
+                    candidates: candidate.words
+                }));
+                setResult(structuredResult);
 
                 // Step 2: Story (Auto-generate for mobile simple flow)
                 const storyRes = await openAIStoryService.generateStory(input, {
@@ -97,40 +125,157 @@ export default function MobileHome() {
         }
     };
 
+    const handleKeywordChange = (index: number, newWord: string) => {
+        if (!result) return;
+        const newResult = [...result];
+        newResult[index] = { ...newResult[index], word: newWord };
+        setResult(newResult);
+    };
+
+    const handleKeywordLockToggle = (index: number) => {
+        if (!result) return;
+        const newResult = [...result];
+        newResult[index] = { ...newResult[index], isLocked: !newResult[index].isLocked };
+        setResult(newResult);
+    };
+
+    const handleToggleAllLocks = () => {
+        if (!result) return;
+        // If all are currently locked, unlock all. Otherwise, lock all.
+        const allLocked = result.every(item => item.isLocked);
+        const newResult = result.map(item => ({ ...item, isLocked: !allLocked }));
+        setResult(newResult);
+    };
+
+    const handleRememit = async () => {
+        if (!result || !input.trim() || loading || generatingImage) return;
+
+        setLoading(true);
+        setGeneratingImage(true);
+
+        try {
+            // Step 1: Smart Randomization
+            const newResult = result.map(item => {
+                if (item.isLocked) return item; // Keep locked word
+
+                // For unlocked words, pick a random one from candidates (preferably different)
+                const otherCandidates = item.candidates.filter(c => c !== item.word);
+                const randomWord = otherCandidates.length > 0
+                    ? otherCandidates[Math.floor(Math.random() * otherCandidates.length)]
+                    : item.word;
+
+                return { ...item, word: randomWord };
+            });
+
+            setResult(newResult);
+
+            // Step 2: Regenerate Story
+            const currentWords = newResult.map(r => r.word);
+            const storyRes = await openAIStoryService.generateStory(input, {
+                manualKeywords: currentWords
+            });
+            setStory(storyRes.story);
+
+            // Step 3: Regenerate Image
+            const url = await openAIStoryService.generateImage(storyRes.story, "Mobile App Memory Refined");
+            setImageUrl(url);
+            setGenerationProgress(100);
+
+        } catch (error) {
+            console.error("Rememit failed:", error);
+            alert("다시 메밋하기 중 오류가 발생했습니다.");
+        } finally {
+            setLoading(false);
+            setGeneratingImage(false);
+        }
+    };
+
+    const getStrategyFromMode = (mode: FilterMode): string => {
+        switch (mode) {
+            case 'number': return '3D';
+            case 'password': return 'ETYMOLOGY';
+            case 'speech': return 'LOCI';
+            case 'study': return 'STORY';
+            default: return 'ASSOCIATION';
+        }
+    };
+
+    const handleSave = async () => {
+        if (!user) {
+            if (confirm("기억을 저장하려면 로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?")) {
+                router.push('/login');
+            }
+            return;
+        }
+
+        if (!result) return;
+
+        try {
+            const memoryData = {
+                input_number: input,
+                keywords: result.map(item => item.word), // Extract just the words for saving
+                story: story,
+                image_url: imageUrl || undefined,
+                strategy: getStrategyFromMode(currentMode),
+                category: currentMode,
+                context: "Mobile App Generated"
+            };
+
+            const saved = await supabaseMemoryService.saveMemory(memoryData);
+
+            if (saved) {
+                alert("기억이 성공적으로 저장되었습니다! PC에서도 확인하실 수 있습니다.");
+            } else {
+                alert("저장에 실패했습니다.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("저장 중 오류가 발생했습니다.");
+        }
+    };
+
     return (
         <div className="pb-24 bg-background-light dark:bg-background-dark min-h-screen">
             {/* Header removed: Now using Global MobileTopBar */}
 
             <main>
                 {/* Hero Section */}
-                <section className="px-5 pt-8 pb-4">
-                    <h1 className="text-3xl font-bold leading-tight mb-2 text-slate-900 dark:text-white">
-                        모든 순간을 기억하세요,<br />
-                        <span className="text-primary">메밋</span>
+                <section className="px-5 pt-1 pb-1">
+                    <h1 className="text-3xl font-bold leading-tight mb-2 text-slate-900 dark:text-white tracking-tight break-keep" style={{ fontFamily: 'Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif' }}>
+                        암호생성부터 학습까지,<br />
+                        <span className="text-xl text-primary block mt-1" style={{ fontFamily: 'Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif' }}>있는 그대로 기억하세요. 두뇌 OS<span className="animate-pulse">_</span></span>
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 mb-8 text-sm leading-relaxed">
-                        무엇이든 3초 만에 메밋하세요.<br />복잡한 정보도 나만의 이야기로 영구 저장됩니다.
-                    </p>
 
-                    {/* Main Input Section */}
-                    <div className="flex flex-col gap-4">
+
+                    {/* 2. Main Input Section */}
+                    <section className="flex flex-col gap-4">
                         {/* 1. Filter Chips */}
-                        <MobileFilterChips currentMode={currentMode} onModeChange={setCurrentMode} />
+                        <MobileModeTabs currentMode={currentMode} onModeChange={setCurrentMode} />
 
-                        <div className="px-5">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed transition-all duration-300 break-keep px-1 -mt-2">
+                            {
+                                currentMode === 'password' ? "강력하고 기억하기 쉬운 나만의 암호를 생성하세요." :
+                                    currentMode === 'number' ? "숫자를 자음으로 치환하여 이미지로 기억하세요." :
+                                        currentMode === 'speech' ? "기억의 궁전을 지어 원고 없이 발표하세요." :
+                                            "모든 기억법을 응용해 지식을 구조화하세요."
+                            }
+                        </p>
+
+                        <div>
                             {/* 2. Magic Input Card */}
                             <MobileMagicInput
                                 value={input}
                                 onChange={setInput}
                                 mode={currentMode}
                                 placeholder={
-                                    currentMode === 'number' ? "암기할 숫자를 입력하세요 (예: 3.141592)" :
-                                        currentMode === 'password' ? "생성 키워드를 입력하세요 (예: 네이버 비번)" :
-                                            "기억하고 싶은 내용을 자유롭게 적어보세요..."
+                                    currentMode === 'password' ? "생성할 키워드를 입력하세요 (예: 네이버, 인스타그램)" :
+                                        currentMode === 'number' ? "암기할 숫자를 입력하세요 (예: 3.141592)" :
+                                            currentMode === 'speech' ? "발표 주제나 핵심 키워드를 입력하세요..." :
+                                                "학습할 내용을 입력하거나 이미지를 업로드하세요..."
                                 }
                             />
                         </div>
-                        <div className="px-5">
+                        <div>
                             <button
                                 onClick={handleConvert}
                                 disabled={loading || !input.trim()}
@@ -150,7 +295,7 @@ export default function MobileHome() {
                                 {loading ? '생성 중...' : '메밋 생성하기'}
                             </button>
                         </div>
-                    </div>
+                    </section>
 
                     {result && (
                         <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -159,7 +304,11 @@ export default function MobileHome() {
                                 keywords={result}
                                 story={{ text: story, highlighted: [] }}
                                 imageUrl={imageUrl || undefined}
-                                onSave={() => { }}
+                                onSave={handleSave}
+                                onKeywordChange={handleKeywordChange}
+                                onKeywordLockToggle={handleKeywordLockToggle}
+                                onToggleAllLocks={handleToggleAllLocks}
+                                onRememit={handleRememit}
                                 onReset={() => {
                                     setResult(null);
                                     setStory('');

@@ -89,7 +89,7 @@ export class OpenAIStoryService {
             // For now, let's assume we get a list from the service or mock it if strictly 1 is retured.
 
             // Actually, looking at SupabaseMemoryService, it uses `getMapping` which returns one map.
-            // We might need to query the `system_code_maps` table directly for all matches.
+            // We might need to query the `memory_maps` table directly for all matches.
             // For this MVP, let's use the `convertNumberToKeywords` to get the *default* ones 
             // AND potentially fetch more if we extend the service. 
             // Since `digits_2_full.json` has multiple, we want that richness.
