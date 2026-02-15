@@ -201,7 +201,7 @@ export default function MobileMagicInput({
                                 <div className="absolute inset-0 p-5 pointer-events-none z-0">
                                     <div className={`
                                         text-lg leading-relaxed font-mono whitespace-pre-wrap break-all
-                                        ${mode === 'number' ? 'tracking-widest text-2xl' : 'font-sans'}
+                                        ${(mode as string) === 'number' ? 'tracking-widest text-2xl' : 'font-sans'}
                                         text-slate-400/40 blur-[0.5px]
                                     `}>
                                         {ghostInput}
@@ -225,7 +225,7 @@ export default function MobileMagicInput({
                             `}
                             placeholder={placeholder} // Visual placeholder is handled by Ghost Prompt
                             maxLength={maxLength}
-                            inputMode={mode === 'number' ? 'decimal' : 'text'}
+                            inputMode={(mode as string) === 'number' ? 'decimal' : 'text'}
                         />
                     </>
                 )}
