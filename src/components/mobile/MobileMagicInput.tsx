@@ -111,14 +111,14 @@ export default function MobileMagicInput({
                 ${isFocused ? 'shadow-xl scale-[1.005] border-primary/50' : 'shadow-md border-slate-200 dark:border-white/5'}
                 group min-h-[180px] flex flex-col
             `}
-            onClick={mode === 'number' ? handleContainerClick : undefined}
+            onClick={(mode as string) === 'number' ? handleContainerClick : undefined}
         >
             {/* Animated Background Gradient */}
             <div className={`absolute inset-0 bg-gradient-to-br ${getModeStyles()} opacity-50 transition-colors duration-700 pointer-events-none`}></div>
 
             {/* Aurora Effect (Pseudo) */}
             <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full blur-[40px] opacity-20 transition-colors duration-700 pointer-events-none
-                ${mode === 'number' ? 'bg-blue-500' : mode === 'password' ? 'bg-emerald-500' : 'bg-purple-500'}
+                ${(mode as string) === 'number' ? 'bg-blue-500' : (mode as string) === 'password' ? 'bg-emerald-500' : 'bg-purple-500'}
             `}></div>
 
             {/* Quantum Scanner Effect (Only when not focused or empty) */}
@@ -131,7 +131,7 @@ export default function MobileMagicInput({
             </div>
 
             <div className="relative p-1 h-full flex-1 flex flex-col">
-                {mode === 'number' ? (
+                {(mode as string) === 'number' ? (
                     // --- Number Mode: Segmented Grid Layout ---
                     <div className="relative flex-1 flex flex-col items-center justify-center p-4">
                         {/* Hidden Input for Native Behavior */}
@@ -221,7 +221,7 @@ export default function MobileMagicInput({
                                 w-full h-40 bg-transparent border-none p-5 text-lg leading-relaxed resize-none
                                 focus:ring-0 placeholder-transparent text-slate-800 dark:text-slate-100
                                 transition-all duration-300 relative z-10
-                                ${mode === 'number' ? 'font-mono tracking-widest text-2xl' : 'font-sans'}
+                                ${(mode as string) === 'number' ? 'font-mono tracking-widest text-2xl' : 'font-sans'}
                             `}
                             placeholder={placeholder} // Visual placeholder is handled by Ghost Prompt
                             maxLength={maxLength}
@@ -232,7 +232,7 @@ export default function MobileMagicInput({
             </div>
 
             {/* Bottom Info Bar */}
-            <div className={`absolute bottom-3 right-4 flex items-center gap-2 z-20 ${mode === 'number' ? 'opacity-50' : ''}`}>
+            <div className={`absolute bottom-3 right-4 flex items-center gap-2 z-20 ${(mode as string) === 'number' ? 'opacity-50' : ''}`}>
                 <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-slate-500 transition-colors
                     ${value.length > 0 ? 'opacity-100' : 'opacity-50'}
                 `}>
