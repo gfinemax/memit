@@ -71,7 +71,7 @@ export default function Header() {
             <h1 className="text-xl font-bold text-white flex items-center gap-2">
                 <Home className="w-5 h-5 text-slate-400" />
                 <span className="text-slate-400">/</span>
-                <span>대시보드</span>
+                <span>메밋하기</span>
             </h1>
 
             <div className="flex items-center gap-4">
@@ -127,13 +127,13 @@ export default function Header() {
                                 </div>
                                 <div className="p-1">
                                     <button
-                                        onClick={() => { setDropdownOpen(false); router.push('/dashboard/settings'); }}
+                                        onClick={() => { setDropdownOpen(false); router.push('/memit/settings'); }}
                                         className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 hover:text-white rounded-lg transition-colors flex items-center gap-2.5"
                                     >
                                         <Settings className="w-4 h-4 text-slate-400" /> <span>내 프로필 설정</span>
                                     </button>
                                     <button
-                                        onClick={() => { setDropdownOpen(false); router.push('/dashboard/settings'); }}
+                                        onClick={() => { setDropdownOpen(false); router.push('/memit/settings'); }}
                                         className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 hover:text-white rounded-lg transition-colors flex items-center gap-2.5"
                                     >
                                         <Bell className="w-4 h-4 text-slate-400" /> <span>알림 설정</span>

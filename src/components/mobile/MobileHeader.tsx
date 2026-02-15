@@ -9,7 +9,7 @@ export default function MobileHeader() {
     const pathname = usePathname();
 
     // Only show on the main dashboard page
-    if (pathname !== '/dashboard') {
+    if (pathname !== '/memit') {
         return null;
     }
 
@@ -25,7 +25,7 @@ export default function MobileHeader() {
 
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => router.push('/dashboard/settings')}
+                        onClick={() => router.push('/memit/settings')}
                         className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
                     >
                         <Settings className="w-5 h-5 text-slate-600 dark:text-slate-400" />

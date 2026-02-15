@@ -73,7 +73,7 @@ export default function RecentMemories() {
                 <div className="flex items-center gap-3">
                     <span className="text-xs text-slate-500">{memories.length}개의 기억</span>
                     {memories.length > 6 && (
-                        <Link href="/dashboard/storage" className="text-xs text-primary font-semibold hover:underline">
+                        <Link href="/memit/storage" className="text-xs text-primary font-semibold hover:underline">
                             전체보기 →
                         </Link>
                     )}

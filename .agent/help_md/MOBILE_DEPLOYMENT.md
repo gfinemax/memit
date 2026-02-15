@@ -64,10 +64,7 @@ npx cap sync
 - **터미널 1**: `pnpm run dev` (Next.js 로컬 서버 실행 유지)
 - **터미널 2**: Capacitor 명령어 실행 (아래 참조)
 
-1. **명령어 입력 (터미널 2)**:
-   ```bash
-   npx cap run android --livereload --external
-   ```
+   npx cap run android --live-reload
 2. **네트워크 인터페이스 선택**:
    명령어 실행 후 다음과 같이 네트워크 목록이 뜰 수 있습니다:
    ```text

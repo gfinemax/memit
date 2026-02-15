@@ -15,7 +15,7 @@ function AuthCallbackContent() {
     useEffect(() => {
         let cancelled = false;
 
-        const next = searchParams.get('next') ?? '/dashboard';
+        const next = searchParams.get('next') ?? '/memit';
 
         const processAuth = async () => {
             console.log('[AUTH] Callback started. URL:', window.location.href);

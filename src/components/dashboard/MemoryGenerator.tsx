@@ -42,6 +42,13 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
     const [passwordMapping, setPasswordMapping] = useState<{ word: string, code: string }[]>([]);
     const [generatingStoryPassword, setGeneratingStoryPassword] = useState(false);
 
+    // Ghost Prompt State
+    const [ghostInput, setGhostInput] = useState('');
+    const [isGhostTyping, setIsGhostTyping] = useState(true);
+    const ghostExamples = ['3755', '100482', '24681357']; // 4, 6, 8 digits
+    const [ghostIndex, setGhostIndex] = useState(0);
+    const [showPlaceholder, setShowPlaceholder] = useState(true);
+
 
     const handleConvert = async () => {
         if (!input.trim() || loading) return;
@@ -147,6 +154,60 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
 
     const [generatingMessageIndex, setGeneratingMessageIndex] = useState(0);
     const [generationProgress, setGenerationProgress] = useState(0);
+
+    // Ghost Typing Effect
+    useEffect(() => {
+        if (input.length > 0) {
+            setGhostInput('');
+            setShowPlaceholder(false);
+            return;
+        }
+
+        // Initial delay for placeholder visibility (3 seconds)
+        if (showPlaceholder) {
+            const initialTimeout = setTimeout(() => {
+                setShowPlaceholder(false);
+            }, 3000);
+            return () => clearTimeout(initialTimeout);
+        }
+
+        let timeout: NodeJS.Timeout;
+        const currentExample = ghostExamples[ghostIndex];
+
+        if (isGhostTyping) {
+            if (ghostInput.length < currentExample.length) {
+                // First character waits for dissolve animation (1200ms)
+                const delay = ghostInput.length === 0 ? 1200 : 250;
+                timeout = setTimeout(() => {
+                    setGhostInput(currentExample.slice(0, ghostInput.length + 1));
+                }, delay);
+            } else {
+                // Wait after typing full example
+                timeout = setTimeout(() => {
+                    setIsGhostTyping(false);
+                }, 2000);
+            }
+        } else {
+            // Backspacing/Deleting
+            if (ghostInput.length > 0) {
+                timeout = setTimeout(() => {
+                    setGhostInput(ghostInput.slice(0, -1));
+                }, 100);
+            } else {
+                // Move to next stage
+                const nextIndex = (ghostIndex + 1) % ghostExamples.length;
+                setGhostIndex(nextIndex);
+                setIsGhostTyping(true);
+
+                // After finishing 4, 6, 8 digit loop, go back to placeholder
+                if (nextIndex === 0) {
+                    setShowPlaceholder(true);
+                }
+            }
+        }
+
+        return () => clearTimeout(timeout);
+    }, [input, ghostInput, isGhostTyping, ghostIndex, showPlaceholder]);
 
     const generationMessages = [
         "스토리에서 핵심 이미지를 추출하는 중...",
@@ -272,7 +333,7 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
                             AI MEMORY GEN
                         </span>
                         <h2 className="text-3xl lg:text-4xl font-bold leading-tight text-white font-display">
-                            {activeTab === 'memory' ? '무엇을 기억하고 싶으신가요?' : '강력한 암호를 생성하세요'}
+                            {activeTab === 'memory' ? '오늘의 기억을 메밋할 시간입니다' : '강력한 암호를 생성하세요'}
                         </h2>
                     </div>
                 </div>
@@ -305,9 +366,10 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
                             <div className="flex flex-col gap-3 mb-8">
                                 <div className="lighting-border group p-[4px] rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.15)]">
                                     <div className="relative z-10 bg-white rounded-2xl p-2 flex flex-col md:flex-row items-center gap-2 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)] transition-all overflow-hidden focus-within:shadow-[inset_0_2px_15px_rgba(168,85,247,0.15)]">
-                                        <div className="flex-1 w-full relative">
+                                        <div className="flex-1 w-full relative min-h-[140px] flex items-center justify-center">
+                                            {/* Hidden but functional textarea */}
                                             <textarea
-                                                className="w-full bg-transparent border-none text-slate-900 placeholder-slate-400 focus:ring-0 resize-none py-6 px-4 focus:outline-none min-h-[100px] text-center text-4xl font-bold tracking-widest placeholder:text-lg placeholder:font-normal placeholder:tracking-normal font-mono"
+                                                className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-text focus:outline-none"
                                                 placeholder="기억할 숫자를 입력하세요"
                                                 rows={1}
                                                 value={input}
@@ -318,19 +380,85 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
                                                         handleConvert();
                                                     }
                                                 }}
+                                                autoFocus
                                             ></textarea>
+
+                                            {/* Visual Segmented Slots */}
+                                            <div className="flex flex-nowrap items-center justify-center gap-2 md:gap-4 z-10 pointer-events-none w-full overflow-hidden">
+                                                <AnimatePresence mode="wait">
+                                                    {input.length === 0 && showPlaceholder ? (
+                                                        <motion.div
+                                                            key="placeholder"
+                                                            initial={{ opacity: 0, y: 0 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            exit={{ opacity: 0, filter: 'blur(8px)', scale: 1.05 }}
+                                                            transition={{ duration: 1.2, ease: "easeInOut" }}
+                                                            className="flex items-center gap-2"
+                                                        >
+                                                            <span className="text-slate-400 text-2xl md:text-4xl font-medium tracking-tight">
+                                                                기억할 숫자를 입력해주세요
+                                                            </span>
+                                                        </motion.div>
+                                                    ) : input.length === 0 ? (
+                                                        // Ghost Prompt Mode (Typing)
+                                                        <motion.div
+                                                            key="ghost-typing"
+                                                            initial={{ opacity: 0 }}
+                                                            animate={{ opacity: 1 }}
+                                                            className="flex flex-nowrap gap-2 md:gap-4"
+                                                        >
+                                                            {ghostInput.split('').map((char, i) => (
+                                                                <div
+                                                                    key={`ghost-${i}`}
+                                                                    className="w-10 h-14 md:w-16 md:h-24 bg-white/50 border-2 border-primary/10 rounded-2xl flex items-center justify-center text-2xl md:text-5xl font-black text-slate-300 transition-all duration-300 animate-pulse shrink-0"
+                                                                    style={{
+                                                                        filter: 'blur(0.8px)',
+                                                                        opacity: 0.3 + (i * 0.05), // Increased base opacity
+                                                                        boxShadow: '0 0 10px rgba(168, 85, 247, 0.05)',
+                                                                    }}
+                                                                >
+                                                                    {char}
+                                                                </div>
+                                                            ))}
+                                                            {/* Animated Cursor (Ghost) */}
+                                                            <div className="w-1 h-6 md:h-10 bg-primary/30 rounded-full animate-bounce shadow-[0_0_10px_rgba(168,85,247,0.2)] ml-1 self-center translate-y-[8px]" />
+                                                        </motion.div>
+                                                    ) : (
+                                                        // Real Input Mode
+                                                        <motion.div
+                                                            key="real-input"
+                                                            className="flex flex-nowrap gap-2 md:gap-4"
+                                                        >
+                                                            {input.split('').map((char, i) => (
+                                                                <div
+                                                                    key={i}
+                                                                    className="w-10 h-14 md:w-16 md:h-24 bg-white border-2 border-primary/20 rounded-2xl flex items-center justify-center text-2xl md:text-5xl font-black text-slate-900 shadow-[0_8px_20px_rgba(168,85,247,0.06)] animate-in zoom-in-95 slide-in-from-bottom-2 duration-200 shrink-0"
+                                                                    style={{
+                                                                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02), 0 10px 15px -3px rgba(168, 85, 247, 0.1)',
+                                                                        borderColor: 'rgba(168, 85, 247, 0.25)'
+                                                                    }}
+                                                                >
+                                                                    {char}
+                                                                </div>
+                                                            ))}
+                                                            {/* Animated Cursor (Real) */}
+                                                            <div className="w-1.5 h-8 md:h-12 bg-primary/60 rounded-full animate-pulse shadow-[0_0_10px_rgba(168,85,247,0.4)] ml-1 self-center translate-y-[8px]" />
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
                                         </div>
                                         <button
                                             disabled={loading}
                                             onClick={handleConvert}
-                                            className="w-full md:w-auto px-8 py-4 bg-primary hover:bg-[#6b1cb0] text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 active:scale-95"
+                                            className="w-full md:w-auto px-8 py-4 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 active:scale-95"
                                         >
                                             {loading ? (
                                                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                                             ) : (
                                                 <Brain className="w-5 h-5" />
                                             )}
-                                            <span>{loading ? '변환 중...' : '변환하기'}</span>
+                                            <span>{loading ? '메밋 중...' : '메밋하기'}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -638,9 +766,9 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
                             <div className="flex flex-col gap-3 mb-8">
                                 <div className="lighting-border group p-[3px] rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.15)]">
                                     <div className="relative z-10 bg-white rounded-2xl p-2 flex flex-col items-center gap-2 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)] transition-all overflow-hidden focus-within:shadow-[inset_0_2px_15px_rgba(168,85,247,0.15)]">
-                                        <div className="flex-1 w-full relative">
+                                        <div className="flex-1 w-full relative flex items-center justify-center min-h-[120px]">
                                             <textarea
-                                                className="w-full bg-transparent border-none text-slate-900 placeholder-slate-400 focus:ring-0 resize-none py-6 px-6 focus:outline-none min-h-[120px] text-center text-xl font-medium leading-relaxed placeholder:text-lg placeholder:font-normal"
+                                                className="w-full bg-transparent border-none text-slate-900 placeholder-slate-400 focus:ring-0 resize-none py-4 px-6 focus:outline-none text-center text-xl font-medium leading-relaxed placeholder:text-lg placeholder:font-normal"
                                                 placeholder="예: 우리 집 강아지 해피의 생일과 좋아하는 간식"
                                                 rows={2}
                                                 value={passwordStory}

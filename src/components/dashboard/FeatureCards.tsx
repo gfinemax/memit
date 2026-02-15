@@ -36,7 +36,7 @@ export default function FeatureCards() {
         <section>
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-bold text-white font-display">주요 기능</h3>
-                <Link href="/dashboard/services" className="text-sm text-primary hover:text-[#8B5CF6] font-medium flex items-center gap-1 transition-colors">
+                <Link href="/memit/services" className="text-sm text-primary hover:text-[#8B5CF6] font-medium flex items-center gap-1 transition-colors">
                     전체보기 <ArrowRight className="w-4 h-4" />
                 </Link>
             </div>

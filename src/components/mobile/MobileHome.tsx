@@ -7,9 +7,13 @@ import { useRouter } from 'next/navigation';
 import { convertNumberAction } from '@/app/actions';
 import { openAIStoryService } from '@/lib/openai-story-service';
 import ResultCard from './ResultCard';
+import MobileFilterChips, { FilterMode } from './MobileFilterChips';
+import MobileMagicInput from './MobileMagicInput';
+import MobileCoverFlow from './MobileCoverFlow';
 
 export default function MobileHome() {
     const router = useRouter();
+    const [currentMode, setCurrentMode] = useState<FilterMode>('number');
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<string[] | null>(null);
@@ -95,17 +99,7 @@ export default function MobileHome() {
 
     return (
         <div className="pb-24 bg-background-light dark:bg-background-dark min-h-screen">
-            {/* Header */}
-            <header className="sticky top-0 z-40 w-full bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5">
-                <div className="px-5 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
-                            <Brain className="w-5 h-5" />
-                        </div>
-                        <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white">MEMIT</span>
-                    </div>
-                </div>
-            </header>
+            {/* Header removed: Now using Global MobileTopBar */}
 
             <main>
                 {/* Hero Section */}
@@ -118,32 +112,35 @@ export default function MobileHome() {
                         무엇이든 3초 만에 메밋하세요.<br />복잡한 정보도 나만의 이야기로 영구 저장됩니다.
                     </p>
 
-                    {/* Quick Action Card */}
-                    <div className="bg-white dark:bg-[#1e1c30] rounded-2xl shadow-xl shadow-primary/5 border border-slate-100 dark:border-slate-800 overflow-hidden relative">
-                        <div className="p-1.5 bg-slate-100/50 dark:bg-black/20 m-4 rounded-xl flex gap-1">
-                            <button className="flex-1 py-2.5 px-4 rounded-lg bg-white dark:bg-white/10 shadow-sm text-primary dark:text-white font-semibold text-sm text-center transition-all">
-                                숫자 암기
-                            </button>
-                            <button className="flex-1 py-2.5 px-4 rounded-lg text-slate-500 dark:text-slate-400 font-medium text-sm text-center hover:text-slate-700 dark:hover:text-slate-200 transition-all">
-                                비밀번호 생성
-                            </button>
+                    {/* Main Input Section */}
+                    <div className="flex flex-col gap-4">
+                        {/* 1. Filter Chips */}
+                        <MobileFilterChips currentMode={currentMode} onModeChange={setCurrentMode} />
+
+                        <div className="px-5">
+                            {/* 2. Magic Input Card */}
+                            <MobileMagicInput
+                                value={input}
+                                onChange={setInput}
+                                mode={currentMode}
+                                placeholder={
+                                    currentMode === 'number' ? "암기할 숫자를 입력하세요 (예: 3.141592)" :
+                                        currentMode === 'password' ? "생성 키워드를 입력하세요 (예: 네이버 비번)" :
+                                            "기억하고 싶은 내용을 자유롭게 적어보세요..."
+                                }
+                            />
                         </div>
-                        <div className="px-4 pb-4">
-                            <div className="relative">
-                                <textarea
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    className="w-full h-32 bg-slate-50 dark:bg-black/20 border-none rounded-xl p-4 text-base resize-none focus:ring-2 focus:ring-primary/20 placeholder-slate-400 text-slate-900 dark:text-white"
-                                    placeholder="암기하고 싶은 숫자나 단어를 입력하세요...&#13;&#10;(예: 3.141592, 은행 계좌번호 등)"
-                                ></textarea>
-                                <div className="absolute bottom-3 right-3 text-xs text-slate-400 font-medium">{input.length}/500</div>
-                            </div>
-                        </div>
-                        <div className="px-4 pb-4">
+                        <div className="px-5">
                             <button
                                 onClick={handleConvert}
-                                disabled={loading}
-                                className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-indigo-500 text-white font-bold text-lg shadow-lg shadow-primary/25 active:scale-[0.98] transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
+                                disabled={loading || !input.trim()}
+                                className={`
+                                    w-full py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none
+                                    ${input.trim()
+                                        ? 'bg-gradient-to-r from-primary to-indigo-600 text-white shadow-primary/30 translate-y-0'
+                                        : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                                    }
+                                `}
                             >
                                 {loading ? (
                                     <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
@@ -217,7 +214,7 @@ export default function MobileHome() {
 
                 {/* Service Link */}
                 <section className="px-5 py-4">
-                    <Link href="/dashboard/services" className="w-full group bg-white dark:bg-[#1e1c30] hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+                    <Link href="/memit/services" className="w-full group bg-white dark:bg-[#1e1c30] hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-primary dark:text-indigo-300">
                                 <Grid className="w-6 h-6" />
@@ -231,8 +228,8 @@ export default function MobileHome() {
                     </Link>
                 </section>
 
-                {/* Hall of Fame */}
-                <section className="py-6">
+                {/* Hall of Fame (Converted to MobileCoverFlow) */}
+                <section className="py-8">
                     <div className="px-5 mb-4">
                         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             <TrophyIcon className="w-5 h-5 text-yellow-500" />
@@ -240,59 +237,8 @@ export default function MobileHome() {
                         </h2>
                         <p className="text-xs text-slate-500 dark:text-slate-400">다른 사용자들이 생성한 놀라운 기억법을 확인하세요.</p>
                     </div>
-                    <div className="flex overflow-x-auto gap-4 px-5 pb-4 no-scrollbar snap-x">
-                        {/* Card 1 */}
-                        <div className="min-w-[280px] snap-center bg-white dark:bg-[#1e1c30] rounded-xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <Quote className="w-12 h-12 text-primary" />
-                            </div>
-                            <div className="flex justify-between items-start mb-3">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                                        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQp78p9_EmjD6tz8xlY-Ltf7WlxvNHUph5rcihBE6kJ237xfyvsc-pyyb1wysrWt5Q1YI22Duz-kY0AsA5pNnrvPm4qzpxUb-anyavJDjHYPp-nzf8XIP2bFf5soBv-e2veMVkl7plpi4xE9vDmadV0H2pXULaIcouBk3q45AdhdXm3UX8fo91TpWuGu-RNo9-KYWP_cPe_ZAQz-33P2bk7Qv52WkVj3QyyknwkFypiEC2-y3UndW1vlMoBZeWK9PAPqMFW9QNRIcR" alt="User" />
-                                    </div>
-                                    <div>
-                                        <div className="text-xs font-bold text-slate-800 dark:text-slate-200">김지수</div>
-                                        <div className="text-[10px] text-slate-400">2시간 전</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center text-rose-500 text-xs font-bold bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-full">
-                                    <Heart className="w-3 h-3 mr-1 fill-current" />
-                                    1.2k
-                                </div>
-                            </div>
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">원주율 100자리 외우기</h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                                3.14159... 숫자를 거대한 우주 정거장의 방 번호로 바꿔서 기억했습니다. 첫 번째 방에는...
-                            </p>
-                        </div>
 
-                        {/* Card 2 */}
-                        <div className="min-w-[280px] snap-center bg-white dark:bg-[#1e1c30] rounded-xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <Quote className="w-12 h-12 text-primary" />
-                            </div>
-                            <div className="flex justify-between items-start mb-3">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                                        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-CBxnd15NTUZ8yBRN-cAQpts-Yt6p0VTIbPF-gjwhGO8-mrD8uDbct7OGY0LX1MdyVC-tcxXLSmTWFaRMT0sHylQYaox_aTBvKqenq4cdyd5RaYxgEuXGGmz33FMgIEUQayDVkFBwi2B-hDAiO_tRYQpS7dL4Gvbk_uTKuBXzzz83tjk6amhnK5GJ1XwdSBfzYFxASIhX0nOjERdyvnONl2lK3nNzcAwZeNFJuQ5cFZROHpCgxFFoakv3K1gBs54dMMfs3yjFvpll" alt="User" />
-                                    </div>
-                                    <div>
-                                        <div className="text-xs font-bold text-slate-800 dark:text-slate-200">박민준</div>
-                                        <div className="text-[10px] text-slate-400">5시간 전</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center text-rose-500 text-xs font-bold bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-full">
-                                    <Heart className="w-3 h-3 mr-1 fill-current" />
-                                    850
-                                </div>
-                            </div>
-                            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">한국사 연도표 암기</h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                                임진왜란 1592년을 "이리오 구이" 굽는 장면으로 연상해서 외우니까 절대 안 잊어버리네요!
-                            </p>
-                        </div>
-                    </div>
+                    <MobileCoverFlow />
                 </section>
 
                 {/* Banner */}

@@ -12,7 +12,7 @@ const services = [
         title: '보안 & 금융',
         desc: '비밀번호, 계좌번호 등 민감한 정보 안전 보관',
         icon: Lock,
-        href: '/dashboard/security',
+        href: '/memit/security',
         gradient: 'from-blue-500 to-cyan-400',
     },
     {
@@ -20,7 +20,7 @@ const services = [
         title: '인맥 & 비즈니스',
         desc: '명함 정보, 미팅 핵심 요약 및 인물 기억',
         icon: Handshake,
-        href: '/dashboard/networking',
+        href: '/memit/networking',
         gradient: 'from-orange-500 to-amber-400',
     },
     {
@@ -28,7 +28,7 @@ const services = [
         title: '학습 & 지식',
         desc: '전공 서적, 시험 요점 효율적인 암기 지원',
         icon: GraduationCap,
-        href: '/dashboard/learning',
+        href: '/memit/learning',
         gradient: 'from-green-500 to-emerald-400',
     },
     {
@@ -36,7 +36,7 @@ const services = [
         title: '발표 & 스피치',
         desc: '연설문 스크립트, 프레젠테이션 흐름',
         icon: Mic,
-        href: '/dashboard/speech',
+        href: '/memit/speech',
         gradient: 'from-pink-500 to-rose-400',
     },
     {
@@ -44,7 +44,7 @@ const services = [
         title: '일상 & 생활',
         desc: '장보기 목록, 할 일, 사소하지만 중요한 것',
         icon: ShoppingCart,
-        href: '/dashboard/daily',
+        href: '/memit/daily',
         gradient: 'from-violet-500 to-purple-400',
     },
     {
@@ -52,7 +52,7 @@ const services = [
         title: '두뇌 트레이닝',
         desc: '기억력 향상 퀴즈, 두뇌 회전 연습',
         icon: Brain,
-        href: '/dashboard/training',
+        href: '/memit/training',
         gradient: 'from-indigo-500 to-blue-400',
     },
 ];

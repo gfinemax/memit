@@ -11,42 +11,47 @@ export default function MobileServiceCategories() {
             title: '보안 & 금융',
             desc: '비밀번호, 계좌번호 등 민감한 정보 안전 보관',
             icon: Lock,
-            href: '/dashboard/security'
+            href: '/memit/security'
         },
         {
             id: 'networking',
-            title: '인맥 & 비즈니스',
+            name: '인맥 & 비즈니스',
             desc: '명함 정보, 미팅 핵심 요약 및 인물 기억',
             icon: Handshake,
-            href: '/dashboard/networking'
+            color: 'bg-emerald-500',
+            href: '/memit/networking'
         },
         {
             id: 'learning',
-            title: '학습 & 지식',
+            name: '학습 & 지식',
             desc: '전공 서적, 시험 요점 효율적인 암기 지원',
             icon: GraduationCap,
-            href: '/dashboard/learning'
+            color: 'bg-amber-500',
+            href: '/memit/learning'
         },
         {
             id: 'speech',
-            title: '발표 & 스피치',
+            name: '발표 & 스피치',
             desc: '연설문 스크립트, 프레젠테이션 흐름',
             icon: Mic,
-            href: '/dashboard/speech'
+            color: 'bg-rose-500',
+            href: '/memit/speech'
         },
         {
             id: 'daily',
-            title: '일상 & 생활',
+            name: '일상 & 생활',
             desc: '장보기 목록, 할 일, 사소하지만 중요한 것',
             icon: ShoppingCart,
-            href: '/dashboard/daily'
+            color: 'bg-cyan-500',
+            href: '/memit/daily'
         },
         {
             id: 'training',
-            title: '두뇌 트레이닝',
+            name: '두뇌 트레이닝',
             desc: '기억력 향상 퀴즈, 두뇌 회전 연습',
             icon: Brain,
-            href: '/dashboard/training'
+            color: 'bg-indigo-500',
+            href: '/memit/training'
         }
     ];
 

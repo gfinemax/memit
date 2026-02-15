@@ -12,35 +12,35 @@ export default function ProblemSection() {
                     transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
                     className="absolute top-1/4 left-1/4 text-6xl text-gray-800 font-display font-bold opacity-10 blur-sm"
                 >
-                    0412
+                    PIN
                 </motion.span>
                 <motion.span
                     animate={{ y: [15, -15, 15] }}
                     transition={{ duration: 7, delay: 1, repeat: Infinity, ease: 'easeInOut' }}
                     className="absolute top-3/4 left-1/3 text-4xl text-gray-700 font-display font-bold opacity-20 blur-[2px]"
                 >
-                    9871
+                    !@#$
                 </motion.span>
                 <motion.span
                     animate={{ y: [-25, 25, -25] }}
                     transition={{ duration: 8, delay: 2, repeat: Infinity, ease: 'easeInOut' }}
                     className="absolute top-1/3 right-1/4 text-8xl text-gray-800 font-display font-bold opacity-5 blur-md"
                 >
-                    PIN
+                    PW?
                 </motion.span>
                 <motion.span
                     animate={{ y: [10, -10, 10] }}
                     transition={{ duration: 5, delay: 0.5, repeat: Infinity, ease: 'easeInOut' }}
                     className="absolute bottom-1/4 right-1/3 text-5xl text-gray-800 font-display font-bold opacity-10"
                 >
-                    PW?
+                    Reset
                 </motion.span>
                 <motion.span
                     animate={{ y: [-15, 15, -15] }}
                     transition={{ duration: 6.5, delay: 1.5, repeat: Infinity, ease: 'easeInOut' }}
                     className="absolute top-1/2 left-10 text-3xl text-gray-700 font-display font-bold opacity-15"
                 >
-                    1998
+                    Error
                 </motion.span>
                 <motion.span
                     animate={{ y: [20, -20, 20] }}
@@ -59,8 +59,8 @@ export default function ProblemSection() {
                     transition={{ duration: 0.8 }}
                     className="font-display text-4xl md:text-5xl font-bold text-white mb-8"
                 >
-                    중요한 순간마다 <br />
-                    <span className="text-gray-500">작아지는 우리.</span>
+                    또 비밀번호 찾기를 <br />
+                    <span className="text-gray-500">누르셨나요?</span>
                 </motion.h2>
 
                 <motion.p
@@ -70,9 +70,9 @@ export default function ProblemSection() {
                     transition={{ duration: 0.8, delay: 0.3 }}
                     className="text-xl text-gray-400 leading-relaxed font-light"
                 >
-                    카드 비밀번호가 기억나지 않아 당황했던 적이 있나요?<br />
-                    소중한 사람의 기념일을 놓쳐 미안했던 적은요?<br />
-                    단순한 건망증이 아닙니다. 당신의 뇌가 과부하 걸린 것입니다.
+                    90일마다 변경하라는 알림이 두려우신가요?<br />
+                    복잡한 특수문자 규칙 때문에 스트레스 받으시나요?<br />
+                    당신의 기억력이 문제가 아닙니다. <strong>'규칙'</strong>이 없을 뿐입니다.
                 </motion.p>
             </div>
         </section>

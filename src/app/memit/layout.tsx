@@ -1,7 +1,8 @@
 import React from 'react';
 import Sidebar from '@/components/dashboard/Sidebar';
 import Header from '@/components/dashboard/Header';
-import MobileBottomNav from '@/components/mobile/MobileBottomNav';
+import MobileScrollWrapper from '@/components/mobile/MobileScrollWrapper';
+import MobileTopBar from '@/components/mobile/MobileTopBar';
 
 export default function DashboardLayout({
     children,
@@ -24,19 +25,16 @@ export default function DashboardLayout({
                     <Header />
                 </div>
 
-                {/* Mobile Header */}
 
-                <div className="flex-1 overflow-y-auto z-10 scroll-smooth relative no-scrollbar">
-                    {/* Padding handled by children or specific mobile/desktop containers */}
-                    {/* Desktop has p-6 lg:p-10, Mobile has its own structure */}
-                    {children}
-                </div>
-
-                {/* Mobile Bottom Navigation */}
+                {/* Mobile Top Bar */}
                 <div className="block md:hidden">
-                    <MobileBottomNav />
+                    <MobileTopBar />
                 </div>
-            </main>
-        </div>
+
+                <MobileScrollWrapper hasTopBar={true}>
+                    {children}
+                </MobileScrollWrapper>
+            </main >
+        </div >
     );
 }

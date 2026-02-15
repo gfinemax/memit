@@ -1,347 +1,125 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import {
-  Brain,
-  LayoutGrid,
-  Trophy,
-  Quote,
-  Heart,
-  Home,
-  Library,
-  User,
-  ChevronRight,
-  Sparkles,
-  X,
-  Copy,
-  Check
-} from 'lucide-react';
-import Link from 'next/link';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { convertNumberAction } from './actions';
 import { Capacitor } from '@capacitor/core';
+import LandingHeader from '@/components/landing/LandingHeader';
+import HeroSection from '@/components/landing/HeroSection';
+import FeatureShowcase from '@/components/landing/FeatureShowcase';
 
-export default function MobileLandingPage() {
+export default function RootPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'number' | 'password'>('number');
-  const [inputText, setInputText] = useState('');
-  const [result, setResult] = useState<string[] | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    // 1. Check for hash fragment (Implicit flow - web)
-    //    Supabase implicit flow redirects to: {redirectTo}#access_token=...
-    //    If Supabase redirects to root (/) with hash, forward to /auth/callback
+    // 1. Auth Hash/Code Check (Forwarding)
     const hash = window.location.hash;
     if (hash && (hash.includes('access_token') || hash.includes('error'))) {
-      console.log('[ROOT] Auth hash detected, forwarding to /auth/callback');
       router.replace(`/auth/callback${hash}`);
       return;
     }
 
-    // 2. Check for code param (PKCE flow - mobile fallback)
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     if (code) {
-      console.log('[ROOT] Auth code detected, forwarding to /auth/callback');
       router.replace(`/auth/callback${window.location.search}`);
       return;
     }
 
-    // 3. No auth data - redirect to login for web users
-    if (!Capacitor.isNativePlatform()) {
-      router.replace('/login');
-    }
+    // 2. Intelligent Redirection
+    const checkMobileSession = async () => {
+      if (Capacitor.isNativePlatform()) {
+        const { createClient } = await import('@/utils/supabase/client');
+        const supabase = createClient();
+
+        if (!supabase) {
+          router.replace('/login');
+          return;
+        }
+
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          router.replace('/memit');
+        } else {
+          router.replace('/login');
+        }
+      }
+    };
+
+    checkMobileSession();
   }, [router]);
 
-  const handleConvert = async () => {
-    if (!inputText.trim()) return;
-
-    setIsLoading(true);
-    setResult(null);
-    setShowResult(false);
-
-    try {
-      const response = await convertNumberAction(inputText);
-      if (response.success && response.data) {
-        setResult(response.data);
-        setShowResult(true);
-      } else {
-        alert('변환에 실패했습니다.');
-      }
-    } catch (e) {
-      console.error(e);
-      alert('오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCopy = () => {
-    if (result) {
-      navigator.clipboard.writeText(result.join(' '));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
   return (
-    <div className="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white antialiased selection:bg-primary/30 min-h-[100dvh] pb-20">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
-        <div className="max-w-md mx-auto px-5 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
-              <Brain className="w-5 h-5" />
-            </div>
-            <span className="font-bold text-lg tracking-tight">MEMIT (메밋)</span>
-          </div>
-          <Link href="/login" className="px-4 py-1.5 rounded-full border border-primary/30 text-primary dark:text-primary-light text-sm font-medium hover:bg-primary/5 transition-colors">
-            로그인
-          </Link>
+    <main className="bg-[#0f172a] min-h-screen text-white selection:bg-primary/30 antialiased overflow-x-hidden">
+      <LandingHeader />
+      <HeroSection />
+
+      {/* Feature List Section (Multi-Module Persona) */}
+      <section id="features" className="py-32 px-6 relative z-20 bg-[#0f172a]">
+        <div className="max-w-7xl mx-auto mb-16 text-center">
+          <h2 className="text-3xl md:text-5xl font-bold font-display text-white mb-6">
+            두뇌를 업그레이드하는 <br className="hidden md:block" />
+            <span className="text-indigo-400">3가지 생각 도구</span>
+          </h2>
         </div>
-      </header>
 
-      <main className="max-w-md mx-auto">
-        {/* Hero Section */}
-        <section className="px-5 pt-8 pb-4">
-          <h1 className="text-3xl font-bold leading-tight mb-2 text-gray-900 dark:text-white">
-            모든 순간을 기억하세요,<br />
-            <span className="text-primary">메밋</span>
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mb-8 text-sm leading-relaxed">
-            무엇이든 3초 만에 메밋하세요.<br />복잡한 정보도 나만의 이야기로 영구 저장됩니다.
-          </p>
-
-          {/* Conversion Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-primary/5 border border-gray-100 dark:border-gray-700 overflow-hidden relative transition-all duration-300">
-            <div className="p-1.5 bg-gray-100/50 dark:bg-gray-900/50 m-4 rounded-xl flex gap-1">
-              <button
-                onClick={() => setActiveTab('number')}
-                className={`flex-1 py-2.5 px-4 rounded-lg shadow-sm font-semibold text-sm text-center transition-all ${activeTab === 'number' ? 'bg-white dark:bg-gray-800 text-primary' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
-              >
-                숫자 암기
-              </button>
-              <button
-                onClick={() => setActiveTab('password')}
-                className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm text-center transition-all ${activeTab === 'password' ? 'bg-white dark:bg-gray-800 text-primary shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
-              >
-                비밀번호 생성
-              </button>
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Persona 1: Security Officer */}
+          <div className="p-8 rounded-3xl bg-indigo-900/10 border border-indigo-500/20 hover:bg-indigo-900/20 transition-all group relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 mb-6 group-hover:scale-110 transition-transform relative z-10">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
             </div>
-
-            <div className="px-4 pb-4">
-              <div className="relative">
-                <textarea
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  className="w-full h-32 bg-gray-50 dark:bg-gray-900 border-none rounded-xl p-4 text-base resize-none focus:ring-2 focus:ring-primary/20 placeholder-gray-400 dark:text-white focus:outline-none transition-all"
-                  placeholder="암기하고 싶은 숫자나 단어를 입력하세요...&#13;&#10;(예: 3.141592, 은행 계좌번호 등)"
-                ></textarea>
-                <div className="absolute bottom-3 right-3 text-xs text-gray-400 font-medium">{inputText.length}/500</div>
-              </div>
-            </div>
-
-            <div className={`px-4 pb-4 ${showResult ? 'hidden' : 'block'}`}>
-              <button
-                onClick={handleConvert}
-                disabled={isLoading}
-                className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-primary-light text-white font-bold text-lg shadow-lg shadow-primary/25 active:scale-[0.98] transition-transform flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5 text-yellow-200" />
-                    메밋 생성하기
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Result Area (Inline Expansion) */}
-            {showResult && result && (
-              <div className="px-4 pb-4 animate-in slide-in-from-bottom-4 duration-300">
-                <div className="bg-primary/5 border border-primary/10 rounded-xl p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-bold text-primary uppercase tracking-wider">Generated Memit</span>
-                    <div className="flex gap-2">
-                      <button onClick={handleCopy} className="p-1.5 hover:bg-primary/10 rounded-full text-primary transition-colors">
-                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      </button>
-                      <button onClick={() => setShowResult(false)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-400 transition-colors">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {result.map((keyword, index) => (
-                      <span key={index} className="px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-sm text-sm font-medium text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-gray-700">
-                        {keyword}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                    이제 이 키워드들을 연결하여 당신만의 이야기를 만들어보세요.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowResult(false)}
-                  className="w-full mt-3 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                >
-                  다시 입력하기
-                </button>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Feature Section */}
-        <section className="px-5 py-4">
-          <button className="w-full group bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-primary dark:text-indigo-300">
-                <LayoutGrid className="w-6 h-6" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-bold text-gray-900 dark:text-white text-lg">다른 암기 서비스 보기</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">보안, 비즈니스, 학습 등 더 많은 카테고리</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-gray-300 dark:text-gray-600 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-          </button>
-        </section>
-
-        {/* Hall of Fame */}
-        <section className="py-6">
-          <div className="px-5 mb-4">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" />
-              명예의 전당
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">다른 사용자들이 생성한 놀라운 기억법을 확인하세요.</p>
+            <h3 className="text-xl font-bold mb-2 text-white relative z-10">보안 전문가 (Security)</h3>
+            <p className="text-indigo-200 text-sm font-semibold mb-4 relative z-10 tracking-wide uppercase text-[10px]">Password Generator</p>
+            <p className="text-slate-400 leading-relaxed font-light text-sm relative z-10">
+              "비밀번호, 외우지 말고 만드세요."<br />
+              당신만의 해킹 불가능한 마스터키 로직을 설계해 드립니다.
+            </p>
           </div>
 
-          <div className="flex overflow-x-auto gap-4 px-5 pb-4 no-scrollbar snap-x">
-            {/* Card 1 */}
-            <div className="min-w-[280px] snap-center bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Quote className="w-12 h-12 text-primary fill-primary" />
-              </div>
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-2">
-                  <img
-                    className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQp78p9_EmjD6tz8xlY-Ltf7WlxvNHUph5rcihBE6kJ237xfyvsc-pyyb1wysrWt5Q1YI22Duz-kY0AsA5pNnrvPm4qzpxUb-anyavJDjHYPp-nzf8XIP2bFf5soBv-e2veMVkl7plpi4xE9vDmadV0H2pXULaIcouBk3q45AdhdXm3UX8fo91TpWuGu-RNo9-KYWP_cPe_ZAQz-33P2bk7Qv52WkVj3QyyknwkFypiEC2-y3UndW1vlMoBZeWK9PAPqMFW9QNRIcR"
-                    alt="User"
-                  />
-                  <div>
-                    <div className="text-xs font-bold text-gray-800 dark:text-gray-200">김지수</div>
-                    <div className="text-[10px] text-gray-400">2시간 전</div>
-                  </div>
-                </div>
-                <div className="flex items-center text-rose-500 text-xs font-bold bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-full">
-                  <Heart className="w-3 h-3 mr-1 fill-rose-500" />
-                  1.2k
-                </div>
-              </div>
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">원주율 100자리 외우기</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                3.14159... 숫자를 거대한 우주 정거장의 방 번호로 바꿔서 기억했습니다. 첫 번째 방에는...
-              </p>
+          {/* Persona 2: Brain Coach */}
+          <div className="p-8 rounded-3xl bg-emerald-900/10 border border-emerald-500/20 hover:bg-emerald-900/20 transition-all group relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-6 group-hover:scale-110 transition-transform relative z-10">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
             </div>
-
-            {/* Card 2 */}
-            <div className="min-w-[280px] snap-center bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Quote className="w-12 h-12 text-primary fill-primary" />
-              </div>
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-2">
-                  <img
-                    className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-CBxnd15NTUZ8yBRN-cAQpts-Yt6p0VTIbPF-gjwhGO8-mrD8uDbct7OGY0LX1MdyVC-tcxXLSmTWFaRMT0sHylQYaox_aTBvKqenq4cdyd5RaYxgEuXGGmz33FMgIEUQayDVkFBwi2B-hDAiO_tRYQpS7dL4Gvbk_uTKuBXzzz83tjk6amhnK5GJ1XwdSBfzYFxASIhX0nOjERdyvnONl2lK3nNzcAwZeNFJuQ5cFZROHpCgxFFoakv3K1gBs54dMMfs3yjFvpll"
-                    alt="User"
-                  />
-                  <div>
-                    <div className="text-xs font-bold text-gray-800 dark:text-gray-200">박민준</div>
-                    <div className="text-[10px] text-gray-400">5시간 전</div>
-                  </div>
-                </div>
-                <div className="flex items-center text-rose-500 text-xs font-bold bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-full">
-                  <Heart className="w-3 h-3 mr-1 fill-rose-500" />
-                  850
-                </div>
-              </div>
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">한국사 연도표 암기</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                임진왜란 1592년을 '이리오 구이' 굽는 장면으로 연상해서 외우니까 절대 안 잊어버리네요!
-              </p>
-            </div>
-
-            {/* Card 3 */}
-            <div className="min-w-[280px] snap-center bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Quote className="w-12 h-12 text-primary fill-primary" />
-              </div>
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">L</div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-800 dark:text-gray-200">Lee01</div>
-                    <div className="text-[10px] text-gray-400">1일 전</div>
-                  </div>
-                </div>
-                <div className="flex items-center text-rose-500 text-xs font-bold bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-full">
-                  <Heart className="w-3 h-3 mr-1 fill-rose-500" />
-                  432
-                </div>
-              </div>
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">영어 단어 50개 한번에</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                어원별로 묶어서 스토리텔링을 만드니까 50개 단어가 하나의 영화처럼 느껴집니다.
-              </p>
-            </div>
+            <h3 className="text-xl font-bold mb-2 text-white relative z-10">두뇌 트레이너 (Brain)</h3>
+            <p className="text-emerald-200 text-sm font-semibold mb-4 relative z-10 tracking-wide uppercase text-[10px]">Number Training</p>
+            <p className="text-slate-400 leading-relaxed font-light text-sm relative z-10">
+              "죽어있는 숫자를 살아있는 이미지로."<br />
+              잠든 좌뇌와 우뇌를 동시에 깨우는 고강도 두뇌 트레이닝.
+            </p>
           </div>
-        </section>
 
-        {/* Promo Section */}
-        <section className="px-5 mt-4">
-          <div className="relative w-full h-48 rounded-2xl overflow-hidden shadow-lg group cursor-pointer">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10 flex flex-col justify-end p-5">
-              <p className="text-white font-bold text-lg mb-1">기억의 궁전 체험하기</p>
-              <p className="text-white/80 text-xs">지금 무료로 시작하고 뇌 잠재력을 깨우세요.</p>
+          {/* Persona 3: Stage Director */}
+          <div className="p-8 rounded-3xl bg-purple-900/10 border border-purple-500/20 hover:bg-purple-900/20 transition-all group relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center text-purple-400 mb-6 group-hover:scale-110 transition-transform relative z-10">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
             </div>
-            <img
-              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrjkqA0PK5F73_khPA8VvmE506ni8v1sVeR1FxG5nVj29YRvSwweDOn8TPn2546dAoz8RV3yg9ZZfqQgapNoV31cu2VsB4oeWNgcOabtXViGqVBAsJ-3Rm-9cYPbSqfywvaZr1wdNXID5KZCUHzfJLW8URVRr6itnw5QgKmCkzXf6Ejv6nGXug6V-NNEUYH1PKb3qM18aMmfQHeD_qvdneOaNDvzsAks0nge3-_2CShI8BWHrt1mq-Wyt31opi9wfGYpQikFDgohEu"
-              alt="Promo"
-            />
+            <h3 className="text-xl font-bold mb-2 text-white relative z-10">카리스마 코치 (Speech)</h3>
+            <p className="text-purple-200 text-sm font-semibold mb-4 relative z-10 tracking-wide uppercase text-[10px]">Presentation Master</p>
+            <p className="text-slate-400 leading-relaxed font-light text-sm relative z-10">
+              "원고 없이 무대에 서는 자유."<br />
+              당신의 이야기가 청중의 기억 속에 영원히 남도록 만듭니다.
+            </p>
           </div>
-        </section>
-      </main>
-
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full bg-white dark:bg-background-dark border-t border-gray-200 dark:border-gray-800 pb-safe z-50">
-        <div className="max-w-md mx-auto flex justify-around items-center h-16 px-2">
-          <button className="flex flex-col items-center justify-center w-full h-full text-primary">
-            <Home className="w-6 h-6" />
-            <span className="text-[10px] mt-0.5 font-medium">홈</span>
-          </button>
-          <button className="flex flex-col items-center justify-center w-full h-full text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
-            <Library className="w-6 h-6" />
-            <span className="text-[10px] mt-0.5 font-medium">보관함</span>
-          </button>
-          <button className="flex flex-col items-center justify-center w-full h-full text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
-            <User className="w-6 h-6" />
-            <span className="text-[10px] mt-0.5 font-medium">마이페이지</span>
-          </button>
         </div>
-      </nav>
-      {/* Spacer for bottom nav */}
-      <div className="h-20"></div>
-    </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-20 border-t border-white/5 px-6 relative z-20 bg-[#0f172a]">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="text-slate-500 text-sm font-light">
+            © 2026 MEMIT AI. Built for the dreamers.
+          </div>
+          <div className="flex gap-8 text-slate-400 text-sm">
+            <a href="#" className="hover:text-white transition-colors">Privacy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms</a>
+            <a href="#" className="hover:text-white transition-colors">Contact</a>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }

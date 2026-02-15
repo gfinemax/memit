@@ -26,22 +26,22 @@ export default function Sidebar() {
     const isActive = (path: string) => pathname === path;
 
     const navItems = [
-        { icon: LayoutDashboard, label: '대시보드', href: '/dashboard' },
-        { icon: FolderOpen, label: '내 기억 저장소', href: '/dashboard/storage' },
-        { icon: LayoutGrid, label: '기억 도우미', href: '/dashboard/services' },
+        { icon: LayoutDashboard, label: '메밋하기', href: '/memit' },
+        { icon: FolderOpen, label: '내 기억 저장소', href: '/memit/storage' },
+        { icon: LayoutGrid, label: '기억 도우미', href: '/memit/services' },
     ];
 
     const serviceItems = [
-        { icon: Lock, label: '보안 & 금융', href: '/dashboard/security' },
-        { icon: Handshake, label: '인맥 & 비즈니스', href: '/dashboard/networking' },
-        { icon: GraduationCap, label: '학습 & 지식', href: '/dashboard/learning' },
-        { icon: Mic, label: '발표 & 스피치', href: '/dashboard/speech' },
-        { icon: ShoppingCart, label: '일상 & 생활', href: '/dashboard/daily' },
-        { icon: Brain, label: '두뇌 트레이닝', href: '/dashboard/training' },
+        { icon: Lock, label: '보안 & 금융', href: '/memit/security' },
+        { icon: Handshake, label: '인맥 & 비즈니스', href: '/memit/networking' },
+        { icon: GraduationCap, label: '학습 & 지식', href: '/memit/learning' },
+        { icon: Mic, label: '발표 & 스피치', href: '/memit/speech' },
+        { icon: ShoppingCart, label: '일상 & 생활', href: '/memit/daily' },
+        { icon: Brain, label: '두뇌 트레이닝', href: '/memit/training' },
     ];
 
     const communityItems = [
-        { icon: Users, label: '기억 공유', href: '/dashboard/community' },
+        { icon: Users, label: '기억 공유', href: '/memit/community' },
     ];
 
     return (
@@ -109,13 +109,13 @@ export default function Sidebar() {
 
             <div className="px-3 lg:px-4 mt-auto border-t border-slate-800 pt-6">
                 <Link
-                    href="/dashboard/settings"
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${isActive('/dashboard/settings')
+                    href="/memit/settings"
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${isActive('/memit/settings')
                         ? 'bg-primary/20 text-white border border-primary/20'
                         : 'hover:bg-slate-800 text-slate-400 hover:text-white'
                         }`}
                 >
-                    <Settings className={`w-5 h-5 lg:w-6 lg:h-6 ${isActive('/dashboard/settings') ? 'text-white' : ''}`} />
+                    <Settings className={`w-5 h-5 lg:w-6 lg:h-6 ${isActive('/memit/settings') ? 'text-white' : ''}`} />
                     <span className="hidden group-hover:block font-medium whitespace-nowrap">설정</span>
                 </Link>
             </div>
