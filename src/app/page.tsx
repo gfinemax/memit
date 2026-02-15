@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
 import LandingHeader from '@/components/landing/LandingHeader';
 import HeroSection from '@/components/landing/HeroSection';
-import FeatureShowcase from '@/components/landing/FeatureShowcase';
+
 
 export default function RootPage() {
   const router = useRouter();
