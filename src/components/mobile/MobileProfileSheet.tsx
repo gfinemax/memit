@@ -68,16 +68,19 @@ export default function MobileProfileSheet({ isOpen, onClose }: MobileProfileShe
                     fetchProfile(session.user.id);
                 }
             });
-        }, []);
+        }
+    }, []);
 
     const fetchProfile = async (userId: string) => {
         const supabase = createClient();
+        if (!supabase) return;
         const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
         if (data) setProfile(data);
     };
 
     const handleSignOut = async () => {
         const supabase = createClient();
+        if (!supabase) return;
         await supabase.auth.signOut();
         window.location.href = '/login';
     };
