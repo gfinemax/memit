@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description: "Your second brain for instant encoding and recall.",
 };
 
+import AppUrlListener from "@/components/AppUrlListener";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,6 +25,7 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} antialiased bg-background-dark text-slate-100 font-display`}
       >
+        <AppUrlListener />
         {children}
       </body>
     </html>
