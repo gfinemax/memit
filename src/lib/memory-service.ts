@@ -18,6 +18,7 @@ export interface UserMemory {
     strategy: string;
     category?: string;
     isFavorite?: boolean;
+    label?: string;
     deleted_at?: string | null;
     created_at?: string;
 }
@@ -29,5 +30,6 @@ export interface MemoryService {
     saveMemory(memory: Omit<UserMemory, 'id' | 'created_at'>): Promise<UserMemory | null>;
     getMemories(): Promise<UserMemory[]>;
     deleteMemory(id: string): Promise<{ success: boolean; error?: string }>;
+    updateMemoryLabel(id: string, label: string): Promise<{ success: boolean; error?: string }>;
     uploadImage(url: string, path: string): Promise<string | null>;
 }

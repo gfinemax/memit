@@ -6,14 +6,6 @@ import { createClient } from '@/utils/supabase/client';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { Loader2 } from 'lucide-react';
 
-// Debug logger that persists to sessionStorage
-function debugLog(msg: string) {
-    const logs = JSON.parse(sessionStorage.getItem('auth_debug_logs') || '[]');
-    logs.push(`[${new Date().toISOString()}] ${msg}`);
-    sessionStorage.setItem('auth_debug_logs', JSON.stringify(logs));
-    console.log('[AUTH]', msg);
-}
-
 function AuthCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -23,13 +15,10 @@ function AuthCallbackContent() {
     useEffect(() => {
         let cancelled = false;
 
-        // Clear previous logs
-        sessionStorage.setItem('auth_debug_logs', '[]');
-
         const next = searchParams.get('next') ?? '/dashboard';
 
         const processAuth = async () => {
-            debugLog(`Callback started. URL: ${window.location.href}`);
+            console.log('[AUTH] Callback started. URL:', window.location.href);
 
             const supabase = createClient();
             if (!supabase) {
@@ -41,26 +30,25 @@ function AuthCallbackContent() {
             setStatus('세션 확인 중...');
             const { data: { session: existingSession } } = await supabase.auth.getSession();
             if (existingSession && !cancelled) {
-                debugLog('Session exists! Redirecting...');
+                console.log('[AUTH] Session already exists! Redirecting...');
                 router.replace(next);
                 return;
             }
 
-            // Step 2: Handle PKCE Code (Mobile Flow)
+            // Step 2: Handle PKCE Code (Mobile Native Only)
             const code = searchParams.get('code');
             if (code) {
                 setStatus('모바일 인증 처리 중... (PKCE)');
-                debugLog('PKCE Code detected, exchanging for session...');
+                console.log('[AUTH] PKCE Code detected, exchanging...');
 
                 try {
                     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
                     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-                    // Create temporary client for PKCE exchange using shared localStorage
                     const mobileClient = createSupabaseClient(supabaseUrl, supabaseKey, {
                         auth: {
                             flowType: 'pkce',
-                            storage: window.localStorage, // Share storage with main client
+                            storage: window.localStorage,
                             autoRefreshToken: true,
                             persistSession: true,
                             detectSessionInUrl: false,
@@ -68,50 +56,51 @@ function AuthCallbackContent() {
                     });
 
                     const { data, error: exchangeError } = await mobileClient.auth.exchangeCodeForSession(code);
-
                     if (exchangeError) throw exchangeError;
 
                     if (data.session && !cancelled) {
-                        debugLog('PKCE Success! Session established.');
+                        console.log('[AUTH] PKCE Success!');
                         setStatus('로그인 완료! 이동 중...');
-
-                        // Small delay to ensure storage sync
-                        await new Promise(r => setTimeout(r, 100));
+                        await new Promise(r => setTimeout(r, 300));
                         router.replace(next);
                         return;
                     }
                 } catch (e: any) {
-                    debugLog(`PKCE Error: ${e.message}`);
-                    // Fallthrough to other methods or show error
-                    // But if code is present, it's likely a PKCE attempt fail, so better to warn
-                    console.error('PKCE Exchange failed:', e);
+                    console.error('[AUTH] PKCE Error:', e.message);
                 }
             }
 
-            // Step 3: Handle Implicit Flow (Web Flow - Hash Fragment)
+            // Step 3: Handle Implicit Flow (Web - Hash Fragment)
+            // detectSessionInUrl: true in client.ts handles this automatically
+            // The hash fragment is parsed by the Supabase client on initialization
             const hash = window.location.hash;
             if (hash && hash.includes('access_token')) {
                 setStatus('웹 인증 처리 중...');
-                // Supabase "detectSessionInUrl: true" handles this automatically in createClient
-                // But we act as a safety net listener
-                debugLog('Hash detected, waiting for auto-detection...');
+                console.log('[AUTH] Hash fragment detected, Supabase auto-detecting...');
             }
 
-            // Step 4: Listen for Auth State Change (Universal)
+            // Step 4: Listen for Auth State Change (covers both implicit auto-detection and any other method)
             const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-                debugLog(`Auth Event: ${event}`);
+                console.log('[AUTH] Auth Event:', event);
                 if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !cancelled) {
+                    setStatus('로그인 완료! 이동 중...');
                     router.replace(next);
                 }
             });
 
-            // Timeout fallback
+            // Timeout fallback - if nothing happens in 8 seconds, redirect to login
             setTimeout(() => {
                 if (!cancelled) {
-                    debugLog('Timeout reached. Redirecting...');
-                    router.replace(next);
+                    console.log('[AUTH] Timeout. Checking session one more time...');
+                    supabase.auth.getSession().then(({ data: { session } }) => {
+                        if (session && !cancelled) {
+                            router.replace(next);
+                        } else if (!cancelled) {
+                            setError('인증 시간 초과. 다시 로그인해주세요.');
+                        }
+                    });
                 }
-            }, 5000);
+            }, 8000);
 
             return () => { subscription.unsubscribe(); };
         };

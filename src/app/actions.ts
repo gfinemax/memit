@@ -119,6 +119,16 @@ export async function deleteMemoryAction(id: string) {
         return { success: false, error: '삭제 중 오류가 발생했습니다.' };
     }
 }
+
+export async function updateMemoryLabelAction(id: string, label: string) {
+    try {
+        const result = await supabaseMemoryService.updateMemoryLabel(id, label);
+        return result;
+    } catch (error) {
+        console.error("Update label action error:", error);
+        return { success: false, error: '라벨 업데이트 중 오류가 발생했습니다.' };
+    }
+}
 export async function generatePasswordFromStoryAction(story: string) {
     if (!story) return { success: false, error: '스토리를 입력해주세요.' };
 

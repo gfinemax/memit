@@ -143,6 +143,10 @@ export class LocalMemoryService implements MemoryService {
         return { success: true };
     }
 
+    async updateMemoryLabel(id: string, label: string): Promise<{ success: boolean; error?: string }> {
+        return { success: true };
+    }
+
     async uploadImage(url: string, path: string): Promise<string | null> {
         return url;
     }

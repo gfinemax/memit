@@ -31,6 +31,26 @@ export default function MobileLandingPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    // 1. Check for hash fragment (Implicit flow - web)
+    //    Supabase implicit flow redirects to: {redirectTo}#access_token=...
+    //    If Supabase redirects to root (/) with hash, forward to /auth/callback
+    const hash = window.location.hash;
+    if (hash && (hash.includes('access_token') || hash.includes('error'))) {
+      console.log('[ROOT] Auth hash detected, forwarding to /auth/callback');
+      router.replace(`/auth/callback${hash}`);
+      return;
+    }
+
+    // 2. Check for code param (PKCE flow - mobile fallback)
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      console.log('[ROOT] Auth code detected, forwarding to /auth/callback');
+      router.replace(`/auth/callback${window.location.search}`);
+      return;
+    }
+
+    // 3. No auth data - redirect to login for web users
     if (!Capacitor.isNativePlatform()) {
       router.replace('/login');
     }

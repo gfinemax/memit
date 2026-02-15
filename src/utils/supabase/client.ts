@@ -16,11 +16,13 @@ export function createClient() {
         auth: {
             persistSession: true,
             autoRefreshToken: true,
-            detectSessionInUrl: true, // Enable for implicit flow hash parsing
+            detectSessionInUrl: true,
             storage: typeof window !== 'undefined' ? window.localStorage : undefined,
             flowType: 'implicit',
-            debug: process.env.NODE_ENV === 'development',
-        }
+        },
+        global: {
+            headers: { 'x-my-custom-header': 'memit' },
+        },
     });
 
     return supabaseInstance;

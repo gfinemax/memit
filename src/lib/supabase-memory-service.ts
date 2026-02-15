@@ -248,6 +248,7 @@ export class SupabaseMemoryService implements MemoryService {
             context: item.metadata?.context,
             category: item.metadata?.category,
             isFavorite: item.metadata?.isFavorite || false,
+            label: item.metadata?.label || '',
             strategy: item.encoded_data?.strategy || 'SCENE',
             created_at: item.created_at
         }));
@@ -264,6 +265,36 @@ export class SupabaseMemoryService implements MemoryService {
 
         if (error) {
             console.error("Delete memory (soft) FAILED", error);
+            return { success: false, error: error.message };
+        }
+
+        return { success: true };
+    }
+
+    async updateMemoryLabel(id: string, label: string): Promise<{ success: boolean; error?: string }> {
+        const supabase = createClient();
+        if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+        // First get current metadata
+        const { data: memory, error: fetchError } = await supabase
+            .from('memories')
+            .select('metadata')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !memory) {
+            return { success: false, error: fetchError?.message || 'Memory not found' };
+        }
+
+        const updatedMetadata = { ...memory.metadata, label };
+
+        const { error } = await supabase
+            .from('memories')
+            .update({ metadata: updatedMetadata })
+            .eq('id', id);
+
+        if (error) {
+            console.error('Update label FAILED', error);
             return { success: false, error: error.message };
         }
 
