@@ -59,16 +59,30 @@ export default function MobileProfileSheet({ isOpen, onClose }: MobileProfileShe
     };
 
     useEffect(() => {
-        const supabase = createClient();
-        if (supabase) {
-            supabase.auth.getSession().then(({ data: { session } }) => {
+        const checkSession = async () => {
+            const supabase = createClient();
+            if (!supabase) return;
 
-                if (session?.user) {
-                    setUser(session.user);
-                    fetchProfile(session.user.id);
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                if (error) {
+                    if (error.message.includes("Refresh Token Not Found") || error.status === 401) {
+                        await supabase.auth.signOut();
+                        setUser(null);
+                    }
+                    return;
                 }
-            });
-        }
+
+                if (user) {
+                    setUser(user);
+                    fetchProfile(user.id);
+                }
+            } catch (err) {
+                console.error("Auth error in profile sheet:", err);
+            }
+        };
+
+        checkSession();
     }, []);
 
     const fetchProfile = async (userId: string) => {

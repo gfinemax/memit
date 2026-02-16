@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Brain, ArrowRight, Zap, Play, Grid, ChevronRight, Quote, Heart, TrophyIcon } from 'lucide-react';
+import { Brain, ArrowRight, Zap, Play, Grid, ChevronRight, ChevronDown, Quote, Heart, TrophyIcon, Key } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { convertNumberAction } from '@/app/actions';
 import { openAIStoryService } from '@/lib/openai-story-service';
@@ -10,6 +10,7 @@ import ResultCard from './ResultCard';
 import MobileModeTabs, { FilterMode } from './MobileModeTabs';
 import MobileMagicInput from './MobileMagicInput';
 import MobileCoverFlow from './MobileCoverFlow';
+import { MNEMONIC_MAP } from '@/lib/mnemonic-map';
 
 import { supabaseMemoryService } from '@/lib/supabase-memory-service';
 import { createClient } from '@/utils/supabase/client';
@@ -30,6 +31,7 @@ export default function MobileHome() {
     const [story, setStory] = useState<string>('');
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
+    const [mnemonicKeyOpen, setMnemonicKeyOpen] = useState(false);
 
     // Advanced Generation States
     const [generatingImage, setGeneratingImage] = useState(false);
@@ -49,9 +51,24 @@ export default function MobileHome() {
     React.useEffect(() => {
         const checkUser = async () => {
             const supabase = createClient();
-            if (supabase) {
-                const { data: { user } } = await supabase.auth.getUser();
+            if (!supabase) return;
+
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+
+                if (error) {
+                    console.error("Auth check error:", error);
+                    // Handle specific "Invalid Refresh Token" case
+                    if (error.message.includes("Refresh Token Not Found") || error.status === 401) {
+                        await supabase.auth.signOut();
+                        setUser(null);
+                    }
+                    return;
+                }
+
                 setUser(user);
+            } catch (err) {
+                console.error("Unexpected auth error:", err);
             }
         };
         checkUser();
@@ -260,6 +277,52 @@ export default function MobileHome() {
                                             "모든 기억법을 응용해 지식을 구조화하세요."
                             }
                         </p>
+
+                        {/* Collapsible Mnemonic Key (Number mode only) */}
+                        {currentMode === 'number' && (
+                            <div className="-mt-1">
+                                <button
+                                    onClick={() => setMnemonicKeyOpen(!mnemonicKeyOpen)}
+                                    className="flex items-center gap-1.5 text-sm font-semibold text-primary/80 hover:text-primary active:scale-[0.98] transition-all px-1"
+                                >
+                                    <Key className="w-3.5 h-3.5" />
+                                    <span>기억의 열쇠</span>
+                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${mnemonicKeyOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {mnemonicKeyOpen && (
+                                    <div className="mt-2 p-3 rounded-xl bg-slate-900/60 border border-primary/20 backdrop-blur-sm animate-in slide-in-from-top-2 duration-200">
+                                        <div className="grid grid-cols-5 gap-1.5">
+                                            {MNEMONIC_MAP.map((item) => {
+                                                const isActive = input.includes(item.num);
+                                                return (
+                                                    <div
+                                                        key={item.num}
+                                                        className={`
+                                                            flex flex-col items-center py-1.5 rounded-lg transition-all duration-200
+                                                            ${isActive
+                                                                ? 'bg-primary/20 ring-1 ring-primary/50 scale-105'
+                                                                : 'bg-white/5 hover:bg-white/10'
+                                                            }
+                                                        `}
+                                                    >
+                                                        <span className={`text-[10px] font-bold ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                                                            {item.num}
+                                                        </span>
+                                                        <span className={`text-sm font-bold leading-tight ${isActive ? 'text-primary' : 'text-slate-300'}`}>
+                                                            {item.consonants}
+                                                        </span>
+                                                        <span className={`text-[9px] ${isActive ? 'text-slate-300' : 'text-slate-600'}`}>
+                                                            {item.label.split(',')[0]}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         <div>
                             {/* 2. Magic Input Card */}

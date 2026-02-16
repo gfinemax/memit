@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getConsonants } from '@/lib/mnemonic-map';
 export type FilterMode = 'password' | 'number' | 'speech' | 'study';
 // import { FilterMode } from './MobileModeTabs'; // Removed to fix build error
 
@@ -155,20 +156,26 @@ export default function MobileMagicInput({
                         {/* Visual Segmented Grid */}
                         <div className="flex flex-wrap gap-2 justify-center items-center z-10 pointer-events-none w-full">
                             {/* Render Value Characters */}
-                            {value.split('').map((char, index) => (
-                                <motion.div
-                                    key={index}
-                                    initial={{ scale: 0.5, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    className={`
-                                        w-12 h-16 rounded-lg border-2 flex items-center justify-center text-3xl font-mono font-bold shadow-sm
+                            {value.split('').map((char, index) => {
+                                const consonant = getConsonants(char);
+                                return (
+                                    <motion.div
+                                        key={index}
+                                        initial={{ scale: 0.5, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        className={`
+                                        w-12 ${consonant ? 'h-[74px]' : 'h-16'} rounded-lg border-2 flex flex-col items-center justify-center shadow-sm
                                         bg-white dark:bg-slate-800 text-slate-800 dark:text-white
                                         border-primary/30
                                     `}
-                                >
-                                    {char}
-                                </motion.div>
-                            ))}
+                                    >
+                                        <span className="text-3xl font-mono font-bold leading-none">{char}</span>
+                                        {consonant && (
+                                            <span className="text-[10px] font-bold text-primary/70 mt-0.5 leading-none">{consonant}</span>
+                                        )}
+                                    </motion.div>
+                                );
+                            })}
 
                             {/* Cursor / Placeholder Box (Only if length < maxLength) */}
                             {value.length < maxLength && (

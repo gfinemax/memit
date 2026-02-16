@@ -217,7 +217,7 @@ export class OpenAIStoryService {
 
   **Instructions:**
       1. **Strict Sequence Order (가장 중요)**: 숫자의 순서를 절대 뒤섞지 마세요. 순서 유지는 필수입니다.
-      2. **Exaggerated Modifiers**: 단어 앞에 강렬하고 과장된 형용사를 붙이세요. (예: '초대형', '눈부신', '광기에 찬')
+      2. **Exaggerated Modifiers & Sensory Details**: 단어 앞에 강렬하고 과장된 형용사를 붙이세요. (예: '초대형', '눈부신', '광기에 찬', '귀가 터질듯한'). 사물의 크기, 색상, 소리를 강조하여 이미지가 풍부하게 생성되도록 합니다.
       3. **Impactful Action**: 단어들이 서로 파괴적이거나 기괴하게 상호작용하게 하세요.
       4. **Highlight**: 선택된 키워드는 **double asterisks**로 감싸세요 (예: **우비**).
       5. **Return**: JSON format ONLY.
@@ -296,7 +296,10 @@ export class OpenAIStoryService {
       5. FRAMING: Clean, lush backgrounds (e.g., blue skies with fluffy clouds, grassy fields) to make the primary objects pop.` : ''}
 
       **STRICT PRINCIPLES**:
-      1. **Keyword Priority (Koreans to English)**: Identify words surrounded by **double asterisks** in the story. These are the "Memory Keys". You MUST translate them accurately and make them the most prominent visual elements in the prompt. Do NOT omit or change these objects.
+      1. **Keyword Visual Weighting (CRITICAL)**: Identify words surrounded by **double asterisks** in the story. These are the core memory objects.
+         - For EACH keyword, you MUST describe its unique physical appearance (e.g., "A huge, antique golden trumpet with detailed engravings and three silver valves").
+         - Give these objects the most prominence and visual weight in the scene. They must NOT be background details.
+         - If any keyword is missing in the final image, the task is a failure. Ensure they are the PRIMARY subjects or interacted with by the primary subjects.
       2. **Vivid Expansion**: Transform simple nouns into hyper-descriptive phrases to give DALL-E 3 rich detail.
       3. **Safety Transformation**: Rephrase any sensitive or violent concepts into epic, mystical, or grand metaphors (e.g., "explosion" -> "erupting supernova of stardust").
       4. **Absolutely No Text**: Do not include any speech bubbles, labels, text, or letters in the image.

@@ -28,11 +28,21 @@ function AuthCallbackContent() {
 
             // Step 1: Check existing session (Fast path)
             setStatus('세션 확인 중...');
-            const { data: { session: existingSession } } = await supabase.auth.getSession();
-            if (existingSession && !cancelled) {
-                console.log('[AUTH] Session already exists! Redirecting...');
-                router.replace(next);
-                return;
+            try {
+                const { data: { session: existingSession }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError) throw sessionError;
+
+                if (existingSession && !cancelled) {
+                    console.log('[AUTH] Session already exists! Redirecting...');
+                    router.replace(next);
+                    return;
+                }
+            } catch (e: any) {
+                console.error('[AUTH] Session check error:', e.message);
+                // If it's a refresh token error, we might need to sign out
+                if (e.message.includes("Refresh Token Not Found")) {
+                    await supabase.auth.signOut();
+                }
             }
 
             // Step 2: Handle PKCE Code (Mobile Native Only)
@@ -67,6 +77,7 @@ function AuthCallbackContent() {
                     }
                 } catch (e: any) {
                     console.error('[AUTH] PKCE Error:', e.message);
+                    setError(`인증 처리 중 오류가 발생했습니다: ${e.message}`);
                 }
             }
 
