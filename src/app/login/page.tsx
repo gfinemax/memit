@@ -4,16 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'; // Import factory
-import {
-    BookOpen,
-    Fingerprint,
-    Key,
-    ArrowRight,
-    Brain,
-    Lock,
-    ShieldCheck,
-    ChevronDown
-} from 'lucide-react';
+import { BookOpen, Fingerprint, Key, ArrowRight, Brain, Lock, ShieldCheck, ChevronDown } from 'lucide-react';
 
 import StorytellingLanding from '@/components/landing/StorytellingLanding';
 

@@ -1,21 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Brain, ArrowRight, Zap, Play, Grid, ChevronRight, ChevronDown, Quote, Heart, TrophyIcon, Key } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronRight, ChevronDown, Quote, Heart, TrophyIcon, Brain, Zap, Key, Grid } from 'lucide-react';
+
 import { convertNumberAction } from '@/app/actions';
 import { openAIStoryService } from '@/lib/openai-story-service';
+import { supabaseMemoryService } from '@/lib/supabase-memory-service';
+import { createClient } from '@/utils/supabase/client';
+import { MNEMONIC_MAP } from '@/lib/mnemonic-map';
+
 import ResultCard from './ResultCard';
 import MobileModeTabs, { FilterMode } from './MobileModeTabs';
 import MobileMagicInput from './MobileMagicInput';
 import MobileCoverFlow from './MobileCoverFlow';
 import WelcomeOnboarding from './WelcomeOnboarding';
-import { MNEMONIC_MAP } from '@/lib/mnemonic-map';
-
-import { supabaseMemoryService } from '@/lib/supabase-memory-service';
-import { createClient } from '@/utils/supabase/client';
 
 export interface KeywordItem {
     word: string;
@@ -52,38 +53,34 @@ export default function MobileHome() {
         "거의 다 되었습니다! 이미지를 현상 중..."
     ];
 
-    React.useEffect(() => {
-        const checkUser = async () => {
+    useEffect(() => {
+        const init = async () => {
+            // Check auth
             const supabase = createClient();
-            if (!supabase) return;
-
-            try {
-                const { data: { user }, error } = await supabase.auth.getUser();
-
-                if (error) {
-                    console.error("Auth check error:", error);
-                    // Handle specific "Invalid Refresh Token" case
-                    if (error.message.includes("Refresh Token Not Found") || error.status === 401) {
-                        await supabase.auth.signOut();
-                        setUser(null);
+            if (supabase) {
+                try {
+                    const { data: { user }, error } = await supabase.auth.getUser();
+                    if (error) {
+                        if (error.message.includes("Refresh Token Not Found") || error.status === 401) {
+                            await supabase.auth.signOut();
+                            setUser(null);
+                        }
+                    } else {
+                        setUser(user);
                     }
-                    return;
+                } catch (err) {
+                    console.error("Auth check error:", err);
                 }
+            }
 
-                setUser(user);
-            } catch (err) {
-                console.error("Unexpected auth error:", err);
+            // Check onboarding
+            const hasSeen = localStorage.getItem('hasSeenOnboarding_v2');
+            if (!hasSeen) {
+                setShowOnboarding(true);
             }
         };
-        checkUser();
-    }, []);
 
-    // Check onboarding on mount
-    React.useEffect(() => {
-        const hasSeen = localStorage.getItem('hasSeenOnboarding_v2');
-        if (!hasSeen) {
-            setShowOnboarding(true);
-        }
+        init();
     }, []);
 
     const handleOnboardingComplete = () => {
