@@ -44,6 +44,7 @@ export default function LoginPage() {
                 const mobileClient = createSupabaseClient(supabaseUrl, supabaseKey, {
                     auth: {
                         flowType: 'pkce',
+                        storage: window.localStorage,
                         detectSessionInUrl: false,
                     }
                 });

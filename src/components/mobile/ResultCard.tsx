@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom';
 import { MNEMONIC_MAP } from '@/lib/mnemonic-map';
 import { KeywordItem } from './MobileHome';
 import { saveCustomKeywordAction } from '@/app/actions';
+import { ChevronUp } from 'lucide-react';
 
 interface ResultCardProps {
     input?: string;
@@ -27,6 +28,8 @@ interface ResultCardProps {
     onKeywordLockToggle?: (index: number) => void;
     onToggleAllLocks?: () => void;
     onRememit?: () => void;
+    useFourCut?: boolean;
+    setUseFourCut?: (val: boolean) => void;
 }
 
 // ─── Canvas-based share card generator ───────────────────────────────
@@ -106,7 +109,7 @@ async function generateShareCardCanvas(
         displayNumber = `010-${input.slice(0, 4)}-${input.slice(4)}`;
     }
     const labelText = options?.customLabel?.trim() || '';
-    const W = 800;         // Canvas width
+    const W = 720;         // Canvas width
     const PAD = 48;        // Outer padding
     const CARD_PAD = 32;   // Inner card padding
 
@@ -117,31 +120,45 @@ async function generateShareCardCanvas(
     const tmpCtx = tempCanvas.getContext('2d')!;
 
     // Measure story text height
-    tmpCtx.font = '500 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+    tmpCtx.font = '500 24px "Pretendard", "Apple SD Gothic Neo", sans-serif';
     const storyClean = storyText.replace(/\*\*/g, '');
     const maxTextW = W - PAD * 2 - CARD_PAD * 2 - 16;
-    const storyLines = wrapText(tmpCtx, storyClean, 0, 0, maxTextW, 46);
-    const storyBoxPadding = 40;
-    const storyH = storyLines * 46 + storyBoxPadding * 2;
+    let storyLines = 1;
+    {
+        let line = '';
+        const chars = storyClean.split('');
+        for (const ch of chars) {
+            const test = line + ch;
+            if (tmpCtx.measureText(test).width > maxTextW && line.length > 0) {
+                storyLines++;
+                line = ch;
+            } else {
+                line = test;
+            }
+        }
+    }
+    const storyH = storyLines * 36 + 20;
 
     // Image area
     const imgAreaW = W - PAD * 2 - CARD_PAD * 2;
     const imgAreaH = Math.round(imgAreaW * 0.75); // 4:3
 
     // Total height calculation
-    let headerH = 200; // Increased base for 3x spacing
+    // Total height calculation
+    // Total height calculation
+    let headerH = 140; // Increased base
     if (options?.customTitle) {
         // Measure title height
-        tmpCtx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
-        const titleLines = wrapText(tmpCtx, options.customTitle, 0, 0, maxTextW, 42);
-        // Spacing: 140px extra margin
-        headerH = titleLines + 140 + 140;
+        tmpCtx.font = 'bold 32px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+        const titleLines = wrapText(tmpCtx, options.customTitle, 0, 0, maxTextW, 44);
+        // Spacing: 30px top + 10px bottom + Number area (~140px)
+        headerH = titleLines + 40 + 140;
     }
-    const keywordsH = 120;
-    const brandingH = 120;
-    const mnemonicTableH = 240;
-    const spacings = 120 + 80 + 60 + 60 + 60 + 60; // significantly increased gaps for hierarchy
-    const totalH = PAD + headerH + imgAreaH + 24 + keywordsH + storyH + mnemonicTableH + brandingH + spacings + PAD;
+    const keywordsH = 100;
+    const brandingH = 60; // Reduced branding height slightly
+    const mnemonicTableH = 160;
+    const spacings = 40 + 30 + 30 + 30 + 15 + 10; // Significantly reduced gaps (Story->Key, Key->Brand)
+    const totalH = PAD + headerH + imgAreaH + 16 + storyH + keywordsH + mnemonicTableH + brandingH + spacings + PAD - 20; // -20 offset for tighter feel
 
     // --- Create real canvas ---
     const canvas = document.createElement('canvas');
@@ -172,15 +189,17 @@ async function generateShareCardCanvas(
     roundRect(ctx, cardX, cardY, cardW, cardH, 20);
     ctx.stroke();
 
-    let cursorY = cardY + CARD_PAD + 120; // Start with extra margin for top badge 3x spacing
+    let cursorY = cardY + CARD_PAD + 20; // Added 20px extra spacing for "SUPER MEMORY" badge
 
     // ─── Custom Title ───
     if (options?.customTitle) {
         ctx.fillStyle = '#94a3b8'; // Slate-400
-        ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+        ctx.font = 'bold 32px "Pretendard", "Apple SD Gothic Neo", sans-serif';
         // Draw wrapped text
-        cursorY = wrapText(ctx, options.customTitle, cardX + CARD_PAD, cursorY, maxTextW, 42);
-        cursorY += 40; // Spacing before number
+        cursorY = wrapText(ctx, options.customTitle, cardX + CARD_PAD, cursorY + 30, maxTextW, 44);
+        cursorY += 10; // Essential spacing after title (0 -> 10)
+    } else {
+        // Fallback or empty
     }
 
     // ─── Number ───
@@ -189,14 +208,22 @@ async function generateShareCardCanvas(
     ctx.fillText(displayNumber || '', cardX + CARD_PAD, cursorY + 44);
 
     // ─── Custom label (next to number) ───
+    ctx.font = 'bold 44px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+    const numW = ctx.measureText(displayNumber || '').width;
+    let afterNumX = cardX + CARD_PAD + numW + 20;
+
     if (labelText) {
-        ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
-        const numW = ctx.measureText(displayNumber || '').width;
-        let afterNumX = cardX + CARD_PAD + numW + 20;
         ctx.fillStyle = '#818cf8'; // primary color for label
+        ctx.font = 'bold 28px "Pretendard", "Apple SD Gothic Neo", sans-serif';
         ctx.fillText(labelText, afterNumX, cursorY + 41);
+        afterNumX += ctx.measureText(labelText).width + 16;
     }
-    cursorY += 80;
+
+    // ─── "숫자" badge removed ───
+    // const badgeText = '숫자';
+    // ... removed ...
+
+    cursorY += 60; // Increased spacing after number to prevent overlap (50 -> 60)
 
     // ─── AI Image ───
     const imgX = cardX + CARD_PAD;
@@ -208,6 +235,7 @@ async function generateShareCardCanvas(
             ctx.save();
             roundRect(ctx, imgX, imgY, imgAreaW, imgAreaH, 16);
             ctx.clip();
+            // Cover fit
             const srcRatio = img.width / img.height;
             const dstRatio = imgAreaW / imgAreaH;
             let sx = 0, sy = 0, sw = img.width, sh = img.height;
@@ -221,16 +249,28 @@ async function generateShareCardCanvas(
             ctx.drawImage(img, sx, sy, sw, sh, imgX, imgY, imgAreaW, imgAreaH);
             ctx.restore();
         } catch (e) {
+            // Fallback: draw placeholder
             ctx.fillStyle = '#334155';
             roundRect(ctx, imgX, imgY, imgAreaW, imgAreaH, 16);
             ctx.fill();
+            ctx.fillStyle = '#64748b';
+            ctx.font = '500 20px "Pretendard", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('이미지를 불러올 수 없습니다', imgX + imgAreaW / 2, imgY + imgAreaH / 2);
+            ctx.textAlign = 'start';
         }
     }
-    cursorY = imgY + imgAreaH + 60;
+    cursorY = imgY + imgAreaH + 24;
+
+    // ─── "기억 스토리" label ───
+    ctx.fillStyle = '#818cf8'; // primary/indigo
+    ctx.font = 'bold 28px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+    ctx.fillText('📖 기억 스토리', cardX + CARD_PAD, cursorY + 28);
+    cursorY += 48;
 
     // ─── Keywords row ───
-    const chipGap = 16;
-    const chipH = 60;
+    const chipGap = 12;
+    const chipH = 48;
     const totalChips = keywords.length;
     const chipW = Math.floor((imgAreaW - chipGap * (totalChips - 1)) / totalChips);
     let chipX = cardX + CARD_PAD;
@@ -238,123 +278,122 @@ async function generateShareCardCanvas(
     for (const kw of keywords) {
         // Chip bg
         ctx.fillStyle = '#1e1c30';
-        roundRect(ctx, chipX, cursorY, chipW, chipH, 12);
+        roundRect(ctx, chipX, cursorY, chipW, chipH, 10);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(129, 140, 248, 0.4)';
-        ctx.lineWidth = 1.5;
-        roundRect(ctx, chipX, cursorY, chipW, chipH, 12);
+        ctx.strokeStyle = 'rgba(51, 65, 85, 0.6)';
+        ctx.lineWidth = 1;
+        roundRect(ctx, chipX, cursorY, chipW, chipH, 10);
         ctx.stroke();
 
-        // Keyword text
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
-        const kwTextW = ctx.measureText(kw.word).width;
-        ctx.fillText(kw.word, chipX + (chipW - kwTextW) / 2, cursorY + 41);
+        // Keyword text with code in parens
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = 'bold 26px "Pretendard", "Apple SD Gothic Neo", sans-serif';
 
-        // Code badge
-        const codeText = kw.code;
-        ctx.font = 'bold 14px "Pretendard", monospace';
-        const codeW = ctx.measureText(codeText).width + 12;
-        const codeH = 22;
-        const codeX = chipX + chipW - codeW / 2 - 4;
-        const codeY = cursorY - codeH / 2 + 2;
-        ctx.fillStyle = '#4f46e5';
-        roundRect(ctx, codeX, codeY, codeW, codeH, 6);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(codeText, codeX + 6, codeY + 16);
+        const displayText = `${kw.word}(${kw.code})`;
+        const textW = ctx.measureText(displayText).width;
+
+        // Center text in chip
+        ctx.fillText(displayText, chipX + (chipW - textW) / 2, cursorY + 31);
 
         chipX += chipW + chipGap;
     }
-    cursorY += chipH + 60;
+    cursorY += chipH + 24;
 
-    // ─── "기억 스토리" label ───
-    ctx.fillStyle = '#818cf8';
-    ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
-    ctx.fillText('📖 기억 스토리', cardX + CARD_PAD, cursorY);
-    cursorY += 40;
-
-    // --- Story Box ---
-    const storyBoxY = cursorY;
-    ctx.fillStyle = 'rgba(30, 41, 59, 0.4)';
-    roundRect(ctx, cardX + CARD_PAD - 16, storyBoxY, maxTextW + 32, storyH, 16);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(71, 85, 105, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // ─── Story text inside box ───
+    // ─── Story text ───
     ctx.fillStyle = '#e2e8f0';
-    ctx.font = '500 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
-    wrapText(ctx, storyClean, cardX + CARD_PAD, storyBoxY + 50, maxTextW, 46);
-    cursorY = storyBoxY + storyH + 60;
+    ctx.font = '500 28px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+    cursorY = wrapText(ctx, storyClean, cardX + CARD_PAD, cursorY + 30, maxTextW, 44);
+    cursorY += 25; // Reduced spacing before Mnemonic Key (50 -> 25)
 
-    // ─── Mnemonic Key Table ───
-    ctx.fillStyle = '#a78bfa';
-    ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+    // ─── Mnemonic Key Table (5x2 Grid) ───
+
+    // Title
+    ctx.fillStyle = '#a78bfa'; // violet-400
+    ctx.font = 'bold 27px "Pretendard", "Apple SD Gothic Neo", sans-serif'; // Increased (1.3x)
     ctx.fillText('🔑 기억의 열쇠 (Mnemonic Key)', cardX + CARD_PAD, cursorY);
-    cursorY += 40;
+    cursorY += 30;
 
+    // Grid Container
     const gridW = cardW - CARD_PAD * 2;
     const cellGap = 8;
     const cellW = (gridW - cellGap * 4) / 5;
-    const cellH = 80;
+    const cellH = 75;
 
-    const mapData = (typeof MNEMONIC_MAP !== 'undefined' && MNEMONIC_MAP.length > 0) ? MNEMONIC_MAP : [];
+    // Check if map exists
+    const mapData = (typeof MNEMONIC_MAP !== 'undefined' && MNEMONIC_MAP.length > 0)
+        ? MNEMONIC_MAP
+        : [
+            { num: '0', consonants: 'ㅇ', label: '이응', word: '알' },
+            { num: '1', consonants: 'ㄱㅋ', label: '기역,키읔', word: '감' },
+            { num: '2', consonants: 'ㄴㄹ', label: '니은,리을', word: '논' },
+            { num: '3', consonants: 'ㄷㅌ', label: '디귿,티읕', word: '달' },
+            { num: '4', consonants: 'ㅁㅂ', label: '미음,비읍', word: '물' },
+            { num: '5', consonants: 'ㅅ', label: '시옷', word: '산' },
+            { num: '6', consonants: 'ㅈ', label: '지읒', word: '종' },
+            { num: '7', consonants: 'ㅊ', label: '치읓', word: '차' },
+            { num: '8', consonants: 'ㅍ', label: '피읍', word: '파' },
+            { num: '9', consonants: 'ㅎ', label: '히읗', word: '해' },
+        ];
 
     for (let i = 0; i < 10; i++) {
         const item = mapData.find(m => m.num === i.toString());
         if (!item) continue;
+
         const row = Math.floor(i / 5);
         const col = i % 5;
+
         const cellX = cardX + CARD_PAD + col * (cellW + cellGap);
         const cellY = cursorY + row * (cellH + cellGap);
+
+        // Highlight active number
         const isActive = input.includes(item.num);
 
+        // Cell Background
         if (isActive) {
-            ctx.fillStyle = 'rgba(139, 92, 246, 0.2)';
-            ctx.strokeStyle = '#8b5cf6';
+            ctx.fillStyle = 'rgba(139, 92, 246, 0.2)'; // violet-500/20
+            ctx.strokeStyle = '#8b5cf6'; // violet-500
         } else {
-            ctx.fillStyle = 'rgba(30, 41, 59, 0.5)';
-            ctx.strokeStyle = 'rgba(71, 85, 105, 0.3)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'; // white/5 (Brighter for visibility)
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)'; // slate-400/40 (More visible border)
         }
 
         roundRect(ctx, cellX, cellY, cellW, cellH, 8);
         ctx.fill();
+        ctx.lineWidth = isActive ? 1.5 : 1;
         ctx.stroke();
 
-        ctx.font = `bold 30px "Pretendard", sans-serif`;
-        ctx.fillStyle = isActive ? '#ffffff' : '#64748b';
+        // Combined Number(Consonant)
+        ctx.font = `bold 27px "Pretendard", sans-serif`; // Increased (1.3x)
+        ctx.fillStyle = isActive ? '#ffffff' : '#94a3b8'; // slate-400 (Brighter text)
         const combinedText = `${item.num}(${item.consonants})`;
         const textW = ctx.measureText(combinedText).width;
         ctx.fillText(combinedText, cellX + cellW / 2 - textW / 2, cellY + cellH / 2 + 10);
     }
-    cursorY += 2 * cellH + cellGap + 60;
+    cursorY += 2 * cellH + cellGap + 0; // Removed extra gap (12 -> 0)
 
     // ─── Branding (Centered) ───
-    const brandText = '⚡ Memit AI - 나만의 기억법';
-    ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
-    const brandW = ctx.measureText(brandText).width;
-    const brandX = cardX + (cardW - brandW) / 2;
-    const brandY = totalH - PAD - 30;
+    const brandY = totalH - PAD - 12;
     ctx.fillStyle = '#818cf8';
-    ctx.fillText(brandText, brandX, brandY);
+    ctx.font = 'bold 20px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚡ Memit AI - 나만의 기억법', W / 2, brandY);
+    ctx.textAlign = 'start'; // Reset alignment
 
     // ─── "SUPER MEMORY" badge (Centered) ───
     const smText = '⚡ SUPER MEMORY';
-    ctx.font = 'bold 30px "Pretendard", sans-serif';
-    const smW = ctx.measureText(smText).width + 60;
-    const smH = 60;
+    ctx.font = 'bold 14px "Pretendard", sans-serif';
+    const smW = ctx.measureText(smText).width + 24;
+    const smH = 28;
     const smX = cardX + (cardW - smW) / 2;
-    const smY = cardY - 30;
+    const smY = cardY - 8;
     const smGrad = ctx.createLinearGradient(smX, smY, smX + smW, smY);
     smGrad.addColorStop(0, '#6366f1');
     smGrad.addColorStop(1, '#4f46e5');
     ctx.fillStyle = smGrad;
-    roundRect(ctx, smX, smY, smW, smH, 30);
+    roundRect(ctx, smX, smY, smW, smH, 14);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(smText, smX + 30, smY + 43);
+    ctx.fillText(smText, smX + 12, smY + 19);
 
     return canvas.toDataURL('image/png');
 }
@@ -370,12 +409,15 @@ export default function ResultCard({
     onKeywordChange,
     onKeywordLockToggle,
     onToggleAllLocks,
-    onRememit
+    onRememit,
+    useFourCut = false,
+    setUseFourCut
 }: ResultCardProps) {
     const [isZoomed, setIsZoomed] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isCapturing, setIsCapturing] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
+    const [isOptionsOpen, setIsOptionsOpen] = useState(false); // New state for accordion
 
     // Share card options
     const [sharePrefix010, setSharePrefix010] = useState(false);
@@ -785,98 +827,113 @@ export default function ResultCard({
                                 </button>
                             </div>
 
-                            {/* Options Panel */}
-                            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 space-y-2.5 bg-white dark:bg-slate-900">
-                                {/* Share Title Input */}
-                                <div className="flex flex-col gap-1.5">
-                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">상단 문구</span>
-                                    <textarea
-                                        ref={titleInputRef}
-                                        defaultValue={shareTitle}
-                                        className="text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:outline-none transition-colors resize-none h-24"
-                                        placeholder="상단 문구를 입력하세요"
-                                        onCompositionStart={() => isComposingRef.current = true}
-                                        onCompositionEnd={() => {
-                                            isComposingRef.current = false;
-                                            handleDebouncedInput();
-                                        }}
-                                        onChange={handleDebouncedInput}
-                                    />
-                                </div>
-
-                                {/* 010 Toggle - only show for 8-digit numbers */}
-                                {is8Digits && (
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Phone className="w-4 h-4 text-primary" />
-                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">010 붙이기</span>
-                                        </div>
-                                        <button
-                                            onClick={async () => {
-                                                const next = !sharePrefix010;
-                                                setSharePrefix010(next);
-                                                // Use refs to get current values (Uncontrolled for IME safety)
-                                                const currentTitle = titleInputRef.current?.value || shareTitle;
-                                                const currentLabel = labelInputRef.current?.value || shareLabel;
-
-                                                const dataUrl = await generateShareCardCanvas(
-                                                    input || '', keywords || [], displayStory.text || '', imageUrl,
-                                                    { prefix010: next, customLabel: currentLabel, customTitle: currentTitle }
-                                                );
-                                                setPreviewUrl(dataUrl);
-                                            }}
-                                            className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${sharePrefix010 ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'
-                                                }`}
-                                        >
-                                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${sharePrefix010 ? 'translate-x-5' : ''
-                                                }`} />
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Custom Label Input */}
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap shrink-0">문자 추가</span>
-                                    <input
-                                        ref={labelInputRef}
-                                        type="text"
-                                        defaultValue={shareLabel}
-                                        placeholder="예: 홍길동"
-                                        className="flex-1 min-w-0 text-sm px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:outline-none transition-colors"
-                                        onCompositionStart={() => isComposingRef.current = true}
-                                        onCompositionEnd={() => {
-                                            isComposingRef.current = false;
-                                            handleDebouncedInput();
-                                        }}
-                                        onChange={handleDebouncedInput} // Trigger regeneration
-                                    />
+                            {/* Scrollable Content Container */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                                {/* Collapsible Options Panel */}
+                                <div className="border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all duration-300">
                                     <button
-                                        onClick={async () => {
-                                            // Use refs to get current values (Uncontrolled for IME safety)
-                                            const currentTitle = titleInputRef.current?.value || shareTitle;
-                                            const currentLabel = labelInputRef.current?.value || shareLabel;
-
-                                            setIsCapturing(true);
-                                            try {
-                                                const dataUrl = await generateShareCardCanvas(
-                                                    input || '', keywords || [], displayStory.text || '', imageUrl,
-                                                    { prefix010: sharePrefix010, customLabel: currentLabel, customTitle: currentTitle }
-                                                );
-                                                setPreviewUrl(dataUrl);
-                                            } finally {
-                                                setIsCapturing(false);
-                                            }
-                                        }}
-                                        className="shrink-0 px-3 py-1.5 bg-primary text-white text-sm font-bold rounded-lg active:scale-95 transition-all"
+                                        onClick={() => setIsOptionsOpen(!isOptionsOpen)}
+                                        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                                     >
-                                        적용
+                                        <div className="flex items-center gap-2">
+                                            <span className="bg-primary/10 text-primary p-1 rounded-md"><Maximize2 className="w-3.5 h-3.5" /></span>
+                                            <span>카드 설정</span>
+                                        </div>
+                                        {isOptionsOpen ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                                     </button>
-                                </div>
-                            </div>
 
-                            <div className="flex-1 overflow-y-auto p-4 bg-slate-100 dark:bg-black/20 flex items-center justify-center">
-                                <div className="relative shadow-lg rounded-lg overflow-hidden">
-                                    <img src={previewUrl} alt="Share Preview" className="max-w-full h-auto object-contain" />
+                                    {/* Accordion Content */}
+                                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOptionsOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                                        <div className="px-4 pb-4 space-y-3">
+                                            {/* Share Title Input */}
+                                            <div className="flex flex-col gap-1.5">
+                                                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">상단 문구</span>
+                                                <textarea
+                                                    ref={titleInputRef}
+                                                    defaultValue={shareTitle}
+                                                    className="text-sm px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:outline-none transition-colors resize-none h-20"
+                                                    placeholder="상단 문구를 입력하세요"
+                                                    onCompositionStart={() => isComposingRef.current = true}
+                                                    onCompositionEnd={() => {
+                                                        isComposingRef.current = false;
+                                                        handleDebouncedInput();
+                                                    }}
+                                                    onChange={handleDebouncedInput}
+                                                />
+                                            </div>
+
+                                            {/* 010 Toggle & Custom Label */}
+                                            <div className="flex flex-col gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/50">
+                                                {is8Digits && (
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <Phone className="w-3.5 h-3.5 text-primary" />
+                                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">010 붙이기</span>
+                                                        </div>
+                                                        <button
+                                                            onClick={async () => {
+                                                                const next = !sharePrefix010;
+                                                                setSharePrefix010(next);
+                                                                const currentTitle = titleInputRef.current?.value || shareTitle;
+                                                                const currentLabel = labelInputRef.current?.value || shareLabel;
+                                                                const dataUrl = await generateShareCardCanvas(
+                                                                    input || '', keywords || [], displayStory.text || '', imageUrl,
+                                                                    { prefix010: next, customLabel: currentLabel, customTitle: currentTitle }
+                                                                );
+                                                                setPreviewUrl(dataUrl);
+                                                            }}
+                                                            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${sharePrefix010 ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                                                        >
+                                                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${sharePrefix010 ? 'translate-x-4' : ''}`} />
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap shrink-0">문자 추가</span>
+                                                    <input
+                                                        ref={labelInputRef}
+                                                        type="text"
+                                                        defaultValue={shareLabel}
+                                                        placeholder="예: 홍길동"
+                                                        className="flex-1 min-w-0 text-sm px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:border-primary focus:outline-none transition-colors"
+                                                        onCompositionStart={() => isComposingRef.current = true}
+                                                        onCompositionEnd={() => {
+                                                            isComposingRef.current = false;
+                                                            handleDebouncedInput();
+                                                        }}
+                                                        onChange={handleDebouncedInput}
+                                                    />
+                                                    <button
+                                                        onClick={async () => {
+                                                            const currentTitle = titleInputRef.current?.value || shareTitle;
+                                                            const currentLabel = labelInputRef.current?.value || shareLabel;
+                                                            setIsCapturing(true);
+                                                            try {
+                                                                const dataUrl = await generateShareCardCanvas(
+                                                                    input || '', keywords || [], displayStory.text || '', imageUrl,
+                                                                    { prefix010: sharePrefix010, customLabel: currentLabel, customTitle: currentTitle }
+                                                                );
+                                                                setPreviewUrl(dataUrl);
+                                                            } finally {
+                                                                setIsCapturing(false);
+                                                            }
+                                                        }}
+                                                        className="shrink-0 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg active:scale-95 transition-all"
+                                                    >
+                                                        적용
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Image Preview Area */}
+                                <div className="p-4 bg-slate-100 dark:bg-black/20 flex items-center justify-center min-h-[300px]">
+                                    <div className="relative shadow-lg rounded-lg overflow-hidden w-full max-w-[320px]">
+                                        <img src={previewUrl} alt="Share Preview" className="w-full h-auto object-contain" />
+                                    </div>
                                 </div>
                             </div>
 
@@ -906,7 +963,29 @@ export default function ResultCard({
             </div>
 
             {/* Action Stack */}
-            <div className="flex-none pt-4 pb-8 space-y-3 z-10 relative">
+            <div className="flex-none pt-4 pb-8 space-y-4 z-10 relative">
+                {/* Style Selector Toggle inside ResultCard */}
+                <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-slate-200 dark:border-slate-700/50">
+                    <button
+                        onClick={() => setUseFourCut?.(false)}
+                        className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${!useFourCut
+                                ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
+                                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                            }`}
+                    >
+                        <span>🎨 단일 컷</span>
+                    </button>
+                    <button
+                        onClick={() => setUseFourCut?.(true)}
+                        className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${useFourCut
+                                ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
+                                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                            }`}
+                    >
+                        <span>🧩 4컷 만화</span>
+                    </button>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                     <button
                         onClick={onRememit}

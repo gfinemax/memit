@@ -269,7 +269,11 @@ export class OpenAIStoryService {
      * Refines a story into a DALL-E safe but vivid prompt.
      * Prevents safety filter blocks by rephrasing violent/shocking terms into artistic ones.
      */
-    private async refineImagePrompt(story: string, context?: string, isQuad: boolean = false): Promise<string> {
+    private async refineImagePrompt(story: string, context?: string, isQuad: boolean = false, keywords?: string[]): Promise<string> {
+        const keywordsSection = keywords && keywords.length > 0
+            ? `\n**MANDATORY VISUAL OBJECTS (Include ALL)**: ${keywords.join(', ')}\n`
+            : "";
+
         const refinementPrompt = `
       You are an expert prompt engineer for DALL-E 3.
       Take the following story and its context, then transform and expand them into a single, highly detailed, and visually descriptive English prompt optimized for DALL-E 3.
@@ -278,11 +282,11 @@ export class OpenAIStoryService {
       **Context**: "${context || 'General Memory'}"
       
       **DALL-E 3 PROMPT STRUCTURE**:
-      - **Type**: Specify if it is a photo, digital art, oil painting, or 3D render.
+      - **Type**: "High-quality, vibrant Webtoon/Anime style" (Strictly enforced). Do NOT create photorealistic or oil painting images.
       - **Subject**: Describe the main characters or objects in vivid detail.
       - **Features**: Add specific attributes (textures, materials, facial expressions).
       - **Setting/Composition**: Describe the background, foreground, and specific placement of elements. Mention camera angles (e.g., wide-angle, macro, low-angle) and lighting (e.g., cinematic lighting, volumetric fog, golden hour).
-      - **Mood/Style**: Define the emotional tone and consistent artistic style.
+      - **Mood/Style**: Dynamic, colorful, and clean lines typical of modern high-end webtoons or Studio Ghibli.
       
       ${isQuad ? `**CRITICAL: 4-PANEL LAYOUT REQUIREMENTS**: 
       1. COMPOSITION: The image MUST be split into EXACTLY four equal-sized panels arranged in a 2x2 grid. Each panel represents a different moment in the story.
@@ -295,14 +299,15 @@ export class OpenAIStoryService {
          - Bottom-right: The resolution or final impactful scene.
       5. FRAMING: Clean, lush backgrounds (e.g., blue skies with fluffy clouds, grassy fields) to make the primary objects pop.` : ''}
 
-      **STRICT PRINCIPLES**:
+       **STRICT PRINCIPLES**:
       1. **Keyword Visual Weighting (CRITICAL)**: Identify words surrounded by **double asterisks** in the story. These are the core memory objects.
          - For EACH keyword, you MUST describe its unique physical appearance (e.g., "A huge, antique golden trumpet with detailed engravings and three silver valves").
          - Give these objects the most prominence and visual weight in the scene. They must NOT be background details.
          - If any keyword is missing in the final image, the task is a failure. Ensure they are the PRIMARY subjects or interacted with by the primary subjects.
-      2. **Vivid Expansion**: Transform simple nouns into hyper-descriptive phrases to give DALL-E 3 rich detail.
-      3. **Safety Transformation**: Rephrase any sensitive or violent concepts into epic, mystical, or grand metaphors (e.g., "explosion" -> "erupting supernova of stardust").
-      4. **Absolutely No Text**: Do not include any speech bubbles, labels, text, or letters in the image.
+      2. **Mandatory Inclusion**: ${keywordsSection} If "MANDATORY VISUAL OBJECTS" are listed above, you MUST translate them to English and ensure they are the ABSOLUTE focal point of the artwork.
+      3. **Vivid Expansion**: Transform simple nouns into hyper-descriptive phrases to give DALL-E 3 rich detail.
+      4. **Safety Transformation**: Rephrase any sensitive or violent concepts into epic, mystical, or grand metaphors (e.g., "explosion" -> "erupting supernova of stardust").
+      5. **Absolutely No Text**: Do not include any speech bubbles, labels, text, or letters in the image.
       
       Return ONLY the final English prompt string.
     `;
@@ -330,9 +335,9 @@ export class OpenAIStoryService {
         }
     }
 
-    async generateImage(story: string, context?: string, isQuad: boolean = false): Promise<string> {
+    async generateImage(story: string, context?: string, isQuad: boolean = false, keywords?: string[]): Promise<string> {
         // Step 1: Fully refine story + context into a safe English prompt
-        const safeFinalPrompt = await this.refineImagePrompt(story, context, isQuad);
+        const safeFinalPrompt = await this.refineImagePrompt(story, context, isQuad, keywords);
 
         try {
             const client = getOpenAIClient();

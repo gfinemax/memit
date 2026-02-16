@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Brain, ArrowRight, Zap, Play, Grid, ChevronRight, ChevronDown, Quote, Heart, TrophyIcon, Key } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { convertNumberAction } from '@/app/actions';
 import { openAIStoryService } from '@/lib/openai-story-service';
@@ -10,6 +11,7 @@ import ResultCard from './ResultCard';
 import MobileModeTabs, { FilterMode } from './MobileModeTabs';
 import MobileMagicInput from './MobileMagicInput';
 import MobileCoverFlow from './MobileCoverFlow';
+import WelcomeOnboarding from './WelcomeOnboarding';
 import { MNEMONIC_MAP } from '@/lib/mnemonic-map';
 
 import { supabaseMemoryService } from '@/lib/supabase-memory-service';
@@ -32,6 +34,8 @@ export default function MobileHome() {
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
     const [mnemonicKeyOpen, setMnemonicKeyOpen] = useState(false);
+    const [useFourCut, setUseFourCut] = useState(false); // Style Selector State
+    const [showOnboarding, setShowOnboarding] = useState(false);
 
     // Advanced Generation States
     const [generatingImage, setGeneratingImage] = useState(false);
@@ -73,6 +77,19 @@ export default function MobileHome() {
         };
         checkUser();
     }, []);
+
+    // Check onboarding on mount
+    React.useEffect(() => {
+        const hasSeen = localStorage.getItem('hasSeenOnboarding_v2');
+        if (!hasSeen) {
+            setShowOnboarding(true);
+        }
+    }, []);
+
+    const handleOnboardingComplete = () => {
+        localStorage.setItem('hasSeenOnboarding_v2', 'true');
+        setShowOnboarding(false);
+    };
 
     React.useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -129,7 +146,7 @@ export default function MobileHome() {
 
                 // Step 3: Image (Advanced UX starts here)
                 setGeneratingImage(true);
-                const url = await openAIStoryService.generateImage(storyRes.story, "Mobile App Memory");
+                const url = await openAIStoryService.generateImage(storyRes.story, "Mobile App Memory", useFourCut, res.data);
                 setImageUrl(url);
                 setGenerationProgress(100);
             }
@@ -194,7 +211,7 @@ export default function MobileHome() {
             setStory(storyRes.story);
 
             // Step 3: Regenerate Image
-            const url = await openAIStoryService.generateImage(storyRes.story, "Mobile App Memory Refined");
+            const url = await openAIStoryService.generateImage(storyRes.story, "Mobile App Memory Refined", useFourCut, currentWords);
             setImageUrl(url);
             setGenerationProgress(100);
 
@@ -254,14 +271,46 @@ export default function MobileHome() {
     return (
         <div className="pb-24 bg-background-light dark:bg-background-dark min-h-screen">
             {/* Header removed: Now using Global MobileTopBar */}
-
+            {showOnboarding && <WelcomeOnboarding onComplete={handleOnboardingComplete} />}
             <main>
                 {/* Hero Section */}
                 <section className="px-5 pt-1 pb-1">
-                    <h1 className="text-3xl font-bold leading-tight mb-2 text-slate-900 dark:text-white tracking-tight break-keep" style={{ fontFamily: 'Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif' }}>
-                        암호생성부터 학습까지,<br />
-                        <span className="text-xl text-primary block mt-1" style={{ fontFamily: 'Pretendard Variable, Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif' }}>있는 그대로 기억하세요. 두뇌 OS<span className="animate-pulse">_</span></span>
-                    </h1>
+                    <div className="mb-4">
+                        {/* Line 1: Main Benefit (Staggered Up) */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="text-2xl min-[390px]:text-3xl font-bold italic text-slate-900 dark:text-white tracking-tight break-keep flex flex-wrap items-center gap-x-2"
+                            style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}
+                        >
+                            <span>있는 그대로 기억하세요.</span>
+                            <div className="flex items-center gap-1.5">
+                                <motion.span
+                                    animate={{
+                                        textShadow: [
+                                            "0 0 0px rgba(99,102,241,0)",
+                                            "0 0 15px rgba(99,102,241,0.3)",
+                                            "0 0 0px rgba(99,102,241,0)"
+                                        ]
+                                    }}
+                                    transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                                    className="text-primary whitespace-nowrap"
+                                >
+                                    두뇌 OS
+                                </motion.span>
+                                <motion.span
+                                    initial={{ opacity: 1 }}
+                                    animate={{ opacity: [1, 0, 1] }}
+                                    transition={{ repeat: Infinity, duration: 0.8, times: [0, 0.5, 1] }}
+                                    className="text-primary font-bold mr-1"
+                                >
+                                    _
+                                </motion.span>
+                                <span className="text-primary font-bold tracking-widest opacity-90">메밋</span>
+                            </div>
+                        </motion.div>
+                    </div>
 
 
                     {/* 2. Main Input Section */}
@@ -338,6 +387,29 @@ export default function MobileHome() {
                                 }
                             />
                         </div>
+
+                        {/* Style Selector Toggle */}
+                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                            <button
+                                onClick={() => setUseFourCut(false)}
+                                className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${!useFourCut
+                                    ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
+                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                                    }`}
+                            >
+                                🎨 단일 컷 (웹툰)
+                            </button>
+                            <button
+                                onClick={() => setUseFourCut(true)}
+                                className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${useFourCut
+                                    ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
+                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                                    }`}
+                            >
+                                🧩 4컷 만화
+                            </button>
+                        </div>
+
                         <div>
                             <button
                                 onClick={handleConvert}
@@ -360,72 +432,78 @@ export default function MobileHome() {
                         </div>
                     </section>
 
-                    {result && (
-                        <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                            <ResultCard
-                                input={input}
-                                keywords={result}
-                                story={{ text: story, highlighted: [] }}
-                                imageUrl={imageUrl || undefined}
-                                onSave={handleSave}
-                                onKeywordChange={handleKeywordChange}
-                                onKeywordLockToggle={handleKeywordLockToggle}
-                                onToggleAllLocks={handleToggleAllLocks}
-                                onRememit={handleRememit}
-                                onReset={() => {
-                                    setResult(null);
-                                    setStory('');
-                                    setImageUrl(null);
-                                    setInput('');
-                                }}
-                            />
-                        </div>
-                    )}
+                    {
+                        result && (
+                            <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                                <ResultCard
+                                    input={input}
+                                    keywords={result}
+                                    story={{ text: story, highlighted: [] }}
+                                    imageUrl={imageUrl || undefined}
+                                    onSave={handleSave}
+                                    onKeywordChange={handleKeywordChange}
+                                    onKeywordLockToggle={handleKeywordLockToggle}
+                                    onToggleAllLocks={handleToggleAllLocks}
+                                    onRememit={handleRememit}
+                                    useFourCut={useFourCut}
+                                    setUseFourCut={setUseFourCut}
+                                    onReset={() => {
+                                        setResult(null);
+                                        setStory('');
+                                        setImageUrl(null);
+                                        setInput('');
+                                    }}
+                                />
+                            </div>
+                        )
+                    }
 
                     {/* Advanced Generation UI Overlay */}
-                    {generatingImage && (
-                        <div className="fixed inset-0 z-[100] bg-black/9Center overflow-hidden flex flex-col items-center justify-center p-6 backdrop-blur-xl">
-                            <div className="w-full max-w-sm space-y-8 text-center">
-                                {/* Cinema-style Loading Animation */}
-                                <div className="relative aspect-square w-full max-w-[280px] mx-auto overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 animate-pulse"></div>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="relative">
-                                            <div className="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                                            <Brain className="absolute inset-0 m-auto w-8 h-8 text-primary animate-pulse" />
+                    {
+                        generatingImage && (
+                            <div className="fixed inset-0 z-[100] bg-black/9Center overflow-hidden flex flex-col items-center justify-center p-6 backdrop-blur-xl">
+                                <div className="w-full max-w-sm space-y-8 text-center">
+                                    {/* Cinema-style Loading Animation */}
+                                    <div className="relative aspect-square w-full max-w-[280px] mx-auto overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 animate-pulse"></div>
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="relative">
+                                                <div className="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                                                <Brain className="absolute inset-0 m-auto w-8 h-8 text-primary animate-pulse" />
+                                            </div>
                                         </div>
+                                        {/* Scanning Light Effect */}
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_15px_rgba(79,70,229,0.8)] animate-scan-y opacity-50"></div>
                                     </div>
-                                    {/* Scanning Light Effect */}
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_15px_rgba(79,70,229,0.8)] animate-scan-y opacity-50"></div>
-                                </div>
 
-                                <div className="space-y-4">
-                                    <h3 className="text-xl font-bold text-white tracking-tight animate-pulse">
-                                        {generationMessages[generatingMessageIndex]}
-                                    </h3>
-                                    <p className="text-slate-400 text-sm">기억의 퍼즐을 맞추는 중입니다...</p>
-                                </div>
-
-                                {/* Progress Bar */}
-                                <div className="w-full space-y-2">
-                                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-primary transition-all duration-300 ease-out shadow-[0_0_10px_rgba(79,70,229,0.5)]"
-                                            style={{ width: `${generationProgress}%` }}
-                                        ></div>
+                                    <div className="space-y-4">
+                                        <h3 className="text-xl font-bold text-white tracking-tight animate-pulse">
+                                            {generationMessages[generatingMessageIndex]}
+                                        </h3>
+                                        <p className="text-slate-400 text-sm">기억의 퍼즐을 맞추는 중입니다...</p>
                                     </div>
-                                    <div className="flex justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest">
-                                        <span>Initialising AI</span>
-                                        <span>{Math.round(generationProgress)}%</span>
+
+                                    {/* Progress Bar */}
+                                    <div className="w-full space-y-2">
+                                        <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-primary transition-all duration-300 ease-out shadow-[0_0_10px_rgba(79,70,229,0.5)]"
+                                                style={{ width: `${generationProgress}%` }}
+                                            ></div>
+                                        </div>
+                                        <div className="flex justify-between text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+                                            <span>Initialising AI</span>
+                                            <span>{Math.round(generationProgress)}%</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-                </section>
+                        )
+                    }
+                </section >
 
                 {/* Service Link */}
-                <section className="px-5 py-4">
+                < section className="px-5 py-4" >
                     <Link href="/memit/services" className="w-full group bg-white dark:bg-[#1e1c30] hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-primary dark:text-indigo-300">
@@ -438,10 +516,10 @@ export default function MobileHome() {
                         </div>
                         <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                     </Link>
-                </section>
+                </section >
 
                 {/* Hall of Fame (Converted to MobileCoverFlow) */}
-                <section className="py-8">
+                < section className="py-8" >
                     <div className="px-5 mb-4">
                         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             <TrophyIcon className="w-5 h-5 text-yellow-500" />
@@ -451,10 +529,10 @@ export default function MobileHome() {
                     </div>
 
                     <MobileCoverFlow />
-                </section>
+                </section >
 
                 {/* Banner */}
-                <section className="px-5 mt-4">
+                < section className="px-5 mt-4" >
                     <div className="relative w-full h-48 rounded-2xl overflow-hidden shadow-lg group">
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10 flex flex-col justify-end p-5">
                             <p className="text-white font-bold text-lg mb-1">기억의 궁전 체험하기</p>
@@ -462,9 +540,9 @@ export default function MobileHome() {
                         </div>
                         <img className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrjkqA0PK5F73_khPA8VvmE506ni8v1sVeR1FxG5nVj29YRvSwweDOn8TPn2546dAoz8RV3yg9ZZfqQgapNoV31cu2VsB4oeWNgcOabtXViGqVBAsJ-3Rm-9cYPbSqfywvaZr1wdNXID5KZCUHzfJLW8URVRr6itnw5QgKmCkzXf6Ejv6nGXug6V-NNEUYH1PKb3qM18aMmfQHeD_qvdneOaNDvzsAks0nge3-_2CShI8BWHrt1mq-Wyt31opi9wfGYpQikFDgohEu" alt="Banner" />
                     </div>
-                </section>
-            </main>
-        </div>
+                </section >
+            </main >
+        </div >
     );
 }
 
