@@ -106,7 +106,7 @@ async function generateShareCardCanvas(
         displayNumber = `010-${input.slice(0, 4)}-${input.slice(4)}`;
     }
     const labelText = options?.customLabel?.trim() || '';
-    const W = 720;         // Canvas width
+    const W = 800;         // Canvas width
     const PAD = 48;        // Outer padding
     const CARD_PAD = 32;   // Inner card padding
 
@@ -117,45 +117,31 @@ async function generateShareCardCanvas(
     const tmpCtx = tempCanvas.getContext('2d')!;
 
     // Measure story text height
-    tmpCtx.font = '500 24px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+    tmpCtx.font = '500 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
     const storyClean = storyText.replace(/\*\*/g, '');
     const maxTextW = W - PAD * 2 - CARD_PAD * 2 - 16;
-    let storyLines = 1;
-    {
-        let line = '';
-        const chars = storyClean.split('');
-        for (const ch of chars) {
-            const test = line + ch;
-            if (tmpCtx.measureText(test).width > maxTextW && line.length > 0) {
-                storyLines++;
-                line = ch;
-            } else {
-                line = test;
-            }
-        }
-    }
-    const storyH = storyLines * 36 + 20;
+    const storyLines = wrapText(tmpCtx, storyClean, 0, 0, maxTextW, 46);
+    const storyBoxPadding = 40;
+    const storyH = storyLines * 46 + storyBoxPadding * 2;
 
     // Image area
     const imgAreaW = W - PAD * 2 - CARD_PAD * 2;
     const imgAreaH = Math.round(imgAreaW * 0.75); // 4:3
 
     // Total height calculation
-    // Total height calculation
-    // Total height calculation
-    let headerH = 140; // Increased base
+    let headerH = 200; // Increased base for 3x spacing
     if (options?.customTitle) {
         // Measure title height
-        tmpCtx.font = 'bold 32px "Pretendard", "Apple SD Gothic Neo", sans-serif';
-        const titleLines = wrapText(tmpCtx, options.customTitle, 0, 0, maxTextW, 44);
-        // Spacing: 30px top + 20px bottom + Number area (~140px)
-        headerH = titleLines + 50 + 140;
+        tmpCtx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+        const titleLines = wrapText(tmpCtx, options.customTitle, 0, 0, maxTextW, 42);
+        // Spacing: 140px extra margin
+        headerH = titleLines + 140 + 140;
     }
-    const keywordsH = 100;
-    const brandingH = 80;
-    const mnemonicTableH = 160;
-    const spacings = 40 + 30 + 30 + 30 + 30 + 30; // increased gaps
-    const totalH = PAD + headerH + imgAreaH + 16 + storyH + keywordsH + mnemonicTableH + brandingH + spacings + PAD;
+    const keywordsH = 120;
+    const brandingH = 120;
+    const mnemonicTableH = 240;
+    const spacings = 120 + 80 + 60 + 60 + 60 + 60; // significantly increased gaps for hierarchy
+    const totalH = PAD + headerH + imgAreaH + 24 + keywordsH + storyH + mnemonicTableH + brandingH + spacings + PAD;
 
     // --- Create real canvas ---
     const canvas = document.createElement('canvas');
@@ -186,17 +172,15 @@ async function generateShareCardCanvas(
     roundRect(ctx, cardX, cardY, cardW, cardH, 20);
     ctx.stroke();
 
-    let cursorY = cardY + CARD_PAD;
+    let cursorY = cardY + CARD_PAD + 120; // Start with extra margin for top badge 3x spacing
 
     // ─── Custom Title ───
     if (options?.customTitle) {
         ctx.fillStyle = '#94a3b8'; // Slate-400
-        ctx.font = 'bold 32px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+        ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
         // Draw wrapped text
-        cursorY = wrapText(ctx, options.customTitle, cardX + CARD_PAD, cursorY + 30, maxTextW, 44);
-        cursorY += 20; // Extra spacing before number
-    } else {
-        // Fallback or empty
+        cursorY = wrapText(ctx, options.customTitle, cardX + CARD_PAD, cursorY, maxTextW, 42);
+        cursorY += 40; // Spacing before number
     }
 
     // ─── Number ───
@@ -205,22 +189,14 @@ async function generateShareCardCanvas(
     ctx.fillText(displayNumber || '', cardX + CARD_PAD, cursorY + 44);
 
     // ─── Custom label (next to number) ───
-    ctx.font = 'bold 44px "Pretendard", "Apple SD Gothic Neo", sans-serif';
-    const numW = ctx.measureText(displayNumber || '').width;
-    let afterNumX = cardX + CARD_PAD + numW + 20;
-
     if (labelText) {
+        ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+        const numW = ctx.measureText(displayNumber || '').width;
+        let afterNumX = cardX + CARD_PAD + numW + 20;
         ctx.fillStyle = '#818cf8'; // primary color for label
-        ctx.font = 'bold 28px "Pretendard", "Apple SD Gothic Neo", sans-serif';
         ctx.fillText(labelText, afterNumX, cursorY + 41);
-        afterNumX += ctx.measureText(labelText).width + 16;
     }
-
-    // ─── "숫자" badge removed ───
-    // const badgeText = '숫자';
-    // ... removed ...
-
-    cursorY += 44;
+    cursorY += 80;
 
     // ─── AI Image ───
     const imgX = cardX + CARD_PAD;
@@ -232,7 +208,6 @@ async function generateShareCardCanvas(
             ctx.save();
             roundRect(ctx, imgX, imgY, imgAreaW, imgAreaH, 16);
             ctx.clip();
-            // Cover fit
             const srcRatio = img.width / img.height;
             const dstRatio = imgAreaW / imgAreaH;
             let sx = 0, sy = 0, sw = img.width, sh = img.height;
@@ -246,28 +221,16 @@ async function generateShareCardCanvas(
             ctx.drawImage(img, sx, sy, sw, sh, imgX, imgY, imgAreaW, imgAreaH);
             ctx.restore();
         } catch (e) {
-            // Fallback: draw placeholder
             ctx.fillStyle = '#334155';
             roundRect(ctx, imgX, imgY, imgAreaW, imgAreaH, 16);
             ctx.fill();
-            ctx.fillStyle = '#64748b';
-            ctx.font = '500 20px "Pretendard", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('이미지를 불러올 수 없습니다', imgX + imgAreaW / 2, imgY + imgAreaH / 2);
-            ctx.textAlign = 'start';
         }
     }
-    cursorY = imgY + imgAreaH + 24;
-
-    // ─── "기억 스토리" label ───
-    ctx.fillStyle = '#818cf8'; // primary/indigo
-    ctx.font = 'bold 28px "Pretendard", "Apple SD Gothic Neo", sans-serif';
-    ctx.fillText('📖 기억 스토리', cardX + CARD_PAD, cursorY + 28);
-    cursorY += 48;
+    cursorY = imgY + imgAreaH + 60;
 
     // ─── Keywords row ───
-    const chipGap = 12;
-    const chipH = 48;
+    const chipGap = 16;
+    const chipH = 60;
     const totalChips = keywords.length;
     const chipW = Math.floor((imgAreaW - chipGap * (totalChips - 1)) / totalChips);
     let chipX = cardX + CARD_PAD;
@@ -275,129 +238,123 @@ async function generateShareCardCanvas(
     for (const kw of keywords) {
         // Chip bg
         ctx.fillStyle = '#1e1c30';
-        roundRect(ctx, chipX, cursorY, chipW, chipH, 10);
+        roundRect(ctx, chipX, cursorY, chipW, chipH, 12);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(51, 65, 85, 0.6)';
-        ctx.lineWidth = 1;
-        roundRect(ctx, chipX, cursorY, chipW, chipH, 10);
+        ctx.strokeStyle = 'rgba(129, 140, 248, 0.4)';
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, chipX, cursorY, chipW, chipH, 12);
         ctx.stroke();
 
         // Keyword text
-        ctx.fillStyle = '#e2e8f0';
-        ctx.font = 'bold 26px "Pretendard", "Apple SD Gothic Neo", sans-serif'; // Increased (1.3x)
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
         const kwTextW = ctx.measureText(kw.word).width;
-        ctx.fillText(kw.word, chipX + (chipW - kwTextW) / 2, cursorY + 31);
+        ctx.fillText(kw.word, chipX + (chipW - kwTextW) / 2, cursorY + 41);
 
         // Code badge
         const codeText = kw.code;
-        ctx.font = 'bold 11px "Pretendard", monospace';
-        const codeW = ctx.measureText(codeText).width + 10;
-        const codeH = 18;
-        const codeX = chipX + chipW - codeW / 2 - 2;
-        const codeY = cursorY - codeH / 2;
-        ctx.fillStyle = '#475569';
-        roundRect(ctx, codeX, codeY, codeW, codeH, 5);
+        ctx.font = 'bold 14px "Pretendard", monospace';
+        const codeW = ctx.measureText(codeText).width + 12;
+        const codeH = 22;
+        const codeX = chipX + chipW - codeW / 2 - 4;
+        const codeY = cursorY - codeH / 2 + 2;
+        ctx.fillStyle = '#4f46e5';
+        roundRect(ctx, codeX, codeY, codeW, codeH, 6);
         ctx.fill();
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillText(codeText, codeX + 5, codeY + 13);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(codeText, codeX + 6, codeY + 16);
 
         chipX += chipW + chipGap;
     }
-    cursorY += chipH + 24;
+    cursorY += chipH + 60;
 
-    // ─── Story text ───
+    // ─── "기억 스토리" label ───
+    ctx.fillStyle = '#818cf8';
+    ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+    ctx.fillText('📖 기억 스토리', cardX + CARD_PAD, cursorY);
+    cursorY += 40;
+
+    // --- Story Box ---
+    const storyBoxY = cursorY;
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.4)';
+    roundRect(ctx, cardX + CARD_PAD - 16, storyBoxY, maxTextW + 32, storyH, 16);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(71, 85, 105, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // ─── Story text inside box ───
     ctx.fillStyle = '#e2e8f0';
-    ctx.font = '500 28px "Pretendard", "Apple SD Gothic Neo", sans-serif';
-    cursorY = wrapText(ctx, storyClean, cardX + CARD_PAD, cursorY + 30, maxTextW, 44); // Increased line height
-    cursorY += 50;
+    ctx.font = '500 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+    wrapText(ctx, storyClean, cardX + CARD_PAD, storyBoxY + 50, maxTextW, 46);
+    cursorY = storyBoxY + storyH + 60;
 
-    // ─── Mnemonic Key Table (5x2 Grid) ───
-
-    // Title
-    ctx.fillStyle = '#a78bfa'; // violet-400
-    ctx.font = 'bold 27px "Pretendard", "Apple SD Gothic Neo", sans-serif'; // Increased (1.3x)
+    // ─── Mnemonic Key Table ───
+    ctx.fillStyle = '#a78bfa';
+    ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
     ctx.fillText('🔑 기억의 열쇠 (Mnemonic Key)', cardX + CARD_PAD, cursorY);
-    cursorY += 30;
+    cursorY += 40;
 
-    // Grid Container
     const gridW = cardW - CARD_PAD * 2;
     const cellGap = 8;
     const cellW = (gridW - cellGap * 4) / 5;
-    const cellH = 75;
+    const cellH = 80;
 
-    // Check if map exists
-    const mapData = (typeof MNEMONIC_MAP !== 'undefined' && MNEMONIC_MAP.length > 0)
-        ? MNEMONIC_MAP
-        : [
-            { num: '0', consonants: 'ㅇ', label: '이응', word: '알' },
-            { num: '1', consonants: 'ㄱㅋ', label: '기역,키읔', word: '감' },
-            { num: '2', consonants: 'ㄴㄹ', label: '니은,리을', word: '논' },
-            { num: '3', consonants: 'ㄷㅌ', label: '디귿,티읕', word: '달' },
-            { num: '4', consonants: 'ㅁㅂ', label: '미음,비읍', word: '물' },
-            { num: '5', consonants: 'ㅅ', label: '시옷', word: '산' },
-            { num: '6', consonants: 'ㅈ', label: '지읒', word: '종' },
-            { num: '7', consonants: 'ㅊ', label: '치읓', word: '차' },
-            { num: '8', consonants: 'ㅍ', label: '피읍', word: '파' },
-            { num: '9', consonants: 'ㅎ', label: '히읗', word: '해' },
-        ];
+    const mapData = (typeof MNEMONIC_MAP !== 'undefined' && MNEMONIC_MAP.length > 0) ? MNEMONIC_MAP : [];
 
     for (let i = 0; i < 10; i++) {
         const item = mapData.find(m => m.num === i.toString());
         if (!item) continue;
-
         const row = Math.floor(i / 5);
         const col = i % 5;
-
         const cellX = cardX + CARD_PAD + col * (cellW + cellGap);
         const cellY = cursorY + row * (cellH + cellGap);
-
-        // Highlight active number
         const isActive = input.includes(item.num);
 
-        // Cell Background
         if (isActive) {
-            ctx.fillStyle = 'rgba(139, 92, 246, 0.2)'; // violet-500/20
-            ctx.strokeStyle = '#8b5cf6'; // violet-500
+            ctx.fillStyle = 'rgba(139, 92, 246, 0.2)';
+            ctx.strokeStyle = '#8b5cf6';
         } else {
-            ctx.fillStyle = 'rgba(30, 41, 59, 0.5)'; // slate-800/50
-            ctx.strokeStyle = 'rgba(71, 85, 105, 0.3)'; // slate-600/30
+            ctx.fillStyle = 'rgba(30, 41, 59, 0.5)';
+            ctx.strokeStyle = 'rgba(71, 85, 105, 0.3)';
         }
 
         roundRect(ctx, cellX, cellY, cellW, cellH, 8);
         ctx.fill();
-        ctx.lineWidth = isActive ? 1.5 : 1;
         ctx.stroke();
 
-        // Combined Number(Consonant)
-        ctx.font = `bold 27px "Pretendard", sans-serif`; // Increased (1.3x)
+        ctx.font = `bold 30px "Pretendard", sans-serif`;
         ctx.fillStyle = isActive ? '#ffffff' : '#64748b';
         const combinedText = `${item.num}(${item.consonants})`;
         const textW = ctx.measureText(combinedText).width;
         ctx.fillText(combinedText, cellX + cellW / 2 - textW / 2, cellY + cellH / 2 + 10);
     }
-    cursorY += 2 * cellH + cellGap + 12; // Height of 2 rows + gap
+    cursorY += 2 * cellH + cellGap + 60;
 
-    // ─── Branding ───
-    const brandY = totalH - PAD - 24;
+    // ─── Branding (Centered) ───
+    const brandText = '⚡ Memit AI - 나만의 기억법';
+    ctx.font = 'bold 30px "Pretendard", "Apple SD Gothic Neo", sans-serif';
+    const brandW = ctx.measureText(brandText).width;
+    const brandX = cardX + (cardW - brandW) / 2;
+    const brandY = totalH - PAD - 30;
     ctx.fillStyle = '#818cf8';
-    ctx.font = 'bold 20px "Pretendard", "Apple SD Gothic Neo", sans-serif'; // Increased to 20px
-    ctx.fillText('⚡ Memit - 나만의 기억법', cardX + CARD_PAD, brandY);
+    ctx.fillText(brandText, brandX, brandY);
 
     // ─── "SUPER MEMORY" badge (Centered) ───
     const smText = '⚡ SUPER MEMORY';
-    ctx.font = 'bold 14px "Pretendard", sans-serif';
-    const smW = ctx.measureText(smText).width + 24;
-    const smH = 28;
+    ctx.font = 'bold 30px "Pretendard", sans-serif';
+    const smW = ctx.measureText(smText).width + 60;
+    const smH = 60;
     const smX = cardX + (cardW - smW) / 2;
-    const smY = cardY - 8;
+    const smY = cardY - 30;
     const smGrad = ctx.createLinearGradient(smX, smY, smX + smW, smY);
     smGrad.addColorStop(0, '#6366f1');
     smGrad.addColorStop(1, '#4f46e5');
     ctx.fillStyle = smGrad;
-    roundRect(ctx, smX, smY, smW, smH, 14);
+    roundRect(ctx, smX, smY, smW, smH, 30);
     ctx.fill();
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(smText, smX + 12, smY + 19);
+    ctx.fillText(smText, smX + 30, smY + 43);
 
     return canvas.toDataURL('image/png');
 }
