@@ -94,7 +94,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display min-h-screen flex flex-col lg:flex-row overflow-x-hidden">
+        <div className="bg-background-dark text-slate-100 font-display min-h-screen flex flex-col overflow-x-hidden">
             {/* Top Fold: Split Screen Login */}
             <div className="flex flex-col lg:flex-row w-full min-h-screen relative z-10 shrink-0">
                 {/* Left Side: Cinematic Visual */}
@@ -132,7 +132,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Right Side: Interaction Area */}
-                <div className="relative w-full lg:w-[40%] flex flex-col justify-start lg:justify-center items-center flex-1 bg-background-dark overflow-visible">
+                <div className="relative w-full lg:w-[40%] flex flex-col justify-center items-center flex-1 bg-background-dark overflow-visible">
                     {/* Animated Background Particles */}
                     <div className="absolute inset-0 pointer-events-none">
                         <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-primary rounded-full blur-[1px] star-particle" style={{ animationDuration: '4s' }}></div>
@@ -145,7 +145,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Login Container */}
-                    <div className="w-full max-w-md px-6 z-10 -mt-12 lg:mt-0 mb-10">
+                    <div className="w-full max-w-md px-6 z-10 lg:mt-0 mb-10">
                         {/* Mobile Header (Hidden as we overlap) */}
                         <div className="lg:hidden mb-6 text-center sr-only">
                             <h2 className="text-2xl font-bold text-white">Enter the Palace</h2>

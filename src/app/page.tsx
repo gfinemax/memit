@@ -54,7 +54,7 @@ export default function RootPage() {
       <HeroSection />
 
       {/* Feature List Section (Multi-Module Persona) */}
-      <section id="features" className="py-32 px-6 relative z-20 bg-[#0f172a]">
+      <section id="features" className="py-32 px-6 relative z-20 bg-background-dark">
         <div className="max-w-7xl mx-auto mb-16 text-center">
           <h2 className="text-3xl md:text-5xl font-bold font-display text-white mb-6">
             두뇌를 업그레이드하는 <br className="hidden md:block" />

@@ -18,7 +18,7 @@ export default function DashboardPage() {
     return (
         <>
             {/* Desktop Dashboard View */}
-            <div className="hidden md:block p-6 lg:p-10">
+            <div className="hidden md:block p-6 lg:p-10 max-w-7xl mx-auto">
                 <div className="grid grid-cols-12 gap-8 pb-10">
                     <div className="col-span-12 space-y-8">
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

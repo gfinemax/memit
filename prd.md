@@ -117,7 +117,7 @@ Backend/DB: Supabase (Auth, Postgres DB, Storage).
 
 AI Engine: OpenAI API (GPT-4o or Claude 3.5 Sonnet) - 이미지 프롬프트 생성 및 텍스트 변환용.
 
-Deployment: Vercel (Web), Capacitor (Mobile App Packaging).
+Deployment: Vercel & Cloudflare Pages (Web), Capacitor (Mobile App Packaging).
 
 8. 데이터베이스 스키마 설계 (Draft)
 8.1. users (Supabase Auth 연동)
@@ -131,6 +131,7 @@ type (String): "2D" (00-99) or "3D" (000-999)
 code (String): "00", "99", "000"...
 
 keywords (Array<String>): ["얼음", "우유"...] (JSONB)
+    - **Status**: 2D (00-99) and 3D (000-999) system data successfully seeded and maintained in `public.memory_maps` table.
 
 description (String, Optional): "현관", "장난감방" (Location context from 2-digit system) or others.
 

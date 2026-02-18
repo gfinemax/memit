@@ -48,7 +48,7 @@ export default function HeroSection() {
     };
 
     return (
-        <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#0f172a] pt-20">
+        <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-background-dark pt-20">
             {/* Dynamic Background */}
             <div className={`absolute inset-0 bg-gradient-to-b ${content[activeTab].color} transition-colors duration-1000 opacity-20`}></div>
             <div className="absolute inset-0 starry-bg opacity-30 animate-pulse-slow pointer-events-none"></div>
@@ -72,7 +72,7 @@ export default function HeroSection() {
                 ))}
             </div>
 
-            <div className="relative z-10 text-center px-4 max-w-5xl mx-auto space-y-8 min-h-[400px]">
+            <div className="relative z-10 text-center px-4 max-w-7xl mx-auto space-y-8 min-h-[400px]">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeTab}

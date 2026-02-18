@@ -68,7 +68,7 @@ async function seedSystemMaps() {
     for (let i = 0; i < systemRows.length; i += batchSize) {
         const batch = systemRows.slice(i, i + batchSize);
         const { error } = await supabase
-            .from('system_code_maps')
+            .from('memory_maps')
             .upsert(batch, {
                 onConflict: 'user_id,type,code',
                 ignoreDuplicates: false // We want to update keywords if they changed
@@ -84,4 +84,7 @@ async function seedSystemMaps() {
     console.log('Seeding complete!');
 }
 
-seedSystemMaps();
+seedSystemMaps().catch(e => {
+    console.error('Unhandled error:', e);
+    process.exit(1);
+});

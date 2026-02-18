@@ -5,8 +5,8 @@ import { ArrowRight, Link as LinkIcon, Info } from 'lucide-react';
 
 export default function SolutionSection() {
     return (
-        <section className="relative py-24 bg-background-light dark:bg-[#130c1a]" id="solution">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="relative py-24 bg-background-dark" id="solution">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16">
                     <motion.span
                         initial={{ opacity: 0, y: 10 }}
