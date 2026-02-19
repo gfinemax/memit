@@ -105,11 +105,6 @@ Action: 랭킹 시스템 및 데일리 챌린지.
 ├── 📂 My Memit (Storage)
 │   ├── 저장된 기억 목록 (검색/필터 지원)
 │   └── 복습 테스트 (가리고 맞추기)
-### 6. My Memory Storage
-- **Categorization**: memories are automatically tagged by category (`security`, `learning`, `daily`, etc.) based on the page where they were generated.
-- **Favorites**: Users can toggle favorite status for quick filtering.
-- **Search & Filtering**: Search by content or filter by category via a responsive tab interface.
-- **Persistent Image Storage**: All AI-generated images (OpenAI Base64) are automatically uploaded to Supabase Storage (`memory-images` bucket) for permanent retention.
 - **Enhanced UX**: Animated grid layout, cinema-inspired image generation loading experience (30s progress bar + status messages).
 ├── ⚙️ Settings
 │   ├── 나만의 0~100 리스트 편집 (Customizing)
@@ -122,8 +117,8 @@ Backend/DB: Supabase (Auth, Postgres DB, Storage).
 
 AI Engine: OpenAI API (GPT-4o or Claude 3.5 Sonnet) - 이미지 프롬프트 생성 및 텍스트 변환용.
 
-Deployment: Vercel & Cloudflare Pages (Web), Capacitor (Mobile App Packaging).
-    - **Mobile AI Connectivity**: 모바일 앱의 정적 배포 환경에서도 AI 기능을 지원하기 위해 Cloudflare Pages Functions를 백엔드로 사용하며, `nodejs_compat` 및 CORS 미들웨어가 설정되어 있다.
+Deployment: Vercel (Production), Capacitor (Mobile App Packaging).
+    - **Mobile AI Connectivity**: 모바일 앱의 네이티브 환경(Capacitor)에서도 AI 기능을 지원하기 위해 Vercel에 배포된 Next.js API Routes를 백엔드로 사용합니다.
 
 8. 데이터베이스 스키마 설계 (Draft)
 8.1. users (Supabase Auth 연동)

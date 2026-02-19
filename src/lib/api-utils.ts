@@ -6,7 +6,7 @@ import { Capacitor } from '@capacitor/core';
  * For Web/Dev, it uses the relative path.
  */
 export function getApiUrl(path: string): string {
-    const PRODUCTION_URL = 'https://memit-ai.pages.dev';
+    const PRODUCTION_URL = 'https://memit-ai.vercel.app'; // Update this to your actual Vercel domain
 
     // Ensure path starts with /
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
