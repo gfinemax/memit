@@ -68,6 +68,11 @@ export default function MobileHome() {
         "거의 다 되었습니다! 이미지를 현상 중..."
     ];
 
+    const getErrorMessage = (error: unknown): string => {
+        if (error instanceof Error && error.message) return error.message;
+        return '알 수 없는 오류';
+    };
+
     useEffect(() => {
         const init = async () => {
             // Check auth
@@ -208,7 +213,7 @@ export default function MobileHome() {
             }
         } catch (error) {
             console.error("Mobile conversion failed:", error);
-            alert("처리 중 오류가 발생했습니다. 다시 시도해 주세요.");
+            alert(`처리 중 오류가 발생했습니다.\n${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
             setGeneratingImage(false);
@@ -273,7 +278,7 @@ export default function MobileHome() {
 
         } catch (error) {
             console.error("Rememit failed:", error);
-            alert("다시 메밋하기 중 오류가 발생했습니다.");
+            alert(`다시 메밋하기 중 오류가 발생했습니다.\n${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
             setGeneratingImage(false);

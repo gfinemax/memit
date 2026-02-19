@@ -253,7 +253,8 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
             if (error.message === "SAFETY_FILTER_TRIGGERED") {
                 alert("스토리가 너무 자극적이거나 위험 요소가 포함되어 이미지 생성이 차단되었습니다. 조금 더 부드러운 맥락(Context)을 입력해 보시겠어요? 🎨");
             } else {
-                alert("이미지 생성 중 오류가 발생했습니다. 다시 시도해 주세요.");
+                const msg = error instanceof Error ? error.message : '알 수 없는 오류';
+                alert(`이미지 생성 중 오류가 발생했습니다.\n${msg}`);
             }
         }
         setGeneratingImage(false);

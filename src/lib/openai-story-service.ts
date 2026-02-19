@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { supabaseMemoryService } from './supabase-memory-service';
-import { getApiUrl } from './api-utils';
+import { getApiCandidateUrls } from './api-utils';
 
 // Helper to check if running in browser
 const isBrowser = typeof window !== 'undefined';
@@ -13,6 +13,46 @@ export interface StorySegment {
 
 export class OpenAIStoryService {
     private _openai: OpenAI | null = null;
+
+    private async postJsonWithFallback(path: string, body: Record<string, unknown>): Promise<any> {
+        const urls = getApiCandidateUrls(path);
+        let lastError: unknown = null;
+
+        for (const url of urls) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const raw = await response.text();
+                let parsed: any = {};
+                try {
+                    parsed = raw ? JSON.parse(raw) : {};
+                } catch {
+                    parsed = { raw };
+                }
+
+                if (!response.ok) {
+                    const errorMessage =
+                        parsed?.error ||
+                        parsed?.message ||
+                        `HTTP ${response.status}`;
+                    throw new Error(`[${response.status}] ${errorMessage} @ ${url}`);
+                }
+
+                return parsed;
+            } catch (error) {
+                lastError = error;
+            }
+        }
+
+        if (lastError instanceof Error) {
+            throw lastError;
+        }
+        throw new Error(`API request failed for ${path}`);
+    }
 
     private getOpenAIClient() {
         if (isBrowser) return null;
@@ -105,13 +145,7 @@ export class OpenAIStoryService {
 
         try {
             if (isBrowser) {
-                const response = await fetch(getApiUrl('/api/ai/generate-story'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt })
-                });
-                if (!response.ok) throw new Error("API Route failure");
-                const data = await response.json();
+                const data = await this.postJsonWithFallback('/api/ai/generate-story', { prompt });
                 return {
                     story: data.story || "스토리 생성 실패",
                     keywords: data.keywords || []
@@ -132,6 +166,10 @@ export class OpenAIStoryService {
             }
         } catch (error) {
             console.error("Story Generation Error:", error);
+            if (isBrowser) {
+                if (error instanceof Error) throw error;
+                throw new Error('Story generation failed');
+            }
             return { story: "연결 오류: 오프라인 모드로 변환합니다.", keywords: [] };
         }
     }
@@ -139,18 +177,8 @@ export class OpenAIStoryService {
     async generateImage(story: string, context?: string, isQuad: boolean = false, keywords?: string[]): Promise<string> {
         try {
             if (isBrowser) {
-                const response = await fetch(getApiUrl('/api/ai/generate-image'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ story, context, isQuad, keywords })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    if (errorData.error === "SAFETY_FILTER_TRIGGERED") throw new Error("SAFETY_FILTER_TRIGGERED");
-                    throw new Error(errorData.error || "Failed");
-                }
-                const data = await response.json();
+                const data = await this.postJsonWithFallback('/api/ai/generate-image', { story, context, isQuad, keywords });
+                if (data.error === "SAFETY_FILTER_TRIGGERED") throw new Error("SAFETY_FILTER_TRIGGERED");
                 return data.imageUrl;
             } else {
                 const client = this.getOpenAIClient();
@@ -173,13 +201,7 @@ export class OpenAIStoryService {
     async generateStoryResponse(prompt: string): Promise<any> {
         try {
             if (isBrowser) {
-                const response = await fetch(getApiUrl('/api/ai/generate-story'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt })
-                });
-                if (!response.ok) throw new Error("API Route failure");
-                return await response.json();
+                return await this.postJsonWithFallback('/api/ai/generate-story', { prompt });
             } else {
                 const client = this.getOpenAIClient();
                 if (!client) throw new Error("Server OpenAI key missing");
