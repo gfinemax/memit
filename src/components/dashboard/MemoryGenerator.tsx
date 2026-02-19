@@ -75,41 +75,35 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
             const currentCandidates = res.candidates || [];
             setCandidates(currentCandidates as { chunk: string, words: string[] }[]);
 
-            if (process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
-                try {
-                    const data = await openAIStoryService.generateStory(input, {
-                        candidates: currentCandidates,
-                        context,
-                        strategy,
-                        manualKeywords: (isSameInput || lockedIndices.length > 0) ? result || undefined : undefined
-                    });
+            try {
+                const data = await openAIStoryService.generateStory(input, {
+                    candidates: currentCandidates,
+                    context,
+                    strategy,
+                    manualKeywords: (isSameInput || lockedIndices.length > 0) ? result || undefined : undefined
+                });
 
-                    const finalKeywords = Array(currentCandidates.length).fill('').map((_, idx) => {
-                        if (lockedIndices.includes(idx) && result && result[idx]) return result[idx];
-                        if (data.keywords && data.keywords[idx]) return data.keywords[idx];
-                        return currentCandidates[idx].words[0] || '???';
-                    });
+                const finalKeywords = Array(currentCandidates.length).fill('').map((_, idx) => {
+                    if (lockedIndices.includes(idx) && result && result[idx]) return result[idx];
+                    if (data.keywords && data.keywords[idx]) return data.keywords[idx];
+                    return currentCandidates[idx].words[0] || '???';
+                });
 
-                    setResult(finalKeywords);
+                setResult(finalKeywords);
 
-                    for (let i = 1; i <= finalKeywords.length; i++) {
-                        await new Promise(r => setTimeout(r, 400));
-                        setRevealedCount(i);
-                    }
-
-                    setStory(data.story);
-                    setIsSelecting(false);
-                    setLoading(false);
-                    setLastConvertedInput(input.trim());
-                } catch (error) {
-                    console.error("AI Story generation failed:", error);
-                    setStory("스토리 생성 중 오류가 발생했습니다.");
-                    setIsSelecting(false);
-                    setLoading(false);
+                for (let i = 1; i <= finalKeywords.length; i++) {
+                    await new Promise(r => setTimeout(r, 400));
+                    setRevealedCount(i);
                 }
-            } else {
+
+                setStory(data.story);
+                setIsSelecting(false);
+                setLoading(false);
+                setLastConvertedInput(input.trim());
+            } catch (error) {
+                console.error("AI Story generation failed:", error);
                 setResult(res.data);
-                setStory("⚠️ OpenAI API Key가 설정되지 않았습니다.");
+                setStory("스토리 생성 중 오류가 발생했습니다.");
                 setRevealedCount(res.data.length);
                 setIsSelecting(false);
                 setLoading(false);

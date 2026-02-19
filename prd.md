@@ -119,6 +119,10 @@ AI Engine: OpenAI API (GPT-4o or Claude 3.5 Sonnet) - 이미지 프롬프트 생
 
 Deployment: Vercel (Production), Capacitor (Mobile App Packaging).
     - **Mobile AI Connectivity**: 모바일 앱의 네이티브 환경(Capacitor)에서도 AI 기능을 지원하기 위해 Vercel에 배포된 Next.js API Routes를 백엔드로 사용합니다.
+    - **Vercel 안정성 요구사항 (운영 필수)**:
+      - `OPENAI_API_KEY`를 Vercel 환경 변수(Production/Preview)에 반드시 설정한다.
+      - 네이티브 앱(Capacitor)에서 API 호출 도메인 변경 가능성을 고려해 `NEXT_PUBLIC_API_BASE_URL`을 지원한다.
+      - 이미지 생성 API는 프롬프트 정제 + 이미지 생성의 2단계 호출 구조이므로 함수 실행 시간 한도를 충분히 확보한다.
 
 8. 데이터베이스 스키마 설계 (Draft)
 8.1. users (Supabase Auth 연동)

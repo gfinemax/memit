@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 /**
  * Server-side route for DALL-E 3 image generation.
  * This keeps the API key secure and prevents CORS issues.
  */
 export async function POST(req: Request) {
     try {
-        const apiKey = process.env.OPENAI_API_KEY;
+        const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
         if (!apiKey) {
             console.error('OPENAI_API_KEY is not set on the server');
             return NextResponse.json({ error: 'AI Service configuration missing' }, { status: 500 });

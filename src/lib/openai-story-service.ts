@@ -18,7 +18,7 @@ export class OpenAIStoryService {
         if (isBrowser) return null;
         if (this._openai) return this._openai;
 
-        const apiKey = process.env.OPENAI_API_KEY;
+        const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
         if (!apiKey) {
             console.error('OPENAI_API_KEY is not set on the server');
             return null;

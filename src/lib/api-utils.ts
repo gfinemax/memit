@@ -6,14 +6,16 @@ import { Capacitor } from '@capacitor/core';
  * For Web/Dev, it uses the relative path.
  */
 export function getApiUrl(path: string): string {
-    const PRODUCTION_URL = 'https://memit-ai.vercel.app'; // Update this to your actual Vercel domain
+    const FALLBACK_PRODUCTION_URL = 'https://memit-ai.vercel.app';
+    const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+    const productionBaseUrl = (configuredBaseUrl || FALLBACK_PRODUCTION_URL).replace(/\/$/, '');
 
     // Ensure path starts with /
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
     // Native platforms (Static Export + Capacitor) need absolute URLs
     if (Capacitor.isNativePlatform()) {
-        return `${PRODUCTION_URL}${cleanPath}`;
+        return `${productionBaseUrl}${cleanPath}`;
     }
 
     // Web environment can use relative paths

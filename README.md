@@ -54,3 +54,13 @@ npx wrangler pages deploy out
 Required Pages environment variable:
 
 - `OPENAI_API_KEY`
+
+## Environment Variables (Vercel)
+
+For App Router API routes (`src/app/api/ai/*`), set:
+
+- `OPENAI_API_KEY` (required)
+
+Optional (native app API base override):
+
+- `NEXT_PUBLIC_API_BASE_URL` (e.g. `https://your-current-vercel-domain.vercel.app`)
