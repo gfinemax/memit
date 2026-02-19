@@ -4,19 +4,33 @@ import OpenAI from 'openai';
 export const runtime = 'nodejs';
 export const maxDuration = 30;
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+function jsonWithCors(body: unknown, status = 200) {
+  return NextResponse.json(body, { status, headers: corsHeaders });
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
+
 export async function POST(req: Request) {
   try {
     const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
     if (!apiKey) {
       console.error('OPENAI_API_KEY is not set');
-      return NextResponse.json({ error: 'AI Service unavailable' }, { status: 500 });
+      return jsonWithCors({ error: 'AI Service unavailable' }, 500);
     }
 
     const openai = new OpenAI({ apiKey });
     const { theme, pinLength, existingDigits, existingWords } = await req.json();
 
     if (!theme || !pinLength) {
-      return NextResponse.json({ error: 'theme and pinLength are required' }, { status: 400 });
+      return jsonWithCors({ error: 'theme and pinLength are required' }, 400);
     }
 
     const remainingLength = pinLength - (existingDigits?.length || 0);
@@ -72,9 +86,9 @@ JSON 형식:
     const content = response.choices[0].message?.content || '{}';
     const result = JSON.parse(content);
 
-    return NextResponse.json(result);
+    return jsonWithCors(result);
   } catch (error: unknown) {
     console.error('AI PIN Generation Error:', error);
-    return NextResponse.json({ error: 'Failed to generate PIN' }, { status: 500 });
+    return jsonWithCors({ error: 'Failed to generate PIN' }, 500);
   }
 }

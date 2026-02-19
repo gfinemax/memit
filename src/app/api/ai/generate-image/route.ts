@@ -4,6 +4,20 @@ import OpenAI from 'openai';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+function jsonWithCors(body: unknown, status = 200) {
+    return NextResponse.json(body, { status, headers: corsHeaders });
+}
+
+export async function OPTIONS() {
+    return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
+
 /**
  * Server-side route for DALL-E 3 image generation.
  * This keeps the API key secure and prevents CORS issues.
@@ -13,14 +27,14 @@ export async function POST(req: Request) {
         const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
         if (!apiKey) {
             console.error('OPENAI_API_KEY is not set on the server');
-            return NextResponse.json({ error: 'AI Service configuration missing' }, { status: 500 });
+            return jsonWithCors({ error: 'AI Service configuration missing' }, 500);
         }
 
         const openai = new OpenAI({ apiKey });
         const { story, context, isQuad, keywords } = await req.json();
 
         if (!story) {
-            return NextResponse.json({ error: 'Story is required' }, { status: 400 });
+            return jsonWithCors({ error: 'Story is required' }, 400);
         }
 
         // 1. Refine the prompt (server-side for better quality and consistency)
@@ -93,7 +107,7 @@ export async function POST(req: Request) {
             throw new Error("No image data returned from OpenAI");
         }
 
-        return NextResponse.json({
+        return jsonWithCors({
             imageUrl: `data:image/png;base64,${b64Data}`,
             refinedPrompt: safeFinalPrompt
         });
@@ -103,12 +117,12 @@ export async function POST(req: Request) {
 
         // Handle safety filter specially
         if (error.status === 400 && error.message?.includes('safety system')) {
-            return NextResponse.json({ error: 'SAFETY_FILTER_TRIGGERED' }, { status: 400 });
+            return jsonWithCors({ error: 'SAFETY_FILTER_TRIGGERED' }, 400);
         }
 
-        return NextResponse.json({
+        return jsonWithCors({
             error: error.message || 'Failed to generate image',
             details: error.status === 429 ? 'Rate limit exceeded' : undefined
-        }, { status: error.status || 500 });
+        }, error.status || 500);
     }
 }

@@ -4,19 +4,33 @@ import OpenAI from 'openai';
 export const runtime = 'nodejs';
 export const maxDuration = 30;
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+function jsonWithCors(body: unknown, status = 200) {
+    return NextResponse.json(body, { status, headers: corsHeaders });
+}
+
+export async function OPTIONS() {
+    return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
+
 export async function POST(req: Request) {
     try {
         const apiKey = process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
         if (!apiKey) {
             console.error('OPENAI_API_KEY is not set');
-            return NextResponse.json({ error: 'AI Service unavailable' }, { status: 500 });
+            return jsonWithCors({ error: 'AI Service unavailable' }, 500);
         }
 
         const openai = new OpenAI({ apiKey });
         const { prompt } = await req.json();
 
         if (!prompt) {
-            return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
+            return jsonWithCors({ error: 'Prompt is required' }, 400);
         }
 
         const completion = await openai.chat.completions.create({
@@ -32,9 +46,9 @@ export async function POST(req: Request) {
         if (!content) throw new Error("No content generated");
 
         const parsed = JSON.parse(content);
-        return NextResponse.json(parsed);
+        return jsonWithCors(parsed);
     } catch (error: any) {
         console.error("Server Story Generation Error:", error);
-        return NextResponse.json({ error: error.message || 'Failed to generate story' }, { status: 500 });
+        return jsonWithCors({ error: error.message || 'Failed to generate story' }, 500);
     }
 }
