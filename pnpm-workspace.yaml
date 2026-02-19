@@ -1,5 +1,4 @@
 patchedDependencies:
   '@capacitor-community/image-to-text': patches/@capacitor-community__image-to-text.patch
   '@capacitor-community/in-app-review': patches/@capacitor-community__in-app-review.patch
-  '@capacitor-firebase/crashlytics': patches/@capacitor-firebase__crashlytics.patch
   '@capgo/capacitor-native-biometric': patches/@capgo__capacitor-native-biometric.patch

@@ -11,9 +11,6 @@ patchedDependencies:
   '@capacitor-community/in-app-review':
     hash: 19d0c83d2eafe48c9b255ea4c1b05e72600370de294ed12ea2ab7f41c0d73b4d
     path: patches/@capacitor-community__in-app-review.patch
-  '@capacitor-firebase/crashlytics':
-    hash: 62c4f41c2be5a45fce49efc491b9057b4a0ccb67bab1aa73e7add5c2d4f52388
-    path: patches/@capacitor-firebase__crashlytics.patch
   '@capgo/capacitor-native-biometric':
     hash: 668c51e82a0f6d1f7bb47a4051c7f0199fa38f45aff70ab8a9006b1650b0dc5a
     path: patches/@capgo__capacitor-native-biometric.patch
@@ -28,9 +25,6 @@ importers:
       '@capacitor-community/in-app-review':
         specifier: ^8.0.0
         version: 8.0.0(patch_hash=19d0c83d2eafe48c9b255ea4c1b05e72600370de294ed12ea2ab7f41c0d73b4d)(@capacitor/core@8.1.0)
-      '@capacitor-firebase/crashlytics':
-        specifier: ^8.0.1
-        version: 8.0.1(patch_hash=62c4f41c2be5a45fce49efc491b9057b4a0ccb67bab1aa73e7add5c2d4f52388)(@capacitor/core@8.1.0)
       '@capacitor/android':
         specifier: ^8.1.0
         version: 8.1.0(@capacitor/core@8.1.0)
@@ -58,9 +52,6 @@ importers:
       '@capacitor/filesystem':
         specifier: ^8.1.2
         version: 8.1.2(@capacitor/core@8.1.0)
-      '@capacitor/push-notifications':
-        specifier: ^8.0.1
-        version: 8.0.1(@capacitor/core@8.1.0)
       '@capacitor/share':
         specifier: ^8.0.1
         version: 8.0.1(@capacitor/core@8.1.0)
@@ -233,15 +224,6 @@ packages:
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@capacitor-firebase/crashlytics@8.0.1':
-    resolution: {integrity: sha512-DUvUFJcCIbvPTr/6+8vJz0CwCCXq2kq5HiJ1DR01au04hltS4Xswx9JwYBuMexRW+IxlA3MwXoJnx2CNdvJHEg==}
-    peerDependencies:
-      '@capacitor/core': '>=8.0.0'
-      firebase: '*'
-    peerDependenciesMeta:
-      firebase:
-        optional: true
-
   '@capacitor/android@8.1.0':
     resolution: {integrity: sha512-z0acTPxj5DCy/U2FU7w+GA93oC+wdyKnsOcRg5rutDmSYa8Do1tzYqApKgf+hnuTNPbtrCTHp0Zy1cLiK/4MEw==}
     peerDependencies:
@@ -292,11 +274,6 @@ packages:
 
   '@capacitor/filesystem@8.1.2':
     resolution: {integrity: sha512-doaaMfGoFR2hWU6aV6u83I+5ZsGyJVq+Gz4r9lMpJzUKMm1eMu0hLnFdV1aXZlU9FlK/RndFrVD8oRZfNOqWgQ==}
-    peerDependencies:
-      '@capacitor/core': '>=8.0.0'
-
-  '@capacitor/push-notifications@8.0.1':
-    resolution: {integrity: sha512-CDY6syMxdG81Epn+V4fCYRR4L9tVS72F1kVrTY2ka6umWy4BmwXOXPsxGxlE5PmHLOhmBwKpy3uOiIJtSpMhOw==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -3751,10 +3728,6 @@ snapshots:
     dependencies:
       '@capacitor/core': 8.1.0
 
-  '@capacitor-firebase/crashlytics@8.0.1(patch_hash=62c4f41c2be5a45fce49efc491b9057b4a0ccb67bab1aa73e7add5c2d4f52388)(@capacitor/core@8.1.0)':
-    dependencies:
-      '@capacitor/core': 8.1.0
-
   '@capacitor/android@8.1.0(@capacitor/core@8.1.0)':
     dependencies:
       '@capacitor/core': 8.1.0
@@ -3856,10 +3829,6 @@ snapshots:
     dependencies:
       '@capacitor/core': 8.1.0
       '@capacitor/synapse': 1.0.4
-
-  '@capacitor/push-notifications@8.0.1(@capacitor/core@8.1.0)':
-    dependencies:
-      '@capacitor/core': 8.1.0
 
   '@capacitor/share@8.0.1(@capacitor/core@8.1.0)':
     dependencies:
