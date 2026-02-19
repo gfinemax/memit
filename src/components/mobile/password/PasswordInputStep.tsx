@@ -5,6 +5,7 @@ import { Sparkles, Key, Globe, Shield, Hash, Type, Palette, ArrowLeft, ChevronRi
 import { PasswordLevel } from './PasswordLevelSelector';
 import { wordToNumbers } from '@/lib/mnemonic-password';
 import { MNEMONIC_MAP } from '@/lib/mnemonic-map';
+import { getApiUrl } from '@/lib/api-utils';
 
 // ─── Types ───────────────────────────────────────────
 type L1SubStep = 'LENGTH' | 'METHOD' | 'INPUT';
@@ -100,18 +101,97 @@ export default function PasswordInputStep({ level, onGenerate, onBack }: Passwor
 
     // ─── Handlers ─────────────────────────────────────
 
-    const handleL1Generate = () => {
+    const handleL1Generate = async () => {
         if (!wordInput.trim()) {
             // Empty input → AI recommendation
             handleAiGenerate();
             return;
         }
+
+        // If provided word doesn't have enough digits, ask AI to complete it
+        if (livePreview.length < pinLength) {
+            setIsSuggesting(true);
+            try {
+                const themeName = currentThemeData?.label?.replace(/^[^\s]+\s/, '') || selectedTheme || '일반';
+                const res = await fetch(getApiUrl('/api/ai/generate-pin'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        theme: themeName,
+                        pinLength,
+                        existingDigits: livePreview,
+                        existingWords: wordInput
+                    }),
+                });
+                const data = await res.json();
+                if (data.error) {
+                    console.warn('AI error:', data.error);
+                    // Fallback: pad with varied digits instead of '0'
+                    const padStr = '1234567890'.repeat(3);
+                    const padded = (livePreview + padStr).slice(0, pinLength);
+                    onGenerate(
+                        wordInput,
+                        userSalt,
+                        padded
+                    );
+                    return;
+                }
+
+                // Combine user word + AI suggestions
+                const allWords = [wordInput, ...(data.words || [])].join(' ');
+
+                // If AI returns full digits instead of just remaining, handle gracefully
+                let additionalDigits = data.digits || '';
+                // If AI returned full length, strip the existing prefix if it matches
+                if (additionalDigits.startsWith(livePreview) && additionalDigits.length >= pinLength) {
+                    additionalDigits = additionalDigits.slice(livePreview.length);
+                }
+
+                // Ensure exactly pinLength
+                let fullDigits = (livePreview + additionalDigits);
+                if (fullDigits.length < pinLength) {
+                    // Constant padding to avoid '00' (Ice) repetition
+                    const salt = (allWords + userSalt).length.toString();
+                    const extra = '12345678901234567890'.slice(0, pinLength - fullDigits.length);
+                    fullDigits += extra;
+                }
+                fullDigits = fullDigits.slice(0, pinLength);
+
+                onGenerate(
+                    allWords,
+                    userSalt,
+                    fullDigits
+                );
+            } catch (err) {
+                console.error('AI completion failed:', err);
+                // Fallback: use repeating padding to always fill the requested length
+                const fallbacks: Record<string, string> = {
+                    'animation': '1256', 'movie': '3045', 'sports': '1122', 'it': '4089',
+                    'food': '1567', 'animal': '2233', 'music': '4455', 'travel': '7788'
+                };
+                const basePadding = fallbacks[selectedTheme || ''] || '1234';
+                // Repeat the padding pattern enough to fill any PIN length
+                const repeatedPadding = basePadding.repeat(Math.ceil(pinLength / basePadding.length));
+                const fullFallback = (livePreview + repeatedPadding).slice(0, pinLength);
+
+                onGenerate(
+                    wordInput,
+                    userSalt,
+                    fullFallback
+                );
+            } finally {
+                setIsSuggesting(false);
+            }
+            return;
+        }
+
+        // Enough digits provided by user input
         setIsSuggesting(true);
         setTimeout(() => {
             onGenerate(
-                wordInput || selectedTheme || 'PIN',
+                wordInput,
                 userSalt,
-                livePreview.slice(0, pinLength).padEnd(pinLength, '0')
+                livePreview.slice(0, pinLength)
             );
             setIsSuggesting(false);
         }, 600);
@@ -121,25 +201,45 @@ export default function PasswordInputStep({ level, onGenerate, onBack }: Passwor
         setIsSuggesting(true);
         try {
             const themeName = currentThemeData?.label?.replace(/^[^\s]+\s/, '') || selectedTheme || '일반';
-            const res = await fetch('/api/ai/generate-pin', {
+            const res = await fetch(getApiUrl('/api/ai/generate-pin'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ theme: themeName, pinLength }),
             });
             const data = await res.json();
             if (data.error) {
-                console.error('AI error:', data.error);
+                console.warn('AI error:', data.error);
+                const digits = '12345678901234567890'.slice(0, pinLength);
+                onGenerate(
+                    currentThemeData?.label?.split(' ')[1] || '기본',
+                    userSalt,
+                    digits
+                );
                 setIsSuggesting(false);
                 return;
             }
-            // Use AI result directly
+            // Use AI result if available, otherwise fallback
+            let finalDigits = data.digits || '';
+            if (finalDigits.length < pinLength) {
+                const extra = '1234567890'.repeat(3).slice(0, pinLength - finalDigits.length);
+                finalDigits += extra;
+            }
+            finalDigits = finalDigits.slice(0, pinLength);
+
             onGenerate(
-                data.words?.join(' ') || themeName,
+                data.words?.join(' ') || (currentThemeData?.label?.split(' ')[1] || '기본'),
                 userSalt,
-                data.digits?.slice(0, pinLength) || '0'.repeat(pinLength)
+                finalDigits
             );
         } catch (err) {
             console.error('AI PIN generation failed:', err);
+            // Fallback for complete failure (Network error, etc)
+            const digits = '12345678901234567890'.slice(0, pinLength);
+            onGenerate(
+                currentThemeData?.label?.split(' ')[1] || '기본',
+                userSalt,
+                digits
+            );
         } finally {
             setIsSuggesting(false);
         }
@@ -228,14 +328,21 @@ export default function PasswordInputStep({ level, onGenerate, onBack }: Passwor
                                 type="number"
                                 min={1}
                                 max={20}
-                                value={pinLength}
+                                value={pinLength || ''}
                                 onChange={(e) => {
-                                    const val = parseInt(e.target.value, 10);
-                                    if (!isNaN(val) && val >= 1 && val <= 20) {
-                                        setPinLength(val);
-                                    } else if (e.target.value === '') {
-                                        setPinLength(4);
+                                    const valStr = e.target.value;
+                                    if (valStr === '') {
+                                        setPinLength(0);
+                                        return;
                                     }
+                                    const val = parseInt(valStr, 10);
+                                    if (!isNaN(val)) {
+                                        setPinLength(Math.min(val, 20));
+                                    }
+                                }}
+                                onBlur={() => {
+                                    if (pinLength < 1) setPinLength(1);
+                                    if (pinLength > 20) setPinLength(20);
                                 }}
                                 className="flex-1 bg-slate-900/50 border border-slate-700/50 rounded-lg px-3 py-2 text-white text-center font-mono text-lg focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
@@ -451,7 +558,7 @@ export default function PasswordInputStep({ level, onGenerate, onBack }: Passwor
                                     </span>
                                     {livePreview.length < pinLength && (
                                         <p className="text-[9px] text-yellow-500 mt-1">
-                                            ※ 부족한 자릿수는 자동 생성됩니다
+                                            ※ 부족한 자릿수는 AI가 테마에 맞춰 채워줍니다 ✨
                                         </p>
                                     )}
                                 </div>

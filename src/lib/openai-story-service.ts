@@ -1,25 +1,9 @@
-
 import OpenAI from 'openai';
 import { supabaseMemoryService } from './supabase-memory-service';
+import { getApiUrl } from './api-utils';
 
-// OpenAI instance cache
-let _openai: OpenAI | null = null;
-
-function getOpenAIClient() {
-    if (_openai) return _openai;
-
-    const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-    if (!apiKey || apiKey === 'undefined' || apiKey === '') {
-        // Return null instead of throwing to avoid build-time crashes during prerendering
-        return null;
-    }
-
-    _openai = new OpenAI({
-        apiKey,
-        dangerouslyAllowBrowser: true
-    });
-    return _openai;
-}
+// Helper to check if running in browser
+const isBrowser = typeof window !== 'undefined';
 
 export interface StorySegment {
     number: string;
@@ -28,10 +12,24 @@ export interface StorySegment {
 }
 
 export class OpenAIStoryService {
+    private _openai: OpenAI | null = null;
+
+    private getOpenAIClient() {
+        if (isBrowser) return null;
+        if (this._openai) return this._openai;
+
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) {
+            console.error('OPENAI_API_KEY is not set on the server');
+            return null;
+        }
+
+        this._openai = new OpenAI({ apiKey });
+        return this._openai;
+    }
+
     /**
      * Chunks a number string into 2-digit or 3-digit segments
-     * Even length: all 2 digits
-     * Odd length: mix of 2 and 3/1 digits (preferring 2 and 3 for better words)
      */
     chunkNumber(input: string): string[] {
         const cleanInput = input.replace(/[^0-9]/g, '');
@@ -40,37 +38,15 @@ export class OpenAIStoryService {
 
         while (remaining.length > 0) {
             if (remaining.length % 2 === 0) {
-                // Even length: take 2
                 chunks.push(remaining.substring(0, 2));
                 remaining = remaining.substring(2);
             } else {
-                // Odd length
-                if (remaining.length === 1) {
-                    // Handle single digit remainder if necessary, or combine with previous?
-                    // Strategy: If 1 digit left, it means we must have had a 3-digit chunk earlier or just 1.
-                    // Let's prefer 3 digits if possible at the start or end.
-                    // Simple strategy for odd: Take 3 first, then rest are even.
-                    // 12345 -> 123, 45 (Good)
-                    // 123 -> 123
-                    // 1 -> 1
-                    if (remaining.length >= 3) {
-                        chunks.push(remaining.substring(0, 3));
-                        remaining = remaining.substring(3);
-                    } else {
-                        chunks.push(remaining);
-                        remaining = "";
-                    }
+                if (remaining.length >= 3) {
+                    chunks.push(remaining.substring(0, 3));
+                    remaining = remaining.substring(3);
                 } else {
-                    // > 1 and odd (e.g. 5, 7)
-                    // Take 3 first
-                    if (remaining.length >= 3) {
-                        chunks.push(remaining.substring(0, 3));
-                        remaining = remaining.substring(3);
-                    } else {
-                        // Should not happen if logic is correct
-                        chunks.push(remaining.substring(0, 2));
-                        remaining = remaining.substring(2);
-                    }
+                    chunks.push(remaining);
+                    remaining = "";
                 }
             }
         }
@@ -79,48 +55,11 @@ export class OpenAIStoryService {
 
     async getCandidates(chunks: string[]): Promise<StorySegment[]> {
         const segments: StorySegment[] = [];
-
         for (const chunk of chunks) {
-            // Use existing memory service to get keywords
-            // Note: The convertNumberToKeywords returns a single "best" match usually,
-            // but we want *candidates* if possible. 
-            // SupabaseMemoryService.convertNumberToKeywords might return one.
-            // We might need a method to get ALL candidates.
-            // For now, let's assume we get a list from the service or mock it if strictly 1 is retured.
-
-            // Actually, looking at SupabaseMemoryService, it uses `getMapping` which returns one map.
-            // We might need to query the `memory_maps` table directly for all matches.
-            // For this MVP, let's use the `convertNumberToKeywords` to get the *default* ones 
-            // AND potentially fetch more if we extend the service. 
-            // Since `digits_2_full.json` has multiple, we want that richness.
-
-            // Let's extend this to fetch from the JSON files imports if we can, OR
-            // rely on the existing service and maybe simulate variety or just use the OpenAI to embellish.
-
-            // User said: "AI will access here [JSONs] to select words".
-            // So we should load the JSONs here.
-
             let keywords: string[] = [];
-
-            // Check length to decide which file/source
-            if (chunk.length === 2) {
-                // Import/Require JSON is tricky in client-side dynamic.
-                // Let's try to use the JSON data passed in or imported.
-                // Ideally we'd fetch this from an API route.
-                // For now, let's fallback to the basic service + AI creativity.
-                // AI can generate the word itself if we give it the Consonant Rule!
-                // BUT user said "AI selects from basic set".
-
-                // Let's try to fetch from Supabase.
-                // We can use `supabaseMemoryService` to search.
-                const res = await supabaseMemoryService.convertNumberToKeywords(chunk);
-                if (res && res.length > 0) keywords = res;
-                else keywords = [chunk]; // Fallback
-            } else {
-                const res = await supabaseMemoryService.convertNumberToKeywords(chunk);
-                if (res && res.length > 0) keywords = res;
-                else keywords = [chunk];
-            }
+            const res = await supabaseMemoryService.convertNumberToKeywords(chunk);
+            if (res && res.length > 0) keywords = res;
+            else keywords = [chunk];
 
             segments.push({
                 number: chunk,
@@ -140,257 +79,119 @@ export class OpenAIStoryService {
         }
     ): Promise<{ story: string, keywords: string[] }> {
         const { candidates, context, strategy = 'SCENE', manualKeywords } = options;
-
-        // If candidates are provided, construct a rich prompt
         let wordsInfo = "";
 
         if (manualKeywords && manualKeywords.length > 0) {
-            wordsInfo = manualKeywords
-                .map((word, index) => `${index + 1}번째 덩어리: **${word}** (사용자 직접 선택)`)
-                .join('\n');
-            wordsInfo += `\n\n**[초강력 지침]**: 사용자가 각 숫자에 대해 특정 단어를 직접 선택했습니다. 다른 대안을 고려하지 말고 오직 위 단어들만 사용하여 스토리를 만드세요. 순서 변경도 절대 금지입니다.`;
+            wordsInfo = manualKeywords.map((word, index) => `${index + 1}번째 덩어리: **${word}**`).join('\n');
         } else if (candidates) {
-            // Construct: "1st: 11 (가구, 고기...), 2nd: 34 (두부, 도마...)"
-            wordsInfo = candidates
-                .map((item, index) => `${index + 1}번째 덩어리 - 숫자 '${item.chunk}': (${item.words.join(', ')})`)
-                .join('\n');
+            wordsInfo = candidates.map((item, index) => `${index + 1}번째 덩어리 - 숫자 '${item.chunk}': (${item.words.join(', ')})`).join('\n');
         } else {
-            // Fallback: just use input (basic)
             wordsInfo = `Number: ${inputNumber}`;
         }
 
-        // Strategy-specific instructions
-        let strategyInstructions = "";
-        if (strategy === 'SCENE') {
-            strategyInstructions = `
-    **전략: 장면 카드 (Scene Mode)**
-    - 숫자를 4자리(2덩어리)씩 묶어서 하나의 '강렬한 정지 화면'으로 상상하세요.
-    - 두 단어가 서로 물리적으로 충돌하거나 결합되는 한 장면을 만드세요.
-    - 예: '9896' -> '화폐'와 '한자'가 결합된 하나의 장면.
-    `;
-        } else if (strategy === 'PAO') {
-            strategyInstructions = `
-    **전략: PAO 모드 (Person-Action-Object)**
-    - 숫자를 6자리(3덩어리)씩 묶어서 [인물] - [행동] - [대상]의 서사를 만드세요.
-    - 단, 현재 제공된 키워드들을 이 역할(인물/행동/대상)에 맞춰 창의적으로 해석하세요.
-    - 예: '98-96-19' -> '화폐(인물화)'가 '한자(행동?)'를 '공항(장소/대상)'에서 어쩌구...
-    `;
-        } else if (strategy === 'STORY_BEAT') {
-            strategyInstructions = `
-    **전략: 스토리 비트 (Story Beats)**
-    - 긴 숫자를 시간 순서에 따른 '기-승-전-결' 흐름으로 만드세요.
-    - "먼저 ~했고, 그 다음에 ~가 일어났다"는 식으로 인과관계를 강조하세요.
-    `;
-        }
-
-        const chunkCount = candidates ? candidates.length : Math.ceil(inputNumber.length / 2);
-
-        // Length-specific instructions
-        let lengthInstructions = "";
-        if (chunkCount <= 2) {
-            lengthInstructions = "4자리 이하이므로, 단 하나의 짧고 강렬한 임팩트 있는 문장으로 작성하세요. (단문 결합)";
-        } else if (chunkCount <= 4) {
-            lengthInstructions = "6~8자리이므로, 1~2개 문장으로 구성된 기승전결이 있는 서사로 작성하세요. (중문 구성)";
-        } else {
-            lengthInstructions = "10자리 이상이므로, 2~3개 이상의 문장으로 이루어진 '미니 영화' 같은 흐름으로 작성하세요. 너무 한 문장에 쑤셔 넣지 말고 자연스럽게 나누어 배치하세요.";
-        }
-
         const prompt = `
-  You are a creative memory expert using the 'Major System'.
-  
-  I have a number: ${inputNumber}.
-  I need to memorize it using these keyword candidates for each chunk IN ORDER:
-  ${wordsInfo}
-  
-  ${context ? `**User Context (What this number represents): "${context}"**` : ''}
-
-  **Current Mnemonic Strategy:**
-  ${strategyInstructions}
-
-  **Story Length Requirement:**
-  ${lengthInstructions}
-
-  **Core Storytelling Principles (3대 원칙):**
-  1. **${manualKeywords ? 'Keyword Adherence (단어 절대 준수)' : 'Synergistic Selection (단어군 최적화)'}**: ${manualKeywords ? '사용자가 직접 선택한 단어들을 문장에 자연스럽게 녹여내세요.' : '각 숫자 덩어리의 모든 후보 단어들을 동시에 분석하여, 상호 간에 혹은 User Context와 가장 잘 어울리는 조합을 선택하세요.'}
-  2. **Keyword Merging (단어 합성 및 응축)**: 두 개 이상의 키워드가 하나의 개념으로 합쳐질 수 있다면 적극적으로 합성하세요. 하나를 외우는 것이 두 개보다 효율적입니다. (예: '비'+'옷'='**우비**')
-  3. **Shocking Visual (초현실적/과장된 각인)**: 이미지 생성을 감안하여 우스꽝스럽거나, 기괴하거나, 압도적인 상황을 설정하세요.
-
-  **Instructions:**
-      1. **Strict Sequence Order (가장 중요)**: 숫자의 순서를 절대 뒤섞지 마세요. 순서 유지는 필수입니다.
-      2. **Exaggerated Modifiers & Sensory Details**: 단어 앞에 강렬하고 과장된 형용사를 붙이세요. (예: '초대형', '눈부신', '광기에 찬', '귀가 터질듯한'). 사물의 크기, 색상, 소리를 강조하여 이미지가 풍부하게 생성되도록 합니다.
-      3. **Impactful Action**: 단어들이 서로 파괴적이거나 기괴하게 상호작용하게 하세요.
-      4. **Highlight**: 선택된 키워드는 **double asterisks**로 감싸세요 (예: **우비**).
-      5. **Return**: JSON format ONLY.
-
-      **Format**:
-      {
-        "keywords": ["selected_keyword_1", "selected_keyword_2"],
-        "story": "Story sentence here..."
-      }
-
-      **Language**: Korean (한국어) - Casual and punchy style (Banmal or polite but vivid).
+      You are a creative memory expert using the 'Major System'.
+      Number: ${inputNumber}.
+      Keywords: ${wordsInfo}
+      ${context ? `Context: "${context}"` : ''}
+      Strategy: ${strategy}
       
-      **Example**:
-      Input: 11 (가구), 34 (도마), Context: "비밀번호"
-      Output: { "keywords": ["가구", "도마"], "story": "비밀번호를 누르자 **초대형 가구**가 천장을 뚫고 떨어져 **피할 틈도 없이 도마**를 가루로 박살냈다!" }
+      Instructions:
+      1. Sequence Order must be kept.
+      2. Highlight keywords with **double asterisks**.
+      3. Return JSON: { "keywords": [], "story": "" }
+      4. Language: Korean.
     `;
 
         try {
-            const client = getOpenAIClient();
-            if (!client) {
-                console.warn("OpenAI client not initialized (missing API key). Skipping story generation.");
-                return { story: "스토리 생성 서비스가 현재 비활성화되어 있습니다.", keywords: [] };
+            if (isBrowser) {
+                const response = await fetch(getApiUrl('/api/ai/generate-story'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                if (!response.ok) throw new Error("API Route failure");
+                const data = await response.json();
+                return {
+                    story: data.story || "스토리 생성 실패",
+                    keywords: data.keywords || []
+                };
+            } else {
+                const client = this.getOpenAIClient();
+                if (!client) throw new Error("Server OpenAI key missing");
+                const completion = await client.chat.completions.create({
+                    messages: [{ role: "system", content: "You are a mnemonic expert. Return JSON." }, { role: "user", content: prompt }],
+                    model: "gpt-4o",
+                    response_format: { type: "json_object" }
+                });
+                const parsed = JSON.parse(completion.choices[0].message.content || "{}");
+                return {
+                    story: parsed.story || "스토리 생성 실패",
+                    keywords: parsed.keywords || []
+                };
             }
-
-            const completion = await client.chat.completions.create({
-                messages: [
-                    { role: "system", content: "You are a creative memory mnemonist. Return only JSON." },
-                    { role: "user", content: prompt }
-                ],
-                model: "gpt-4o", // Upgraded for competition quality
-                response_format: { type: "json_object" }
-            });
-
-            const content = completion.choices[0].message.content;
-            if (!content) throw new Error("No content generated");
-
-            const parsed = JSON.parse(content);
-            return {
-                story: parsed.story || "스토리를 생성할 수 없습니다.",
-                keywords: parsed.keywords || []
-            };
         } catch (error) {
-            console.error("OpenAI Error:", error);
-            throw error;
-        }
-    }
-
-    /**
-     * Refines a story into a DALL-E safe but vivid prompt.
-     * Prevents safety filter blocks by rephrasing violent/shocking terms into artistic ones.
-     */
-    private async refineImagePrompt(story: string, context?: string, isQuad: boolean = false, keywords?: string[]): Promise<string> {
-        const keywordsSection = keywords && keywords.length > 0
-            ? `\n**MANDATORY VISUAL OBJECTS (Include ALL)**: ${keywords.join(', ')}\n`
-            : "";
-
-        const refinementPrompt = `
-      You are an expert prompt engineer for DALL-E 3.
-      Take the following story and its context, then transform and expand them into a single, highly detailed, and visually descriptive English prompt optimized for DALL-E 3.
-      
-      **Story**: "${story}"
-      **Context**: "${context || 'General Memory'}"
-      
-      **DALL-E 3 PROMPT STRUCTURE**:
-      - **Type**: "High-quality, vibrant Webtoon/Anime style" (Strictly enforced). Do NOT create photorealistic or oil painting images.
-      - **Subject**: Describe the main characters or objects in vivid detail.
-      - **Features**: Add specific attributes (textures, materials, facial expressions).
-      - **Setting/Composition**: Describe the background, foreground, and specific placement of elements. Mention camera angles (e.g., wide-angle, macro, low-angle) and lighting (e.g., cinematic lighting, volumetric fog, golden hour).
-      - **Mood/Style**: Dynamic, colorful, and clean lines typical of modern high-end webtoons or Studio Ghibli.
-      
-      ${isQuad ? `**CRITICAL: 4-PANEL LAYOUT REQUIREMENTS**: 
-      1. COMPOSITION: The image MUST be split into EXACTLY four equal-sized panels arranged in a 2x2 grid. Each panel represents a different moment in the story.
-      2. VISUAL STYLE: "Studio Ghibli Animation Style" (Hayao Miyazaki style). Use soft, painterly watercolor backgrounds, vibrant but natural color palettes, hand-drawn aesthetics, and whimsical details. High-quality, cinematic anime finish.
-      3. MNEMONIC FOCUS: In each panel, the primary object or action MUST be the absolute central focus, drawn with dramatic exaggeration for memorability.
-      4. PANELS NARRATIVE: 
-         - Top-left: Introduction of the first key element.
-         - Top-right: Development or first interaction.
-         - Bottom-left: The climax or surprising twist.
-         - Bottom-right: The resolution or final impactful scene.
-      5. FRAMING: Clean, lush backgrounds (e.g., blue skies with fluffy clouds, grassy fields) to make the primary objects pop.` : ''}
-
-       **STRICT PRINCIPLES**:
-      1. **Keyword Visual Weighting (CRITICAL)**: Identify words surrounded by **double asterisks** in the story. These are the core memory objects.
-         - For EACH keyword, you MUST describe its unique physical appearance (e.g., "A huge, antique golden trumpet with detailed engravings and three silver valves").
-         - Give these objects the most prominence and visual weight in the scene. They must NOT be background details.
-         - If any keyword is missing in the final image, the task is a failure. Ensure they are the PRIMARY subjects or interacted with by the primary subjects.
-      2. **Mandatory Inclusion**: ${keywordsSection} If "MANDATORY VISUAL OBJECTS" are listed above, you MUST translate them to English and ensure they are the ABSOLUTE focal point of the artwork.
-      3. **Vivid Expansion**: Transform simple nouns into hyper-descriptive phrases to give DALL-E 3 rich detail.
-      4. **Safety Transformation**: Rephrase any sensitive or violent concepts into epic, mystical, or grand metaphors (e.g., "explosion" -> "erupting supernova of stardust").
-      5. **Absolutely No Text**: Do not include any speech bubbles, labels, text, or letters in the image.
-      
-      Return ONLY the final English prompt string.
-    `;
-
-        try {
-            const client = getOpenAIClient();
-            if (!client) {
-                console.warn("OpenAI client not initialized. Skipping prompt refinement.");
-                return story;
-            }
-
-            const completion = await client.chat.completions.create({
-                messages: [
-                    { role: "system", content: "You are a specialized prompt engineer. Return ONLY text." },
-                    { role: "user", content: refinementPrompt }
-                ],
-                model: "gpt-4o",
-            });
-            const refined = completion.choices[0].message.content || story;
-            console.log("[DALL-E Prompt]:", refined); // For verification
-            return refined;
-        } catch (error) {
-            console.error("Prompt Refinement Error:", error);
-            return story; // Fallback to raw story
+            console.error("Story Generation Error:", error);
+            return { story: "연결 오류: 오프라인 모드로 변환합니다.", keywords: [] };
         }
     }
 
     async generateImage(story: string, context?: string, isQuad: boolean = false, keywords?: string[]): Promise<string> {
-        // Step 1: Fully refine story + context into a safe English prompt
-        const safeFinalPrompt = await this.refineImagePrompt(story, context, isQuad, keywords);
-
         try {
-            const client = getOpenAIClient();
-            if (!client) {
-                throw new Error("OPENAI_CLIENT_NOT_INITIALIZED");
+            if (isBrowser) {
+                const response = await fetch(getApiUrl('/api/ai/generate-image'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ story, context, isQuad, keywords })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (errorData.error === "SAFETY_FILTER_TRIGGERED") throw new Error("SAFETY_FILTER_TRIGGERED");
+                    throw new Error(errorData.error || "Failed");
+                }
+                const data = await response.json();
+                return data.imageUrl;
+            } else {
+                const client = this.getOpenAIClient();
+                if (!client) throw new Error("Server OpenAI key missing");
+                const response = await client.images.generate({
+                    model: "dall-e-3",
+                    prompt: story,
+                    n: 1,
+                    size: "1024x1024",
+                    response_format: "b64_json"
+                });
+                return `data:image/png;base64,${response.data?.[0]?.b64_json}`;
             }
-
-            const response = await client.images.generate({
-                model: "dall-e-3",
-                prompt: safeFinalPrompt,
-                n: 1,
-                size: "1024x1024",
-                quality: "hd",
-                response_format: "b64_json" // Changed to skip CORS fetch later
-            });
-
-            const b64Data = response.data?.[0]?.b64_json;
-            if (!b64Data) throw new Error("No image data returned from OpenAI");
-
-            // Return data URL so image shows up immediately on UI
-            return `data:image/png;base64,${b64Data}`;
-        } catch (error: any) {
-            console.error("OpenAI Image Generation Error:", error);
-            // Handle safety filter error specially
-            if (error.status === 400 && error.message?.includes('safety system')) {
-                throw new Error("SAFETY_FILTER_TRIGGERED");
-            }
+        } catch (error) {
+            console.error("Image Generation Error:", error);
             throw error;
         }
     }
 
     async generateStoryResponse(prompt: string): Promise<any> {
         try {
-            const client = getOpenAIClient();
-            if (!client) {
-                throw new Error("OPENAI_CLIENT_NOT_INITIALIZED");
+            if (isBrowser) {
+                const response = await fetch(getApiUrl('/api/ai/generate-story'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                if (!response.ok) throw new Error("API Route failure");
+                return await response.json();
+            } else {
+                const client = this.getOpenAIClient();
+                if (!client) throw new Error("Server OpenAI key missing");
+                const completion = await client.chat.completions.create({
+                    messages: [{ role: "system", content: "Return ONLY JSON." }, { role: "user", content: prompt }],
+                    model: "gpt-4o",
+                    response_format: { type: "json_object" }
+                });
+                return JSON.parse(completion.choices[0].message.content || "{}");
             }
-
-            const completion = await client.chat.completions.create({
-                messages: [
-                    { role: "system", content: "You are a helpful assistant. Return ONLY JSON." },
-                    { role: "user", content: prompt }
-                ],
-                model: "gpt-4o",
-                response_format: { type: "json_object" }
-            });
-
-            const content = completion.choices[0].message.content;
-            if (!content) throw new Error("No content generated");
-
-            return JSON.parse(content);
         } catch (error) {
-            console.error("OpenAI JSON Error:", error);
+            console.error("JSON Generation Error:", error);
             throw error;
         }
     }

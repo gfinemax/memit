@@ -148,7 +148,8 @@ const typedDigitsData = digitsData as DigitsData;
 export interface MnemonicImage {
     number: string;
     keyword: string;
-    imageUrl?: string; // Placeholder for future real images
+    candidates: string[];
+    imageUrl?: string;
 }
 
 export interface PasswordGenerationResult {
@@ -173,19 +174,18 @@ function djb2Hash(str: string): number {
  * Get Mnemonic Image for a 2-digit number
  */
 export function getImagesForNumber(numStr: string): MnemonicImage {
-    // Ensure 2 digits (padding if needed, though strictly we handle 2 digits)
+    // Ensure 2 digits
     const code = numStr.padStart(2, '0').slice(-2);
     const entry = typedDigitsData.digits_2.find(d => d.code === code);
 
-    // Deterministically pick one keyword based on the code itself (or random if we wanted, but let's stick to first for consistency or random for variety?)
-    // For consistency in "Suggestion", we should pick the FIRST keyword or a specific one.
-    // Let's pick the first one for now as the "canonical" image.
-    const keyword = entry?.keywords[0] || 'Unknown';
+    const candidates = entry?.keywords || ['Unknown'];
+    const keyword = candidates[0];
 
     return {
         number: code,
         keyword: keyword,
-        imageUrl: `/images/mnemonics/${code}.png` // Hypothetical path
+        candidates: candidates,
+        imageUrl: `/images/mnemonics/${code}.png`
     };
 }
 

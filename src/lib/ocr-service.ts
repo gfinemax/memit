@@ -2,6 +2,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Ocr, TextDetections } from '@capacitor-community/image-to-text';
 import { Capacitor } from '@capacitor/core';
 import { openAIStoryService } from './openai-story-service';
+import { getApiUrl } from './api-utils';
 
 export const ocrService = {
     /**
@@ -59,7 +60,7 @@ Text: ${text}`;
 
             // We can reuse openAIStoryService logic or create a dedicated simple call
             // For now, let's assume a simplified keyword extractor
-            const response = await fetch('/api/ai/extract-keywords', {
+            const response = await fetch(getApiUrl('/api/ai/extract-keywords'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text })

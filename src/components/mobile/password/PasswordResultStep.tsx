@@ -23,6 +23,10 @@ export default function PasswordResultStep({ result, onClose }: PasswordResultSt
     const [generatingMessageIndex, setGeneratingMessageIndex] = useState(0);
     const [isSharing, setIsSharing] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
+    const [selectedIndices, setSelectedIndices] = useState<number[]>(
+        result.images.map(() => 0)
+    );
+    const [lastStory, setLastStory] = useState(result.story);
 
     const generationMessages = [
         "스토리에서 핵심 이미지를 추출하는 중...",
@@ -32,6 +36,33 @@ export default function PasswordResultStep({ result, onClose }: PasswordResultSt
         "마지막 디테일을 다듬고 있습니다...",
         "이미지를 현상 중..."
     ];
+
+    const currentKeywords = result.images.map((img, i) =>
+        img.candidates[selectedIndices[i]] || img.keyword
+    );
+
+    useEffect(() => {
+        if (currentKeywords.length >= 2) {
+            let story = `${currentKeywords[0]}`;
+            for (let i = 1; i < currentKeywords.length; i++) {
+                story += `, ${currentKeywords[i]}`;
+            }
+            story += '... 상상해보세요!';
+            setLastStory(story);
+        } else if (currentKeywords.length === 1) {
+            setLastStory(`${currentKeywords[0]}... 이미지를 떠올려보세요.`);
+        }
+    }, [selectedIndices]);
+
+    const cycleKeyword = (imageIndex: number) => {
+        setSelectedIndices(prev => {
+            const next = [...prev];
+            const candidates = result.images[imageIndex].candidates;
+            next[imageIndex] = (next[imageIndex] + 1) % candidates.length;
+            return next;
+        });
+        setImageUrl(null);
+    };
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -70,10 +101,10 @@ export default function PasswordResultStep({ result, onClose }: PasswordResultSt
         setGeneratingImage(true);
         try {
             const url = await openAIStoryService.generateImage(
-                result.story,
+                lastStory,
                 "PIN Password Memory",
                 false,
-                result.images.map(img => img.keyword)
+                currentKeywords
             );
             setImageUrl(url);
             setGenerationProgress(100);
@@ -91,20 +122,20 @@ export default function PasswordResultStep({ result, onClose }: PasswordResultSt
 
         try {
             // Prepare card keywords for utility
-            const shareKeywords = result.images.map(img => ({
-                word: img.keyword,
+            const shareKeywords = result.images.map((img, i) => ({
+                word: currentKeywords[i],
                 code: img.number
             }));
 
             const previewUrl = await generateShareCardCanvas(
                 result.password,
                 shareKeywords,
-                result.story,
+                lastStory,
                 imageUrl || undefined,
                 {
                     prefix010: false,
                     customLabel: '암호 기억법',
-                    customTitle: `✨ 메밋 AI가 암호를 기억하기 쉽게 변환했습니다.\n아래 그림에서 [${result.images.map(img => img.keyword).join(', ')}] 이미지를 떠올려보세요.`,
+                    customTitle: `✨ 메밋 AI가 암호를 기억하기 쉽게 변환했습니다.\n아래 그림에서 [${currentKeywords.join(', ')}] 이미지를 떠올려보세요.`,
                     isPinMode: true
                 }
             );
@@ -197,7 +228,10 @@ export default function PasswordResultStep({ result, onClose }: PasswordResultSt
                     </span>
                     <div
                         onClick={handleCopy}
-                        className="text-4xl font-mono font-bold text-white tracking-[0.2em] cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+                        className={`${result.password.length >= 12 ? 'text-2xl' :
+                            result.password.length >= 10 ? 'text-3xl' :
+                                'text-4xl'
+                            } font-mono font-bold text-white tracking-[0.2em] cursor-pointer hover:scale-105 active:scale-95 transition-transform`}
                     >
                         {result.password}
                     </div>
@@ -237,26 +271,38 @@ export default function PasswordResultStep({ result, onClose }: PasswordResultSt
                             result.images.length <= 4 ? 'grid-cols-2' :
                                 'grid-cols-3'
                             }`}>
-                            {result.images.map((image, index) => (
-                                <div
-                                    key={index}
-                                    className="aspect-square bg-slate-800/50 rounded-lg flex flex-col items-center justify-center border border-white/5 p-2"
-                                >
-                                    <span className="text-2xl mb-1">
-                                        {getEmojiForKeyword(image.keyword)}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400 font-bold whitespace-nowrap">
-                                        {image.number} {image.keyword}
-                                    </span>
-                                </div>
-                            ))}
+                            {result.images.map((image, index) => {
+                                const currentKeyword = currentKeywords[index];
+                                return (
+                                    <div
+                                        key={index}
+                                        onClick={() => cycleKeyword(index)}
+                                        className="aspect-square bg-slate-800/50 rounded-lg flex flex-col items-center justify-center border border-white/5 p-2 cursor-pointer hover:bg-slate-700/50 hover:border-primary/30 transition-all active:scale-95 group/card"
+                                    >
+                                        <span className="text-2xl mb-1 group-hover/card:scale-110 transition-transform">
+                                            {getEmojiForKeyword(currentKeyword)}
+                                        </span>
+                                        <span className="text-[10px] text-slate-400 font-bold whitespace-nowrap mb-0.5">
+                                            {image.number} {currentKeyword}
+                                        </span>
+                                        <div className="flex gap-0.5 mt-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                                            {image.candidates.map((_, i) => (
+                                                <div
+                                                    key={i}
+                                                    className={`w-1 h-1 rounded-full ${i === selectedIndices[index] ? 'bg-primary' : 'bg-slate-600'}`}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
 
-                    {result.story && (
+                    {lastStory && (
                         <div className="bg-white/5 rounded-xl p-4 border border-white/5 backdrop-blur-sm">
                             <p className="text-center text-sm text-slate-300 font-medium leading-relaxed italic">
-                                &quot;{result.story}&quot;
+                                &quot;{lastStory}&quot;
                             </p>
                         </div>
                     )}
@@ -326,8 +372,8 @@ export default function PasswordResultStep({ result, onClose }: PasswordResultSt
                         alt="Zoomed Memory"
                         className="max-w-full max-h-[80vh] rounded-xl shadow-2xl animate-in zoom-in-95 duration-300"
                     />
-                    <div className="absolute bottom-10 left-0 right-0 text-center">
-                        <p className="text-slate-400 text-sm italic">&quot;{result.story}&quot;</p>
+                    <div className="absolute bottom-10 left-0 right-0 text-center px-6">
+                        <p className="text-slate-200 text-sm italic font-medium drop-shadow-lg">&quot;{lastStory}&quot;</p>
                     </div>
                 </div>
             )}

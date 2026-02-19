@@ -34,3 +34,23 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Cloudflare Pages + Functions
+
+This project uses Cloudflare Pages Functions with a separate `functions` directory:
+
+- API routes: `functions/api/ai/*`
+- Health check: `functions/api/health.ts` -> `/api/health`
+- Middleware (CORS): `functions/api/ai/_middleware.ts`
+- Static output: `out` (configured in `wrangler.toml`)
+
+Build and deploy:
+
+```bash
+pnpm build
+npx wrangler pages deploy out
+```
+
+Required Pages environment variable:
+
+- `OPENAI_API_KEY`

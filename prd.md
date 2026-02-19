@@ -50,6 +50,7 @@ Mode 2: 스토리 → 숫자 (Story to Number) = 강력한 비밀번호 생성
 **[PIN Visual Support]** 생성된 PIN에 대해 시각적 보조 기능을 제공한다:
 - **AI 연상 이미지 생성**: PIN 생성 결과에서 DALL-E 3를 활용해 스토리 기반 연상 이미지를 즉시 생성할 수 있다.
 - **휘발성 보안 유지**: 보안을 위해 PIN 이미지는 별도의 DB에 저장하지 않으며, 사용자가 명시적으로 공유할 때만 이미지 카드로 변환된다.
+- **핀번호 길이 보정 로직**: AI 생성 불일치 또는 에러 발생 시에도 사용자가 선택한 길이를 엄격히 준수하도록 클라이언트 측 패딩 및 대체 로직(Fallback Logic)이 구현되어 있다.
 
 5.2. 6대 카테고리별 맞춤 입력 (Context-Aware Inputs)
 사용자가 선택한 카테고리에 따라 입력 폼(Form) 형식이 최적화되어야 한다.
@@ -122,6 +123,7 @@ Backend/DB: Supabase (Auth, Postgres DB, Storage).
 AI Engine: OpenAI API (GPT-4o or Claude 3.5 Sonnet) - 이미지 프롬프트 생성 및 텍스트 변환용.
 
 Deployment: Vercel & Cloudflare Pages (Web), Capacitor (Mobile App Packaging).
+    - **Mobile AI Connectivity**: 모바일 앱의 정적 배포 환경에서도 AI 기능을 지원하기 위해 Cloudflare Pages Functions를 백엔드로 사용하며, `nodejs_compat` 및 CORS 미들웨어가 설정되어 있다.
 
 8. 데이터베이스 스키마 설계 (Draft)
 8.1. users (Supabase Auth 연동)
