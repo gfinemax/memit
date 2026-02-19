@@ -35,6 +35,9 @@ export const metadata: Metadata = {
 };
 
 import AppUrlListener from "@/components/AppUrlListener";
+import PushInit from "@/components/PushInit";
+import Providers from "@/components/Providers";
+import AppInitializer from "@/components/AppInitializer";
 
 export default function RootLayout({
   children,
@@ -42,12 +45,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+              document.documentElement.classList.toggle('dark', theme === 'dark');
+            })()
+          `
+        }} />
+      </head>
       <body
-        className={`${spaceGrotesk.variable} antialiased bg-background-dark text-slate-100 font-display`}
+        className={`${spaceGrotesk.variable} antialiased bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display`}
       >
-        <AppUrlListener />
-        {children}
+        <Providers>
+          <AppUrlListener />
+          <PushInit />
+          <AppInitializer />
+          {children}
+        </Providers>
       </body>
     </html>
   );

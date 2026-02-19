@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import PasswordGeneratorWizard from './password/PasswordGeneratorWizard';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronDown, Quote, Heart, TrophyIcon, Brain, Zap, Key, Grid } from 'lucide-react';
@@ -17,6 +18,7 @@ import MobileModeTabs, { FilterMode } from './MobileModeTabs';
 import MobileMagicInput from './MobileMagicInput';
 import MobileCoverFlow from './MobileCoverFlow';
 import WelcomeOnboarding from './WelcomeOnboarding';
+import { eventBus, APP_EVENTS } from '@/lib/events';
 
 export interface KeywordItem {
     word: string;
@@ -25,18 +27,31 @@ export interface KeywordItem {
     isLocked?: boolean;
 }
 
+// Add Password Result Interface
+export interface PasswordResult {
+    password: string;
+    verificationHash: string;
+    hints: {
+        site: string;
+        sentence: string;
+        ruleConfig: any;
+    };
+}
+
 export default function MobileHome() {
     const router = useRouter();
     const [currentMode, setCurrentMode] = useState<FilterMode>('password');
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<KeywordItem[] | null>(null);
+    const [passwordResult, setPasswordResult] = useState<PasswordResult | null>(null);
     const [story, setStory] = useState<string>('');
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
     const [mnemonicKeyOpen, setMnemonicKeyOpen] = useState(false);
     const [useFourCut, setUseFourCut] = useState(false); // Style Selector State
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [savedMemoryId, setSavedMemoryId] = useState<string | null>(null);
 
     // Advanced Generation States
     const [generatingImage, setGeneratingImage] = useState(false);
@@ -81,6 +96,19 @@ export default function MobileHome() {
         };
 
         init();
+
+        const handleFocusInput = (data: any) => {
+            if (data?.mode) {
+                setCurrentMode(data.mode);
+            }
+            // Dispatch native event for MobileMagicInput with text data
+            window.dispatchEvent(new CustomEvent('trigger-magic-focus', {
+                detail: { text: data?.text }
+            }));
+        };
+
+        eventBus.on(APP_EVENTS.FOCUS_INPUT, handleFocusInput);
+        return () => eventBus.off(APP_EVENTS.FOCUS_INPUT, handleFocusInput);
     }, []);
 
     const handleOnboardingComplete = () => {
@@ -120,10 +148,41 @@ export default function MobileHome() {
         if (!input.trim() || loading || generatingImage) return;
         setLoading(true);
         setResult(null);
+        setPasswordResult(null);
         setStory('');
         setImageUrl(null);
 
         try {
+            // Special Flow for Password Mode
+            if (currentMode === 'password') {
+                // Dynamically import to ensure client-side execution if needed (though it is pure JS)
+                const { generateMnemonicPassword, generateVerificationHash } = await import('@/lib/password-generator');
+
+                const options = {
+                    useKoreanMap: true, // Default to true for robust password
+                    useLeet: true,
+                    includeSpecial: true,
+                    includeNumber: true,
+                    length: 12
+                };
+
+                const password = generateMnemonicPassword(input, options);
+                const hash = generateVerificationHash(password);
+
+                setPasswordResult({
+                    password,
+                    verificationHash: hash,
+                    hints: {
+                        site: "Default", // User can change this later
+                        sentence: input,
+                        ruleConfig: options
+                    }
+                });
+
+                setLoading(false);
+                return;
+            }
+
             // Step 1: Keywords
             const res = await convertNumberAction(input);
             if (res.success && res.data && res.candidates) {
@@ -255,6 +314,14 @@ export default function MobileHome() {
             const saved = await supabaseMemoryService.saveMemory(memoryData);
 
             if (saved) {
+                const sid = saved.id as string;
+                setSavedMemoryId(sid);
+                localStorage.setItem('last_saved_memory_id', sid);
+
+                // Increment milestone for in-app review
+                const currentCount = parseInt(localStorage.getItem('memories_created_count') || '0');
+                localStorage.setItem('memories_created_count', (currentCount + 1).toString());
+
                 alert("기억이 성공적으로 저장되었습니다! PC에서도 확인하실 수 있습니다.");
             } else {
                 alert("저장에 실패했습니다.");
@@ -262,6 +329,48 @@ export default function MobileHome() {
         } catch (e) {
             console.error(e);
             alert("저장 중 오류가 발생했습니다.");
+        }
+    };
+
+    const handleShareCommunity = async () => {
+        if (!result) return;
+
+        let idToShare = savedMemoryId;
+        if (!idToShare) {
+            // Auto-save if not already saved
+            setLoading(true);
+            try {
+                const memoryData = {
+                    input_number: input,
+                    keywords: result.map(item => item.word),
+                    story: story,
+                    image_url: imageUrl || undefined,
+                    strategy: 'SCENE' as any,
+                    category: currentMode as any,
+                    context: "Shared to Community"
+                };
+                const saved = await supabaseMemoryService.saveMemory(memoryData);
+                if (saved) {
+                    const sid = saved.id as string;
+                    idToShare = sid;
+                    setSavedMemoryId(sid);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        if (idToShare) {
+            const res = await supabaseMemoryService.shareMemory(idToShare);
+            if (res.success) {
+                alert("명예의 전당에 성공적으로 공유되었습니다! 🏆");
+            } else {
+                alert("공유 중 오류가 발생했습니다: " + res.error);
+            }
+        } else {
+            alert("저장 후 공유할 수 있습니다.");
         }
     };
 
@@ -315,126 +424,134 @@ export default function MobileHome() {
                         {/* 1. Filter Chips */}
                         <MobileModeTabs currentMode={currentMode} onModeChange={setCurrentMode} />
 
-                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed transition-all duration-300 break-keep px-1 -mt-2">
-                            {
-                                currentMode === 'password' ? "강력하고 기억하기 쉬운 나만의 암호를 생성하세요." :
-                                    currentMode === 'number' ? "숫자를 자음으로 치환하여 이미지로 기억하세요." :
-                                        currentMode === 'speech' ? "기억의 궁전을 지어 원고 없이 발표하세요." :
-                                            "모든 기억법을 응용해 지식을 구조화하세요."
-                            }
-                        </p>
+                        {currentMode === 'password' ? (
+                            <div className="mt-2">
+                                <PasswordGeneratorWizard />
+                            </div>
+                        ) : (
+                            <>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed transition-all duration-300 break-keep px-1 -mt-2">
+                                    {
+                                        currentMode === 'number' ? "숫자를 자음으로 치환하여 이미지로 기억하세요." :
+                                            currentMode === 'speech' ? "기억의 궁전을 지어 원고 없이 발표하세요." :
+                                                "모든 기억법을 응용해 지식을 구조화하세요."
+                                    }
+                                </p>
 
-                        {/* Collapsible Mnemonic Key (Number mode only) */}
-                        {currentMode === 'number' && (
-                            <div className="-mt-1">
-                                <button
-                                    onClick={() => setMnemonicKeyOpen(!mnemonicKeyOpen)}
-                                    className="flex items-center gap-1.5 text-sm font-semibold text-primary/80 hover:text-primary active:scale-[0.98] transition-all px-1"
-                                >
-                                    <Key className="w-3.5 h-3.5" />
-                                    <span>기억의 열쇠</span>
-                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${mnemonicKeyOpen ? 'rotate-180' : ''}`} />
-                                </button>
+                                {/* Collapsible Mnemonic Key (Number mode only) */}
+                                {currentMode === 'number' && (
+                                    <div className="-mt-1">
+                                        <button
+                                            onClick={() => setMnemonicKeyOpen(!mnemonicKeyOpen)}
+                                            className="flex items-center gap-1.5 text-sm font-semibold text-primary/80 hover:text-primary active:scale-[0.98] transition-all px-1"
+                                        >
+                                            <Key className="w-3.5 h-3.5" />
+                                            <span>기억의 열쇠</span>
+                                            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${mnemonicKeyOpen ? 'rotate-180' : ''}`} />
+                                        </button>
 
-                                {mnemonicKeyOpen && (
-                                    <div className="mt-2 p-3 rounded-xl bg-slate-900/60 border border-primary/20 backdrop-blur-sm animate-in slide-in-from-top-2 duration-200">
-                                        <div className="grid grid-cols-5 gap-1.5">
-                                            {MNEMONIC_MAP.map((item) => {
-                                                const isActive = input.includes(item.num);
-                                                return (
-                                                    <div
-                                                        key={item.num}
-                                                        className={`
-                                                            flex flex-col items-center py-1.5 rounded-lg transition-all duration-200
-                                                            ${isActive
-                                                                ? 'bg-primary/20 ring-1 ring-primary/50 scale-105'
-                                                                : 'bg-white/5 hover:bg-white/10'
-                                                            }
-                                                        `}
-                                                    >
-                                                        <span className={`text-[10px] font-bold ${isActive ? 'text-white' : 'text-slate-500'}`}>
-                                                            {item.num}
-                                                        </span>
-                                                        <span className={`text-sm font-bold leading-tight ${isActive ? 'text-primary' : 'text-slate-300'}`}>
-                                                            {item.consonants}
-                                                        </span>
-                                                        <span className={`text-[9px] ${isActive ? 'text-slate-300' : 'text-slate-600'}`}>
-                                                            {item.label.split(',')[0]}
-                                                        </span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
+                                        {mnemonicKeyOpen && (
+                                            <div className="mt-2 p-3 rounded-xl bg-slate-900/60 border border-primary/20 backdrop-blur-sm animate-in slide-in-from-top-2 duration-200">
+                                                <div className="grid grid-cols-5 gap-1.5">
+                                                    {MNEMONIC_MAP.map((item) => {
+                                                        const isActive = input.includes(item.num);
+                                                        return (
+                                                            <div
+                                                                key={item.num}
+                                                                className={`
+                                                                    flex flex-col items-center py-1.5 rounded-lg transition-all duration-200
+                                                                    ${isActive
+                                                                        ? 'bg-primary/20 ring-1 ring-primary/50 scale-105'
+                                                                        : 'bg-white/5 hover:bg-white/10'
+                                                                    }
+                                                                `}
+                                                            >
+                                                                <span className={`text-[10px] font-bold ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                                                                    {item.num}
+                                                                </span>
+                                                                <span className={`text-sm font-bold leading-tight ${isActive ? 'text-primary' : 'text-slate-300'}`}>
+                                                                    {item.consonants}
+                                                                </span>
+                                                                <span className={`text-[9px] ${isActive ? 'text-slate-300' : 'text-slate-600'}`}>
+                                                                    {item.label.split(',')[0]}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
-                            </div>
+
+                                {/* Input Area */}
+                                <div className="mt-2">
+                                    <MobileMagicInput
+                                        value={input}
+                                        onChange={setInput}
+                                        mode={currentMode}
+                                        onOcrScan={(text) => setInput(text)}
+                                        placeholder={
+                                            currentMode === 'number' ? "암기할 숫자를 입력하세요 (예: 3.141592)" :
+                                                currentMode === 'speech' ? "발표 주제나 핵심 키워드를 입력하세요..." :
+                                                    "학습할 내용을 입력하거나 이미지를 업로드하세요..."
+                                        }
+                                    />
+                                </div>
+
+                                {/* Style Selector Toggle */}
+                                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                                    <button
+                                        onClick={() => setUseFourCut(false)}
+                                        className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${!useFourCut
+                                            ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
+                                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                                            }`}
+                                    >
+                                        🎨 단일 컷 (웹툰)
+                                    </button>
+                                    <button
+                                        onClick={() => setUseFourCut(true)}
+                                        className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${useFourCut
+                                            ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
+                                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                                            }`}
+                                    >
+                                        🧩 4컷 만화
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <button
+                                        onClick={handleConvert}
+                                        disabled={loading || !input.trim()}
+                                        className={`
+                                            w-full py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none
+                                            ${input.trim()
+                                                ? 'bg-gradient-to-r from-primary to-indigo-600 text-white shadow-primary/30 translate-y-0'
+                                                : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                                            }
+                                        `}
+                                    >
+                                        {loading ? (
+                                            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                        ) : (
+                                            <Zap className="w-5 h-5 text-yellow-300" fill="currentColor" />
+                                        )}
+                                        {loading ? '생성 중...' : '메밋 생성하기'}
+                                    </button>
+                                </div>
+                            </>
                         )}
-
-                        <div>
-                            {/* 2. Magic Input Card */}
-                            <MobileMagicInput
-                                value={input}
-                                onChange={setInput}
-                                mode={currentMode}
-                                placeholder={
-                                    currentMode === 'password' ? "생성할 키워드를 입력하세요 (예: 네이버, 인스타그램)" :
-                                        currentMode === 'number' ? "암기할 숫자를 입력하세요 (예: 3.141592)" :
-                                            currentMode === 'speech' ? "발표 주제나 핵심 키워드를 입력하세요..." :
-                                                "학습할 내용을 입력하거나 이미지를 업로드하세요..."
-                                }
-                            />
-                        </div>
-
-                        {/* Style Selector Toggle */}
-                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                            <button
-                                onClick={() => setUseFourCut(false)}
-                                className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${!useFourCut
-                                    ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
-                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                                    }`}
-                            >
-                                🎨 단일 컷 (웹툰)
-                            </button>
-                            <button
-                                onClick={() => setUseFourCut(true)}
-                                className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${useFourCut
-                                    ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
-                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                                    }`}
-                            >
-                                🧩 4컷 만화
-                            </button>
-                        </div>
-
-                        <div>
-                            <button
-                                onClick={handleConvert}
-                                disabled={loading || !input.trim()}
-                                className={`
-                                    w-full py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none
-                                    ${input.trim()
-                                        ? 'bg-gradient-to-r from-primary to-indigo-600 text-white shadow-primary/30 translate-y-0'
-                                        : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
-                                    }
-                                `}
-                            >
-                                {loading ? (
-                                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                                ) : (
-                                    <Zap className="w-5 h-5 text-yellow-300" fill="currentColor" />
-                                )}
-                                {loading ? '생성 중...' : '메밋 생성하기'}
-                            </button>
-                        </div>
                     </section>
 
                     {
-                        result && (
+                        (result || passwordResult) && (
                             <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
                                 <ResultCard
                                     input={input}
-                                    keywords={result}
+                                    keywords={result || undefined}
+                                    passwordResult={passwordResult}
                                     story={{ text: story, highlighted: [] }}
                                     imageUrl={imageUrl || undefined}
                                     onSave={handleSave}
@@ -442,10 +559,12 @@ export default function MobileHome() {
                                     onKeywordLockToggle={handleKeywordLockToggle}
                                     onToggleAllLocks={handleToggleAllLocks}
                                     onRememit={handleRememit}
+                                    onShareCommunity={handleShareCommunity}
                                     useFourCut={useFourCut}
                                     setUseFourCut={setUseFourCut}
                                     onReset={() => {
                                         setResult(null);
+                                        setPasswordResult(null);
                                         setStory('');
                                         setImageUrl(null);
                                         setInput('');

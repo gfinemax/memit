@@ -387,6 +387,120 @@ export class SupabaseMemoryService implements MemoryService {
 
         return { success: true };
     }
+
+    async getCommunityScenarios(): Promise<UserMemory[]> {
+        const supabase = createClient();
+        if (!supabase) return [];
+
+        const { data, error } = await supabase
+            .from('memories')
+            .select('*, profiles(username, avatar_url)')
+            .eq('metadata->>isPublic', 'true')
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        if (error || !data) {
+            console.error("Get community scenarios FAILED", error);
+            return [];
+        }
+
+        return data.map(item => ({
+            id: item.id,
+            input_number: item.input_data,
+            keywords: item.encoded_data?.keywords || [],
+            story: item.encoded_data?.story || '',
+            image_url: item.image_url,
+            context: item.metadata?.context,
+            category: item.metadata?.category,
+            isFavorite: item.metadata?.isFavorite || false,
+            label: item.metadata?.label || '',
+            strategy: item.encoded_data?.strategy || 'SCENE',
+            created_at: item.created_at,
+            authorName: item.profiles?.username,
+            authorAvatar: item.profiles?.avatar_url
+        }));
+    }
+
+    async shareMemory(id: string): Promise<{ success: boolean; error?: string }> {
+        const supabase = createClient();
+        if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+        const { data: memory, error: fetchError } = await supabase
+            .from('memories')
+            .select('metadata')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !memory) return { success: false, error: fetchError?.message || 'Memory not found' };
+
+        const newMetadata = { ...(memory.metadata || {}), isPublic: true };
+
+        const { error } = await supabase
+            .from('memories')
+            .update({ metadata: newMetadata })
+            .eq('id', id);
+
+        if (error) return { success: false, error: error.message };
+        return { success: true };
+    }
+
+    async importMemory(memoryId: string): Promise<{ success: boolean; memory?: UserMemory; error?: string }> {
+        const supabase = createClient();
+        if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { success: false, error: 'Authorization required' };
+
+        // 1. Fetch the original memory
+        const { data: original, error: fetchError } = await supabase
+            .from('memories')
+            .select('*')
+            .eq('id', memoryId)
+            .single();
+
+        if (fetchError || !original) return { success: false, error: 'Original memory not found' };
+
+        // 2. Clone it for the current user
+        const cloneData = {
+            user_id: user.id,
+            input_data: original.input_data,
+            encoded_data: original.encoded_data,
+            image_url: original.image_url,
+            metadata: {
+                ...original.metadata,
+                isPublic: false,
+                isImported: true,
+                originalId: memoryId,
+                context: `Imported from community`
+            },
+            source_type: 'IMPORTED'
+        };
+
+        const { data: cloned, error: insertError } = await supabase
+            .from('memories')
+            .insert(cloneData)
+            .select()
+            .single();
+
+        if (insertError || !cloned) return { success: false, error: insertError?.message };
+
+        return {
+            success: true,
+            memory: {
+                id: cloned.id,
+                input_number: cloned.input_data,
+                keywords: cloned.encoded_data.keywords,
+                story: cloned.encoded_data.story,
+                image_url: cloned.image_url,
+                context: cloned.metadata?.context,
+                category: cloned.metadata?.category,
+                isFavorite: cloned.metadata?.isFavorite || false,
+                strategy: cloned.encoded_data.strategy,
+                created_at: cloned.created_at
+            }
+        };
+    }
 }
 
 export const supabaseMemoryService = new SupabaseMemoryService();

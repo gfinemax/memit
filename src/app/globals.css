@@ -112,6 +112,19 @@
   animation: float 6s ease-in-out infinite;
 }
 
+/* Safe Area Insets */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility mb-safe {
+  margin-bottom: env(safe-area-inset-bottom);
+}
+
 /* Landing Page Specific Utilities */
 .starry-bg {
   background-image: radial-gradient(white, rgba(255, 255, 255, .2) 2px, transparent 3px),

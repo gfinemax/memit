@@ -95,6 +95,64 @@ npx cap open android
 
 ---
 
+## ⚡ 효율적인 개발 (Live Reload)
+
+테스트 버전이라 코드가 자주 바뀐다면, 매번 빌드(`pnpm build`)할 필요 없이 **실시간으로 앱에 반영**되는 '라이브 리로드' 모드를 사용하세요.
+
+### 1. 로컬 IP 확인
+1. 터미널에서 `ipconfig` (Windows) 또는 `ifconfig` (Mac)를 입력하여 자신의 **IPv4 주소**를 확인합니다. (예: `192.168.1.10`)
+
+### 2. Capacitor 설정 변경
+`capacitor.config.ts` 파일에서 주석 처리된 `server` 부분을 해제하고 자신의 IP를 넣습니다.
+
+```typescript
+const config: CapacitorConfig = {
+  // ...
+  server: {
+    url: 'http://<자신의-IP>:3000', // 예: 'http://192.168.1.10:3000'
+    cleartext: true
+  }
+};
+```
+
+### 3. 실시간 실행
+```powershell
+# 1. PC에서 개발 서버 실행 (터미널 1)
+pnpm dev
+
+# 2. 안드로이드 앱 실행 (터미널 2)
+npx cap run android
+```
+이제 VS Code에서 코드를 수정하고 저장하면 안드로이드 폰/에뮬레이터에서도 즉시 바뀝니다!
+
+---
+
+## 🛠️ 고급 디버깅 (Chrome DevTools)
+
+앱에서 UI가 깨지거나 로그를 보고 싶을 때 유용합니다.
+
+1. 안드로이드 기기/에뮬레이터에서 앱을 실행합니다.
+2. PC 크롬 브라우저 주소창에 `chrome://inspect/#devices` 를 입력합니다.
+3. 목록에 뜨는 자신의 기기명 아래 **[inspect]** 버튼을 누릅니다.
+4. 이제 PC 웹 개발할 때처럼 콘솔(Console)과 요소(Elements)를 그대로 확인할 수 있습니다.
+
+---
+
+## 🌍 클라우드 직접 연결 (배포 버전 미리보기)
+
+만약 PC를 켜두기 어렵다면, 아까 배포한 Cloudflare 주소를 직접 넣어서 테스트할 수도 있습니다.
+
+```typescript
+// capacitor.config.ts
+server: {
+  url: 'https://memit-ai.pages.dev',
+  cleartext: true
+}
+```
+이렇게 하면 소스 코드를 빌드해서 앱에 넣지 않아도, 앱을 실행할 때마다 최신 배포 버전을 웹처럼 불러옵니다.
+
+---
+
 ## ❓ 자주 묻는 질문 (Troubleshooting)
 
 **Q: `ERR_CONNECTION_REFUSED` 오류가 떠요!**

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "740162197613",
+    "project_id": "memit-d66db",
+    "storage_bucket": "memit-d66db.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:740162197613:android:e961fac2553f0662d34764",
+        "android_client_info": {
+          "package_name": "com.memit.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPWen7cuqJbIfjkC1HN-_TeL_18zwbNt8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

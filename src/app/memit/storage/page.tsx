@@ -22,11 +22,16 @@ import {
     Tag,
     Star,
     Download,
-    LucideIcon
+    LucideIcon,
+    ShieldAlert,
+    ChevronRight,
+    ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getMemoriesAction, deleteMemoryAction, toggleFavoriteAction } from '@/app/actions';
 import { UserMemory } from '@/lib/memory-service';
+// import { NativeBiometric } from '@capgo/capacitor-native-biometric';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import MemoryModal from '@/components/dashboard/MemoryModal';
 
 const CATEGORIES: { id: string; label: string; icon: LucideIcon; color: string }[] = [
@@ -42,45 +47,40 @@ const CATEGORIES: { id: string; label: string; icon: LucideIcon; color: string }
 ];
 
 export default function StoragePage() {
-    const [memories, setMemories] = useState<UserMemory[]>([]);
-    const [filteredMemories, setFilteredMemories] = useState<UserMemory[]>([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('all');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [selectedMemory, setSelectedMemory] = useState<UserMemory | null>(null);
     const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
-    const fetchMemories = async () => {
-        setLoading(true);
-        const res = await getMemoriesAction();
-        if (res.success && res.data) {
-            setMemories(res.data);
-            setFilteredMemories(res.data);
-        }
-        setLoading(false);
-    };
+    const { data: memories = [], isLoading: loading } = useQuery({
+        queryKey: ['memories'],
+        queryFn: async () => {
+            const res = await getMemoriesAction();
+            if (res.success && res.data) return res.data;
+            return [] as UserMemory[];
+        },
+    });
 
-    useEffect(() => {
-        fetchMemories();
-    }, []);
+    const [filteredMemories, setFilteredMemories] = useState<UserMemory[]>([]);
 
     useEffect(() => {
         let result = memories;
 
         // Apply Category Filter
         if (activeCategory === 'favorite') {
-            result = result.filter(m => m.isFavorite);
+            result = result.filter((m: UserMemory) => m.isFavorite);
         } else if (activeCategory !== 'all') {
-            result = result.filter(m => m.category === activeCategory);
+            result = result.filter((m: UserMemory) => m.category === activeCategory);
         }
 
         // Apply Search Filter
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase();
-            result = result.filter(m =>
+            result = result.filter((m: UserMemory) =>
                 m.input_number.includes(query) ||
-                m.keywords.some(k => k.toLowerCase().includes(query)) ||
+                m.keywords.some((k: string) => k.toLowerCase().includes(query)) ||
                 m.story.toLowerCase().includes(query) ||
                 (m.context && m.context.toLowerCase().includes(query))
             );
@@ -89,16 +89,21 @@ export default function StoragePage() {
         setFilteredMemories(result);
     }, [activeCategory, searchQuery, memories]);
 
+    const deleteMutation = useMutation({
+        mutationFn: deleteMemoryAction,
+        onSuccess: (res: any) => {
+            if (res.success) {
+                queryClient.invalidateQueries({ queryKey: ['memories'] });
+                setSelectedMemory(null);
+            } else {
+                alert(res.error || "삭제에 실패했습니다.");
+            }
+        }
+    });
+
     const handleDelete = async (id: string) => {
         if (!confirm("이 기억을 보관함에서 영구히 삭제하시겠습니까?")) return;
-
-        const res = await deleteMemoryAction(id);
-        if (res.success) {
-            setSelectedMemory(null);
-            fetchMemories();
-        } else {
-            alert(res.error || "삭제에 실패했습니다.");
-        }
+        deleteMutation.mutate(id);
     };
 
     const handleExportData = () => {
@@ -119,27 +124,74 @@ export default function StoragePage() {
         }
     };
 
+    const favoriteMutation = useMutation({
+        mutationFn: ({ id, status }: { id: string; status: boolean }) => toggleFavoriteAction(id, status),
+        onMutate: async ({ id, status }: { id: string; status: boolean }) => {
+            await queryClient.cancelQueries({ queryKey: ['memories'] });
+            const previousMemories = queryClient.getQueryData(['memories']);
+            queryClient.setQueryData(['memories'], (old: UserMemory[] | undefined) =>
+                old?.map(m => m.id === id ? { ...m, isFavorite: status } : m)
+            );
+            return { previousMemories };
+        },
+        onError: (err, variables, context) => {
+            if (context?.previousMemories) {
+                queryClient.setQueryData(['memories'], context.previousMemories);
+            }
+            alert("실패했습니다.");
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['memories'] });
+        },
+    });
+
     const handleToggleFavorite = async (id: string, currentStatus: boolean) => {
-        const nextStatus = !currentStatus;
+        favoriteMutation.mutate({ id, status: !currentStatus });
+    };
 
-        // Optimistic Update
-        setMemories(prev => prev.map(m => m.id === id ? { ...m, isFavorite: nextStatus } : m));
+    const handleCategoryClick = async (categoryId: string) => {
+        const isBiometricEnabled = localStorage.getItem('biometric_enabled') === 'true';
 
-        const res = await toggleFavoriteAction(id, nextStatus);
-        if (!res.success) {
-            alert(res.error || "실패했습니다.");
-            // Rollback
-            setMemories(prev => prev.map(m => m.id === id ? { ...m, isFavorite: currentStatus } : m));
+        if (categoryId === 'security' && isBiometricEnabled) {
+            try {
+                const { NativeBiometric } = await import('@capgo/capacitor-native-biometric');
+                const check = await NativeBiometric.isAvailable();
+                if (check.isAvailable) {
+                    await NativeBiometric.verifyIdentity({
+                        reason: "보안 항목에 접근하기 위해 인증이 필요합니다.",
+                        title: "보안 인증",
+                        subtitle: "생체 인식을 사용하여 잠금을 해제합니다.",
+                        description: "보관된 민감한 정보를 확인합니다.",
+                        negativeButtonText: "취소",
+                    });
+                }
+                setActiveCategory(categoryId);
+            } catch (e) {
+                console.error('Biometric verification failed', e);
+            }
+        } else {
+            setActiveCategory(categoryId);
         }
     };
 
     return (
-        <div className="p-6 lg:p-10 max-w-[1600px] mx-auto min-h-screen">
+        <div className="px-5 pt-0 pb-6 lg:p-10 max-w-[1600px] mx-auto min-h-screen">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold text-white font-display mb-2">내 기억 저장소</h1>
-                    <p className="text-slate-400">당신이 수집한 소중한 기억들의 컬렉션입니다.</p>
+                    <motion.h1
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-2xl min-[390px]:text-3xl font-bold italic tracking-tight break-keep mb-0 flex flex-wrap items-center gap-x-2"
+                        style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}
+                    >
+                        <span className="text-white">내 기억</span>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-primary">저장소</span>
+                            <span className="text-primary font-bold opacity-80 animate-pulse">_</span>
+                        </div>
+                    </motion.h1>
+                    <p className="text-slate-400 text-[11px] opacity-70 mt-0.5">소중한 기억들의 컬렉션입니다.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -152,7 +204,7 @@ export default function StoragePage() {
                             placeholder="숫자나 키워드로 찾기..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="bg-slate-900/50 border border-slate-800 focus:border-primary/50 text-white rounded-2xl py-3 pl-12 pr-6 w-full md:w-72 lg:w-96 transition-all outline-none focus:ring-4 focus:ring-primary/10"
+                            className="bg-slate-900/40 border border-slate-800/50 focus:border-primary/50 text-white rounded-xl py-2.5 pl-11 pr-5 w-full md:w-72 lg:w-96 transition-all outline-none text-sm"
                         />
                     </div>
 
@@ -182,22 +234,22 @@ export default function StoragePage() {
                 </div>
             </div>
 
-            {/* Category Bar */}
-            <div className="mb-10">
-                <div className="flex flex-wrap items-center gap-3">
+            {/* Category Bar - Enhanced with horizontal scroll on mobile */}
+            <div className="mb-4 -mx-6 px-6 overflow-x-auto no-scrollbar lg:mx-0 lg:px-0">
+                <div className="flex items-center gap-2 pb-2 min-w-max lg:flex-wrap">
                     {CATEGORIES.map((cat) => (
                         <button
                             key={cat.id}
-                            onClick={() => setActiveCategory(cat.id)}
-                            className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl border transition-all duration-300 whitespace-nowrap ${activeCategory === cat.id
-                                ? 'bg-primary/20 border-primary/40 text-white shadow-[0_0_20px_rgba(168,85,247,0.15)]'
-                                : 'bg-slate-900/20 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'
+                            onClick={() => handleCategoryClick(cat.id)}
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 whitespace-nowrap ${activeCategory === cat.id
+                                ? 'bg-primary/20 border-primary/40 text-white shadow-lg ring-2 ring-primary/10'
+                                : 'bg-slate-900/40 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'
                                 }`}
                         >
-                            <cat.icon className={`w-4 h-4 ${activeCategory === cat.id ? cat.color : 'text-slate-600'}`} />
-                            <span className="font-semibold text-sm">{cat.label}</span>
+                            <cat.icon className={`w-3.5 h-3.5 ${activeCategory === cat.id ? cat.color : 'text-slate-600'}`} />
+                            <span className="font-bold text-xs tracking-tight">{cat.label}</span>
                             {activeCategory === cat.id && (
-                                <span className="ml-1 bg-primary/30 py-0.5 px-2 rounded-full text-[10px] font-bold">
+                                <span className="ml-1 bg-primary/40 py-0.5 px-2 rounded-full text-[10px] font-black">
                                     {filteredMemories.length}
                                 </span>
                             )}
@@ -205,6 +257,41 @@ export default function StoragePage() {
                     ))}
                 </div>
             </div>
+
+            {/* Security Notice Banner - Appears when security category is active */}
+            <AnimatePresence>
+                {activeCategory === 'security' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20, height: 0 }}
+                        animate={{ opacity: 1, y: 0, height: 'auto' }}
+                        exit={{ opacity: 0, y: -20, height: 0 }}
+                        className="mb-10 overflow-hidden"
+                    >
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-[2.5rem] p-6 flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-md">
+                            <div className="flex items-center gap-5">
+                                <div className="w-14 h-14 rounded-3xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                    <ShieldAlert className="w-7 h-7 text-blue-400" />
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-bold text-white mb-1">개인 보안 및 금융 정보 관리 안내</h4>
+                                    <p className="text-sm text-blue-200/70 leading-relaxed">
+                                        보안이 중요한 암호나 금융 관련 기억은 서비스 내 보관보다,<br className="hidden sm:block" />
+                                        **개별적으로 안전하게 다운로드**하여 오프라인으로 관리하시는 것을 강력히 권장합니다.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleExportData}
+                                className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-bold text-sm transition-all shadow-lg active:scale-95"
+                            >
+                                <Download className="w-4 h-4" />
+                                지금 백업 파일 다운로드
+                                <ArrowRight className="w-4 h-4 ml-1" />
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Content Area */}
             {loading ? (

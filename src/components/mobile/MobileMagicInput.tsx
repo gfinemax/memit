@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getConsonants } from '@/lib/mnemonic-map';
+import { Camera, Zap, Scan } from 'lucide-react';
+import { ocrService } from '@/lib/ocr-service';
+
 export type FilterMode = 'password' | 'number' | 'speech' | 'study';
-// import { FilterMode } from './MobileModeTabs'; // Removed to fix build error
 
 interface MobileMagicInputProps {
     value: string;
@@ -12,6 +14,7 @@ interface MobileMagicInputProps {
     mode: FilterMode;
     placeholder?: string;
     maxLength?: number;
+    onOcrScan?: (text: string, keywords?: string[]) => void;
 }
 
 export default function MobileMagicInput({
@@ -19,9 +22,11 @@ export default function MobileMagicInput({
     onChange,
     mode,
     placeholder = "기억하고 싶은 내용을 입력하세요...",
-    maxLength = 500
+    maxLength = 500,
+    onOcrScan
 }: MobileMagicInputProps) {
     const [isFocused, setIsFocused] = useState(false);
+    const [isScanning, setIsScanning] = useState(false);
 
     // --- Ghost Prompt Logic ---
     const [ghostInput, setGhostInput] = useState('');
@@ -76,7 +81,7 @@ export default function MobileMagicInput({
         }
 
         return () => clearTimeout(timeout);
-    }, [value, ghostInput, isGhostTyping, ghostIndex, mode]); // Added mode dependency to reset/change examples
+    }, [value, ghostInput, isGhostTyping, ghostIndex, mode]);
 
 
     // Dynamic styles based on mode
@@ -104,16 +109,44 @@ export default function MobileMagicInput({
         setIsFocused(true);
     };
 
+    // External Focus Trigger
+    useEffect(() => {
+        const handleMagicFocus = (e: CustomEvent) => {
+            const detail = e.detail;
+            if (detail?.text) {
+                onChange(detail.text);
+            }
+
+            setTimeout(() => {
+                if (inputRef.current) {
+                    inputRef.current.focus();
+                    setIsFocused(true);
+                    inputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 150);
+        };
+
+        window.addEventListener('trigger-magic-focus', handleMagicFocus as any);
+        return () => window.removeEventListener('trigger-magic-focus', handleMagicFocus as any);
+    }, [onChange]);
+
     return (
         <div
             className={`
                 relative rounded-2xl overflow-hidden transition-all duration-500
                 bg-white/50 dark:bg-[#1e1c30]/50 backdrop-blur-xl border
                 ${isFocused ? 'shadow-xl scale-[1.005] border-primary/50' : 'shadow-md border-slate-200 dark:border-white/5'}
-                group min-h-[180px] flex flex-col
+                group min-h-[180px] flex flex-col relative
             `}
             onClick={(mode as string) === 'number' ? handleContainerClick : undefined}
         >
+            {isScanning && (
+                <div className="absolute inset-0 z-[40] bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center space-y-3">
+                    <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    <p className="text-white text-xs font-bold animate-pulse">이미지 분석 중...</p>
+                </div>
+            )}
+
             {/* Animated Background Gradient */}
             <div className={`absolute inset-0 bg-gradient-to-br ${getModeStyles()} opacity-50 transition-colors duration-700 pointer-events-none`}></div>
 
@@ -141,8 +174,6 @@ export default function MobileMagicInput({
                             value={value}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                // Allow only numbers and typical dividers if needed (or just raw input as requested, but user said 'Number')
-                                // For now allow all, but keyboard is decimal.
                                 onChange(val);
                             }}
                             onFocus={() => setIsFocused(true)}
@@ -150,7 +181,7 @@ export default function MobileMagicInput({
                             className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-text caret-transparent resize-none"
                             placeholder={placeholder}
                             maxLength={maxLength}
-                            inputMode="decimal" // Numeric keyboard
+                            inputMode="decimal"
                         />
 
                         {/* Visual Segmented Grid */}
@@ -192,7 +223,7 @@ export default function MobileMagicInput({
                             )}
                         </div>
 
-                        {/* Ghost Prompt for Number Mode (Optional: Show below/above if empty?) */}
+                        {/* Ghost Prompt for Number Mode */}
                         {value.length === 0 && (
                             <div className="mt-4 text-slate-400 text-sm animate-pulse font-mono">
                                 예: {ghostInput || "3.14"}
@@ -230,7 +261,7 @@ export default function MobileMagicInput({
                                 transition-all duration-300 relative z-10
                                 ${(mode as string) === 'number' ? 'font-mono tracking-widest text-2xl' : 'font-sans'}
                             `}
-                            placeholder={placeholder} // Visual placeholder is handled by Ghost Prompt
+                            placeholder={placeholder}
                             maxLength={maxLength}
                             inputMode={(mode as string) === 'number' ? 'decimal' : 'text'}
                         />
@@ -239,15 +270,39 @@ export default function MobileMagicInput({
             </div>
 
             {/* Bottom Info Bar */}
-            <div className={`absolute bottom-3 right-4 flex items-center gap-2 z-20 ${(mode as string) === 'number' ? 'opacity-50' : ''}`}>
-                <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-slate-500 transition-colors
-                    ${value.length > 0 ? 'opacity-100' : 'opacity-50'}
-                `}>
-                    {mode.toUpperCase()}
-                </span>
-                <span className={`text-xs font-medium transition-colors ${value.length > maxLength * 0.9 ? 'text-rose-500' : 'text-slate-400'}`}>
-                    {value.length}/{maxLength}
-                </span>
+            <div className={`absolute bottom-3 right-4 flex items-center gap-3 z-30 ${(mode as string) === 'number' ? 'opacity-50' : ''}`}>
+                <button
+                    onClick={async (e) => {
+                        e.stopPropagation();
+                        setIsScanning(true);
+                        try {
+                            const result = await ocrService.scanImage();
+                            if (result) {
+                                if (onOcrScan) {
+                                    onOcrScan(result.text, result.keywords);
+                                } else {
+                                    onChange(result.text);
+                                }
+                            }
+                        } finally {
+                            setIsScanning(false);
+                        }
+                    }}
+                    disabled={isScanning}
+                    className="p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all active:scale-90"
+                >
+                    <Scan className="w-4 h-4" />
+                </button>
+                <div className="flex flex-col items-end gap-0.5">
+                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-slate-500 transition-colors
+                        ${value.length > 0 ? 'opacity-100' : 'opacity-50'}
+                    `}>
+                        {mode.toUpperCase()}
+                    </span>
+                    <span className={`text-[9px] font-medium transition-colors ${value.length > maxLength * 0.9 ? 'text-rose-500' : 'text-slate-400'}`}>
+                        {value.length}/{maxLength}
+                    </span>
+                </div>
             </div>
         </div>
     );

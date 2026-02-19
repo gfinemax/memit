@@ -21,6 +21,8 @@ export interface UserMemory {
     label?: string;
     deleted_at?: string | null;
     created_at?: string;
+    authorName?: string;
+    authorAvatar?: string;
 }
 
 export interface MemoryService {

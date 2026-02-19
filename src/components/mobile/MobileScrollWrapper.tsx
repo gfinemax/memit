@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import MobileBottomNav from './MobileBottomNav';
+import { eventBus, APP_EVENTS } from '@/lib/events';
 
 interface MobileScrollWrapperProps {
     children: React.ReactNode;
@@ -28,12 +29,13 @@ export default function MobileScrollWrapper({ children, hasTopBar = false }: Mob
                     // Upscroll (< 0) & moved more than 10px -> Show
                     // Buffer of 10px prevents jitter
 
-                    if (Math.abs(diff) > 50) { // Increased threshold for smoother mobile feel
-                        // console.log(`[ScrollDebug] Diff: ${diff}, ShowNav: ${showNav}`); 
+                    if (Math.abs(diff) > 10) { // Threshold reduced for better responsiveness
                         if (diff > 0 && showNav) {
                             setShowNav(false);
+                            eventBus.emit(APP_EVENTS.SET_NAV_VISIBILITY, false);
                         } else if (diff < 0 && !showNav) {
                             setShowNav(true);
+                            eventBus.emit(APP_EVENTS.SET_NAV_VISIBILITY, true);
                         }
                         lastScrollTop.current = currentScrollTop;
                     }

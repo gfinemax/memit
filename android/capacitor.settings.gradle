@@ -2,11 +2,20 @@
 include ':capacitor-android'
 project(':capacitor-android').projectDir = new File('../node_modules/.pnpm/@capacitor+android@8.1.0_@capacitor+core@8.1.0/node_modules/@capacitor/android/capacitor')
 
+include ':capacitor-community-image-to-text'
+project(':capacitor-community-image-to-text').projectDir = new File('../node_modules/.pnpm/@capacitor-community+image-_315b63c7e8d5c53eeb3db8f221775491/node_modules/@capacitor-community/image-to-text/android')
+
+include ':capacitor-community-in-app-review'
+project(':capacitor-community-in-app-review').projectDir = new File('../node_modules/.pnpm/@capacitor-community+in-app_7593ec7e4f2bdbe957ba26ad5aa3072f/node_modules/@capacitor-community/in-app-review/android')
+
 include ':capacitor-app'
 project(':capacitor-app').projectDir = new File('../node_modules/.pnpm/@capacitor+app@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/app/android')
 
 include ':capacitor-browser'
 project(':capacitor-browser').projectDir = new File('../node_modules/.pnpm/@capacitor+browser@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/browser/android')
+
+include ':capacitor-camera'
+project(':capacitor-camera').projectDir = new File('../node_modules/.pnpm/@capacitor+camera@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/camera/android')
 
 include ':capacitor-clipboard'
 project(':capacitor-clipboard').projectDir = new File('../node_modules/.pnpm/@capacitor+clipboard@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/clipboard/android')
@@ -22,3 +31,6 @@ project(':capacitor-share').projectDir = new File('../node_modules/.pnpm/@capaci
 
 include ':capacitor-toast'
 project(':capacitor-toast').projectDir = new File('../node_modules/.pnpm/@capacitor+toast@8.0.1_@capacitor+core@8.1.0/node_modules/@capacitor/toast/android')
+
+include ':capgo-capacitor-native-biometric'
+project(':capgo-capacitor-native-biometric').projectDir = new File('../node_modules/.pnpm/@capgo+capacitor-native-bio_c795482f4f60840c462d6e816f374e82/node_modules/@capgo/capacitor-native-biometric/android')

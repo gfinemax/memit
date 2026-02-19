@@ -7,6 +7,7 @@ import {
     ChevronRight, Moon, Shield, Mail, Info, FileText, X, Check
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
+import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -16,6 +17,8 @@ export default function SettingsPage() {
     const [editOpen, setEditOpen] = useState(false);
     const [editName, setEditName] = useState('');
     const [saving, setSaving] = useState(false);
+    const [biometricsAvailable, setBiometricsAvailable] = useState(false);
+    const [biometricEnabled, setBiometricEnabled] = useState(false);
 
     useEffect(() => {
         const supabase = createClient();
@@ -28,7 +31,39 @@ export default function SettingsPage() {
                     .then(({ data }) => { if (data) setProfile(data); });
             }
         });
+
+        // Check Biometrics Availability
+        NativeBiometric.isAvailable()
+            .then((result) => setBiometricsAvailable(result.isAvailable))
+            .catch(() => setBiometricsAvailable(false));
+
+        const enabled = localStorage.getItem('biometric_enabled') === 'true';
+        setBiometricEnabled(enabled);
     }, []);
+
+    const handleToggleBiometric = async () => {
+        const nextValue = !biometricEnabled;
+        if (nextValue) {
+            try {
+                // Verify before enabling
+                await NativeBiometric.verifyIdentity({
+                    reason: "생체 인식을 활성화하기 위해 인증이 필요합니다.",
+                    title: "본인 인증",
+                    subtitle: "생체 인식을 사용하여 잠금을 설정합니다.",
+                    description: "기기에서 지원하는 생체 인식 정보를 사용합니다.",
+                    negativeButtonText: "취소",
+                });
+                setBiometricEnabled(true);
+                localStorage.setItem('biometric_enabled', 'true');
+            } catch (e) {
+                console.error('Biometric verification failed', e);
+                // On some devices, cancel might throw an error
+            }
+        } else {
+            setBiometricEnabled(false);
+            localStorage.setItem('biometric_enabled', 'false');
+        }
+    };
 
     const displayName = profile?.username ||
         user?.user_metadata?.full_name ||
@@ -161,13 +196,22 @@ export default function SettingsPage() {
                     <SettingsSection title="앱 설정">
                         <SettingItem icon={Moon} title="다크 모드" description="화면 테마를 설정합니다"
                             value={darkMode === 'system' ? '시스템 설정' : darkMode === 'dark' ? '다크' : '라이트'} />
+                        {biometricsAvailable && (
+                            <SettingToggle
+                                icon={Shield}
+                                title="생체 파일 잠금"
+                                description="보안 카테고리 진입 시 생체 인증 필요"
+                                enabled={biometricEnabled}
+                                onToggle={handleToggleBiometric}
+                            />
+                        )}
                         <SettingItem icon={Shield} title="프라이버시" description="데이터 수집, 개인정보 관리" isLast />
                     </SettingsSection>
 
                     <SettingsSection title="지원">
                         <SettingItem icon={HelpCircle} title="도움말 및 지원" description="FAQ, 문의하기" />
-                        <SettingItem icon={FileText} title="이용 약관" description="서비스 이용약관 및 정책" />
-                        <SettingItem icon={Info} title="앱 정보" description="MEMIT v1.0.0" />
+                        <SettingItem icon={FileText} title="이용 약관 및 정책" description="개인정보 처리방침, 서비스 이용약관" onClick={() => router.push('/memit/legal')} />
+                        <SettingItem icon={Info} title="앱 정보" description="MEMIT v1.1.0" />
                         <SettingItem icon={LogOut} title="로그아웃" isDanger isLast onClick={handleSignOut} />
                     </SettingsSection>
                 </div>
@@ -206,11 +250,21 @@ export default function SettingsPage() {
 
                     <MobileSettingsSection title="앱 설정">
                         <MobileSettingItem icon={Moon} title="다크 모드" value="시스템 설정" />
+                        {biometricsAvailable && (
+                            <MobileSettingToggle
+                                icon={Shield}
+                                title="생체 파일 잠금"
+                                enabled={biometricEnabled}
+                                onToggle={handleToggleBiometric}
+                            />
+                        )}
                         <MobileSettingItem icon={Shield} title="프라이버시" isLast />
                     </MobileSettingsSection>
 
                     <MobileSettingsSection title="지원">
                         <MobileSettingItem icon={HelpCircle} title="도움말 및 지원" />
+                        <MobileSettingItem icon={FileText} title="이용 약관 및 정책" onClick={() => router.push('/memit/legal')} />
+                        <MobileSettingItem icon={Info} title="앱 정보" value="v1.1.0" />
                         <MobileSettingItem icon={LogOut} title="로그아웃" isLast isDanger onClick={handleSignOut} />
                     </MobileSettingsSection>
                 </main>
@@ -263,6 +317,33 @@ function SettingItem({
     );
 }
 
+function SettingToggle({
+    icon: Icon, title, description, enabled, isLast, onToggle
+}: {
+    icon: any; title: string; description?: string; enabled: boolean; isLast?: boolean; onToggle: () => void;
+}) {
+    return (
+        <div onClick={onToggle} className={`flex items-center p-5 hover:bg-slate-800/40 transition-colors cursor-pointer group
+            ${!isLast ? 'border-b border-slate-800/60' : ''}`}
+        >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center mr-4 bg-slate-800 text-slate-300 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                <Icon className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+                <span className="font-semibold block text-slate-200 group-hover:text-white">
+                    {title}
+                </span>
+                {description && (
+                    <span className="text-xs text-slate-500 block mt-0.5">{description}</span>
+                )}
+            </div>
+            <div className={`w-12 h-6 rounded-full relative transition-colors ${enabled ? 'bg-primary' : 'bg-slate-700'}`}>
+                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${enabled ? 'left-7' : 'left-1'}`} />
+            </div>
+        </div>
+    );
+}
+
 /* ─── Mobile Components ─── */
 
 function MobileSettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -291,6 +372,26 @@ function MobileSettingItem({
             <span className={`flex-1 font-medium ${isDanger ? 'text-red-500' : 'text-slate-200'}`}>{title}</span>
             {value && <span className="text-sm text-slate-400 mr-2">{value}</span>}
             {!isDanger && <ChevronRight className="w-4 h-4 text-slate-400" />}
+        </div>
+    );
+}
+
+function MobileSettingToggle({
+    icon: Icon, title, enabled, isLast, onToggle
+}: {
+    icon: any; title: string; enabled: boolean; isLast?: boolean; onToggle: () => void;
+}) {
+    return (
+        <div onClick={onToggle} className={`flex items-center p-4 hover:bg-slate-800/50 transition-colors cursor-pointer
+            ${!isLast ? 'border-b border-slate-800' : ''}`}
+        >
+            <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-slate-800 text-slate-300">
+                <Icon className="w-4 h-4" />
+            </div>
+            <span className="flex-1 font-medium text-slate-200">{title}</span>
+            <div className={`w-10 h-5 rounded-full relative transition-colors ${enabled ? 'bg-primary' : 'bg-slate-700'}`}>
+                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${enabled ? 'left-5.2' : 'left-0.5'}`} />
+            </div>
         </div>
     );
 }
