@@ -88,9 +88,28 @@ export default function LoginPage() {
         }
     };
 
-    const handleGuestLogin = () => {
-        // Guest Demo Mode
-        router.push('/memit');
+    const handleGuestLogin = async () => {
+        // Guest Demo Mode: Auto-login with test account
+        if (!supabase) return;
+
+        try {
+            const { error } = await supabase.auth.signInWithPassword({
+                email: 'test@memit.ai',
+                password: 'password123!',
+            });
+
+            if (error) {
+                console.error('Guest login failed:', error.message);
+                // Fallback to simple navigation if auth fails (e.g. network issue)
+                router.push('/memit');
+                return;
+            }
+
+            router.push('/memit');
+        } catch (err) {
+            console.error('Guest login error:', err);
+            router.push('/memit');
+        }
     };
 
     return (
