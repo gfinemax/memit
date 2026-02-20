@@ -166,14 +166,13 @@
 
 .lighting-border {
   position: relative;
-  border-radius: 1rem;
   overflow: hidden;
 }
 
 .lighting-border::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -1px;
   z-index: 0;
   border-radius: inherit;
   background: conic-gradient(from var(--lighting-angle),
@@ -185,4 +184,10 @@
       transparent 300deg,
       transparent 360deg);
   animation: rotate-lighting 3s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  padding: 3px;
+  pointer-events: none;
 }

@@ -84,7 +84,7 @@ export function Footer() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-2">
                     <Brain className="text-primary w-6 h-6" />
-                    <span className="font-display font-bold text-white text-lg tracking-tight">Memit</span>
+                    <span className="font-display font-bold text-white text-lg tracking-tight">Memit AI</span>
                 </div>
                 <div className="flex gap-6 text-sm text-gray-400">
                     <a className="hover:text-white transition-colors" href="#">이용약관</a>

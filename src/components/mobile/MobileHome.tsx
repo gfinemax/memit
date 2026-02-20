@@ -75,9 +75,9 @@ export default function MobileHome() {
     };
 
     useEffect(() => {
-        const supabase = createClient();
-
         const init = async () => {
+            // Check auth
+            const supabase = createClient();
             if (supabase) {
                 try {
                     const { data: { user }, error } = await supabase.auth.getUser();
@@ -103,15 +103,6 @@ export default function MobileHome() {
 
         init();
 
-        // Add Auth Listener
-        let authListener: any = null;
-        if (supabase) {
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-                setUser(session?.user ?? null);
-            });
-            authListener = subscription;
-        }
-
         const handleFocusInput = (data: any) => {
             if (data?.mode) {
                 setCurrentMode(data.mode);
@@ -123,10 +114,7 @@ export default function MobileHome() {
         };
 
         eventBus.on(APP_EVENTS.FOCUS_INPUT, handleFocusInput);
-        return () => {
-            eventBus.off(APP_EVENTS.FOCUS_INPUT, handleFocusInput);
-            if (authListener) authListener.unsubscribe();
-        };
+        return () => eventBus.off(APP_EVENTS.FOCUS_INPUT, handleFocusInput);
     }, []);
 
     const handleOnboardingComplete = () => {

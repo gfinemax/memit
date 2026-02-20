@@ -134,7 +134,7 @@ export default function MobileMagicInput({
         <div
             className={`
                 relative rounded-[2.5rem] overflow-hidden transition-all duration-500
-                bg-white/40 dark:bg-slate-900/40 backdrop-blur-[20px] border
+                bg-white/40 dark:bg-slate-900/40 backdrop-blur-[20px] border lighting-border
                 ${isFocused ? 'shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] scale-[1.01] border-primary/40' : 'shadow-lg border-slate-200/50 dark:border-white/5'}
                 group min-h-[200px] flex flex-col relative mx-1
             `}
@@ -147,22 +147,6 @@ export default function MobileMagicInput({
                 </div>
             )}
 
-            {/* Animated Background Gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${getModeStyles()} opacity-50 transition-colors duration-700 pointer-events-none`}></div>
-
-            {/* Aurora Effect (Pseudo) */}
-            <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full blur-[40px] opacity-20 transition-colors duration-700 pointer-events-none
-                ${(mode as string) === 'number' ? 'bg-blue-500' : (mode as string) === 'password' ? 'bg-emerald-500' : 'bg-purple-500'}
-            `}></div>
-
-            {/* Scanning Light Effect (Concept 3 Style) */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
-                <motion.div
-                    animate={{ top: ['-20%', '120%'] }}
-                    transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-                    className="absolute left-0 right-0 h-[100px] bg-gradient-to-b from-transparent via-primary/20 to-transparent blur-[20px]"
-                />
-            </div>
 
             <div className="relative p-1 h-full flex-1 flex flex-col">
                 {(mode as string) === 'number' ? (
