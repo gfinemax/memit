@@ -158,26 +158,12 @@ image_url (String): 생성된 결과 이미지
 created_at (Timestamp)
 
 
-9. UI/UX 가이드라인 (Design System)
-Concept: "Digital Wallet for Brain" (깔끔함, 신뢰감, 지적임)
-
-Color Palette:
-
-Primary: Deep Indigo (#4F46E5) - 뇌, 심해, 우주를 상징.
-
-Secondary: Violet (#7C3AED) - 창의성, 마법.
-
-Background: Slate (#F8FAFC / Dark: #0F172A)
-
-Typography:
-
-Headings: Pretendard (Bold, Clean)
-
-Body: Pretendard (Readable)
-
-Interaction:
-
-결과 화면은 "카드 뒤집기" 또는 "마법 가루가 뿌려지는" 듯한 애니메이션 효과로 '기억이 생성됨'을 시각적으로 강조.
+**[Concept 3: Minimalist Floating]** (Current Standard):
+- **Design Philosophy**: "One-handed Premium Experience" - 주요 조작부를 하단으로 배치하고, 모든 요소를 공중에 떠 있는 듯한(Floating) 레이어로 구성하여 깊이감과 미래지향적 감성 제공.
+- **Floating Capsule Selector**: 모드 선택기(Mode Tabs)를 중앙 하단에 떠 있는 캡슐 형태로 디자인하여 한 손 조작성 극대화 및 시각적 부담 감소.
+- **Glassmorphism Input**: 입력창(Magic Input)에 고밀도 광학 블러(`backdrop-blur-[20px]`)와 저채도 배경(`bg-white/40`)을 적용하여 콘텐츠의 가독성과 세련미 동시 확보.
+- **Luminous CTA**: 메인 실행 버튼에 그라디언트와 미세한 외부 네온 글로우(Neon Glow) 효과를 적용하여 사용자 시선을 자연스럽게 유도하고 프리미엄 브랜드 아이덴티티 강조.
+- **Elastic Feedback**: 숫자 카드 입력 및 모드 전환 시 탄성(Spring) 애니메이션을 적용하여 '디지털 뇌'의 유연함을 표현.
 
 입력 폼은 모바일 키패드가 바로 올라오도록 inputMode 설정 최적화.
 

@@ -7,11 +7,12 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronDown, Quote, Heart, TrophyIcon, Brain, Zap, Key, Grid } from 'lucide-react';
 
-import { convertNumberAction } from '@/app/actions';
+import { convertNumberAction, saveMemoryAction } from '@/app/actions_v2';
 import { openAIStoryService } from '@/lib/openai-story-service';
 import { supabaseMemoryService } from '@/lib/supabase-memory-service';
 import { createClient } from '@/utils/supabase/client';
 import { MNEMONIC_MAP } from '@/lib/mnemonic-map';
+import { KeywordResult } from '@/lib/memory-service';
 
 import ResultCard from './ResultCard';
 import MobileModeTabs, { FilterMode } from './MobileModeTabs';
@@ -45,7 +46,7 @@ export default function MobileHome() {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<KeywordItem[] | null>(null);
     const [passwordResult, setPasswordResult] = useState<PasswordResult | null>(null);
-    const [story, setStory] = useState<string>('');
+    const [story, setStory] = useState<{ text: string; highlighted: string[] } | null>(null);
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [user, setUser] = useState<any>(null);
     const [mnemonicKeyOpen, setMnemonicKeyOpen] = useState(false);
@@ -150,11 +151,15 @@ export default function MobileHome() {
     }, [generatingImage]);
 
     const handleConvert = async () => {
-        if (!input.trim() || loading || generatingImage) return;
+        console.log("[DEBUG] handleConvert called", { input: input.trim(), loading, generatingImage, currentMode });
+        if (!input.trim() || loading || generatingImage) {
+            console.log("[DEBUG] handleConvert aborted: validation failed");
+            return;
+        }
         setLoading(true);
         setResult(null);
         setPasswordResult(null);
-        setStory('');
+        setStory(null);
         setImageUrl(null);
 
         try {
@@ -188,32 +193,74 @@ export default function MobileHome() {
                 return;
             }
 
-            // Step 1: Keywords
-            const res = await convertNumberAction(input);
-            if (res.success && res.data && res.candidates) {
-                // Map to structured KeywordItem
-                const structuredResult: KeywordItem[] = res.candidates.map(candidate => ({
-                    word: candidate.words[0], // Default to first word
-                    code: candidate.chunk,
-                    candidates: candidate.words
-                }));
-                setResult(structuredResult);
+            // Step 1: Convert Input (e.g. Number -> Keywords)
+            let keywordResults: KeywordResult[] = [];
+            try {
+                if (currentMode === 'number') {
+                    keywordResults = await supabaseMemoryService.convertNumberToKeywords(input);
+                } else {
+                    const res = await openAIStoryService.generateStory(input, {});
+                    // Map simple keywords to KeywordResult structure
+                    keywordResults = res.keywords.map((word: string) => ({
+                        word,
+                        code: '',
+                        candidates: [word]
+                    }));
+                }
+            } catch (err) {
+                console.error("[ERROR] Keyword conversion failed:", err);
+                alert("키워드 변환 중 오류가 발생했습니다: " + getErrorMessage(err));
+                return;
+            }
 
-                // Step 2: Story (Auto-generate for mobile simple flow)
-                const storyRes = await openAIStoryService.generateStory(input, {
-                    manualKeywords: res.data
+            if (keywordResults.length === 0) {
+                keywordResults = [{
+                    word: input.substring(0, 10),
+                    code: '',
+                    candidates: [input.substring(0, 10)]
+                }];
+            }
+
+            // Map and store result
+            const initialKeywords: KeywordItem[] = keywordResults.map(res => ({
+                word: res.word,
+                code: res.code,
+                candidates: res.candidates,
+                isLocked: false
+            }));
+            setResult(initialKeywords);
+
+            // Step 2: Generate Story
+            setGeneratingImage(true);
+            let storyRes;
+            try {
+                // Pass word list only for generation
+                const keywordsOnly = keywordResults.map(r => r.word);
+                storyRes = await openAIStoryService.generateStory(input, {
+                    manualKeywords: keywordsOnly
                 });
-                setStory(storyRes.story);
+                setStory({ text: storyRes.story, highlighted: [] });
+            } catch (err) {
+                console.error("[ERROR] Story generation failed:", err);
+                alert("AI 스토리 생성 중 오류가 발생했습니다: " + getErrorMessage(err));
+                setGeneratingImage(false);
+                return;
+            }
 
-                // Step 3: Image (Advanced UX starts here)
-                setGeneratingImage(true);
-                const url = await openAIStoryService.generateImage(storyRes.story, "Mobile App Memory", useFourCut, res.data);
+            // Step 3: Generate Image (DALL-E)
+            try {
+                const keywordsOnly = keywordResults.map(r => r.word);
+                const url = await openAIStoryService.generateImage(storyRes.story, "Mobile App Memory Creation", useFourCut, keywordsOnly);
+                if (!url) throw new Error("이미지 URL이 비어있습니다.");
                 setImageUrl(url);
                 setGenerationProgress(100);
+            } catch (err) {
+                console.error("[ERROR] Image generation failed:", err);
+                alert("AI 부품(이미지) 생성 중 오류가 발생했습니다: " + getErrorMessage(err) + "\n(스토리는 생성되었습니다.)");
             }
-        } catch (error) {
-            console.error("Mobile conversion failed:", error);
-            alert(`처리 중 오류가 발생했습니다.\n${getErrorMessage(error)}`);
+        } catch (globalError) {
+            console.error("[CRITICAL] handleConvert global failure:", globalError);
+            alert("처리 중 예기치 못한 오류가 발생했습니다: " + getErrorMessage(globalError));
         } finally {
             setLoading(false);
             setGeneratingImage(false);
@@ -269,7 +316,7 @@ export default function MobileHome() {
             const storyRes = await openAIStoryService.generateStory(input, {
                 manualKeywords: currentWords
             });
-            setStory(storyRes.story);
+            setStory({ text: storyRes.story, highlighted: [] });
 
             // Step 3: Regenerate Image
             const url = await openAIStoryService.generateImage(storyRes.story, "Mobile App Memory Refined", useFourCut, currentWords);
@@ -309,7 +356,7 @@ export default function MobileHome() {
             const memoryData = {
                 input_number: input,
                 keywords: result.map(item => item.word), // Extract just the words for saving
-                story: story,
+                story: story?.text || '',
                 image_url: imageUrl || undefined,
                 strategy: getStrategyFromMode(currentMode),
                 category: currentMode,
@@ -348,7 +395,7 @@ export default function MobileHome() {
                 const memoryData = {
                     input_number: input,
                     keywords: result.map(item => item.word),
-                    story: story,
+                    story: story?.text || '',
                     image_url: imageUrl || undefined,
                     strategy: 'SCENE' as any,
                     category: currentMode as any,
@@ -504,46 +551,52 @@ export default function MobileHome() {
                                     />
                                 </div>
 
-                                {/* Style Selector Toggle */}
-                                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                                    <button
-                                        onClick={() => setUseFourCut(false)}
-                                        className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${!useFourCut
-                                            ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
-                                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                                            }`}
-                                    >
-                                        🎨 단일 컷 (웹툰)
-                                    </button>
-                                    <button
-                                        onClick={() => setUseFourCut(true)}
-                                        className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${useFourCut
-                                            ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
-                                            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-                                            }`}
-                                    >
-                                        🧩 4컷 만화
-                                    </button>
+                                {/* Concept 3 Style Selector */}
+                                <div className="flex justify-center mt-2 px-1">
+                                    <div className="inline-flex bg-slate-100/50 dark:bg-white/5 p-1 rounded-full border border-slate-200/50 dark:border-slate-700/30 backdrop-blur-md">
+                                        <button
+                                            onClick={() => setUseFourCut(false)}
+                                            className={`px-6 py-2 text-[11px] font-bold rounded-full transition-all duration-300 ${!useFourCut ? 'bg-white dark:bg-slate-700 text-primary shadow-sm scale-105' : 'text-slate-400 opacity-70'}`}
+                                        >
+                                            🎨 단일 컷 (웹툰)
+                                        </button>
+                                        <button
+                                            onClick={() => setUseFourCut(true)}
+                                            className={`px-6 py-2 text-[11px] font-bold rounded-full transition-all duration-300 ${useFourCut ? 'bg-white dark:bg-slate-700 text-primary shadow-sm scale-105' : 'text-slate-400 opacity-70'}`}
+                                        >
+                                            🧩 4컷 만화
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div>
+                                <div className="mt-4 px-1">
                                     <button
                                         onClick={handleConvert}
                                         disabled={loading || !input.trim()}
                                         className={`
-                                            w-full py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none
+                                            w-full py-5 rounded-[2rem] font-bold text-lg shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:shadow-none relative overflow-hidden group
                                             ${input.trim()
-                                                ? 'bg-gradient-to-r from-primary to-indigo-600 text-white shadow-primary/30 translate-y-0'
+                                                ? 'bg-gradient-to-r from-indigo-500 via-primary to-purple-600 text-white shadow-primary/40'
                                                 : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
                                             }
                                         `}
                                     >
-                                        {loading ? (
-                                            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                                        ) : (
-                                            <Zap className="w-5 h-5 text-yellow-300" fill="currentColor" />
+                                        {/* Luminous Glow Effect */}
+                                        {input.trim() && !loading && (
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
                                         )}
-                                        {loading ? '생성 중...' : '메밋 생성하기'}
+
+                                        {loading ? (
+                                            <div className="w-6 h-6 border-3 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                        ) : (
+                                            <Zap className={`w-5 h-5 ${input.trim() ? 'text-yellow-300' : 'text-slate-400'}`} fill="currentColor" />
+                                        )}
+                                        <span className="tracking-tight">{loading ? '생성 중...' : '메밋 생성하기'}</span>
+
+                                        {/* Subtle Underglow */}
+                                        {input.trim() && !loading && (
+                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-primary/40 blur-[10px]" />
+                                        )}
                                     </button>
                                 </div>
                             </>
@@ -557,7 +610,7 @@ export default function MobileHome() {
                                     input={input}
                                     keywords={result || undefined}
                                     passwordResult={passwordResult}
-                                    story={{ text: story, highlighted: [] }}
+                                    story={story || { text: '', highlighted: [] }}
                                     imageUrl={imageUrl || undefined}
                                     onSave={handleSave}
                                     onKeywordChange={handleKeywordChange}
@@ -570,7 +623,7 @@ export default function MobileHome() {
                                     onReset={() => {
                                         setResult(null);
                                         setPasswordResult(null);
-                                        setStory('');
+                                        setStory(null);
                                         setImageUrl(null);
                                         setInput('');
                                     }}

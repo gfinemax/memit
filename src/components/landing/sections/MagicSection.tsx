@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, ArrowDown, Sparkles, Wand2 } from 'lucide-react';
-import { convertNumberAction } from '@/app/actions';
+import { convertNumberAction } from '@/app/actions_v2';
 
 export default function MagicSection() {
     const [input, setInput] = useState('27');

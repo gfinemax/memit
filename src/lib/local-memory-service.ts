@@ -1,4 +1,4 @@
-import { MemoryService, SystemCodeMap, SystemType, UserMemory } from './memory-service';
+import { MemoryService, SystemCodeMap, SystemType, UserMemory, KeywordResult } from './memory-service';
 import digits2Data from '../../digits_2_full.json';
 import digits3Data from '../../digits_3_full.json';
 
@@ -75,21 +75,24 @@ export class LocalMemoryService implements MemoryService {
         return results;
     }
 
-    async convertNumberToKeywords(number: string): Promise<string[]> {
-        // Simple strategy: Greedy match (prefer 3 digits, then 2)
-        // This is a naive implementation for the "Core Logic" requirement.
-        const result: string[] = [];
+    async convertNumberToKeywords(number: string): Promise<KeywordResult[]> {
+        const result: KeywordResult[] = [];
         let remaining = number.replace(/[^0-9]/g, '');
 
         while (remaining.length > 0) {
             let match: SystemCodeMap | null = null;
+            let chunk = '';
 
             // Try 3 digits
             if (remaining.length >= 3) {
-                const chunk = remaining.substring(0, 3);
+                chunk = remaining.substring(0, 3);
                 match = await this.getMapping('3D', chunk);
                 if (match) {
-                    result.push(match.keywords[0]); // Take safe first keyword
+                    result.push({
+                        word: match.keywords[0],
+                        code: chunk,
+                        candidates: match.keywords
+                    });
                     remaining = remaining.substring(3);
                     continue;
                 }
@@ -97,29 +100,34 @@ export class LocalMemoryService implements MemoryService {
 
             // Try 2 digits
             if (remaining.length >= 2) {
-                const chunk = remaining.substring(0, 2);
+                chunk = remaining.substring(0, 2);
                 match = await this.getMapping('2D', chunk);
                 if (match) {
-                    result.push(match.keywords[0]);
+                    result.push({
+                        word: match.keywords[0],
+                        code: chunk,
+                        candidates: match.keywords
+                    });
                     remaining = remaining.substring(2);
                     continue;
                 }
             }
 
-            // Fallback for single digit (pad to 2D? or just skip?)
-            // For now, if we can't match, just skip one char to avoid infinite loop
-            // ideally specific logic for single digits (00-09)
+            // Fallback for single digit
             if (remaining.length === 1) {
-                const chunk = '0' + remaining;
+                chunk = '0' + remaining;
                 match = await this.getMapping('2D', chunk);
                 if (match) {
-                    result.push(match.keywords[0]);
+                    result.push({
+                        word: match.keywords[0],
+                        code: chunk,
+                        candidates: match.keywords
+                    });
                 }
                 remaining = remaining.substring(1);
                 continue;
             }
 
-            // If no match found (should cover 00-99 cases)
             remaining = remaining.substring(1);
         }
 

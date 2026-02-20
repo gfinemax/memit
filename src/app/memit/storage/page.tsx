@@ -28,7 +28,7 @@ import {
     ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getMemoriesAction, deleteMemoryAction, toggleFavoriteAction } from '@/app/actions';
+import { getMemoriesAction, deleteMemoryAction, toggleFavoriteAction, updateMemoryLabelAction } from '@/app/actions_v2';
 import { UserMemory } from '@/lib/memory-service';
 // import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

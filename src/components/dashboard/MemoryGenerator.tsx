@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import MnemonicKey from './MnemonicKey';
 import { Sparkles, Brain, Info, Copy, Check, ChevronDown, ChevronUp, Lock, Unlock, Bookmark } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { convertNumberAction, saveMemoryAction, generatePasswordFromStoryAction } from '@/app/actions';
+import { convertNumberAction, saveMemoryAction, generatePasswordFromStoryAction } from '@/app/actions_v2';
 import { openAIStoryService } from '@/lib/openai-story-service';
 
 export default function MemoryGenerator({ onMemorySaved, category = 'general' }: { onMemorySaved?: () => void, category?: string }) {
@@ -102,9 +102,9 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
                 setLastConvertedInput(input.trim());
             } catch (error) {
                 console.error("AI Story generation failed:", error);
-                setResult(res.data);
+                setResult(res.data as string[]);
                 setStory("스토리 생성 중 오류가 발생했습니다.");
-                setRevealedCount(res.data.length);
+                setRevealedCount((res.data as string[]).length);
                 setIsSelecting(false);
                 setLoading(false);
                 setLastConvertedInput(input.trim());

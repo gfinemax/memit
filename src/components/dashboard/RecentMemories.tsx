@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, FlaskConical, ShoppingCart, Brain, Calendar, Image as ImageIcon, Trash2, Pencil } from 'lucide-react';
-import { getMemoriesAction, deleteMemoryAction, updateMemoryLabelAction } from '@/app/actions';
+import { deleteMemoryAction, getMemoriesAction, toggleFavoriteAction, updateMemoryLabelAction } from '@/app/actions_v2';
 import { UserMemory } from '@/lib/memory-service';
 import MemoryModal from './MemoryModal';
 import Link from 'next/link';

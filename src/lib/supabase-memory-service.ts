@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/client';
-import { MemoryService, SystemCodeMap, SystemType, UserMemory } from './memory-service';
+import { MemoryService, SystemCodeMap, SystemType, UserMemory, KeywordResult } from './memory-service';
+import { chunkNumberLogic } from './mnemonic-utils';
 
 export class SupabaseMemoryService implements MemoryService {
     async getMapping(type: SystemType, code: string): Promise<SystemCodeMap | null> {
@@ -60,40 +61,34 @@ export class SupabaseMemoryService implements MemoryService {
         }));
     }
 
-    async convertNumberToKeywords(number: string): Promise<string[]> {
-        const result: string[] = [];
-        let remaining = number.replace(/[^0-9]/g, '');
+    async convertNumberToKeywords(number: string): Promise<KeywordResult[]> {
+        const result: KeywordResult[] = [];
+        const cleanInput = number.replace(/[^0-9]/g, '');
 
-        while (remaining.length > 0) {
+        // Use unified chunking logic to ensure consistency and total length match
+        const chunks = chunkNumberLogic(cleanInput);
+
+        for (const chunk of chunks) {
             let match: SystemCodeMap | null = null;
-            if (remaining.length >= 3) {
-                const chunk = remaining.substring(0, 3);
-                match = await this.getMapping('3D', chunk);
-                if (match) {
-                    result.push(match.keywords[0]);
-                    remaining = remaining.substring(3);
-                    continue;
-                }
+            const type: SystemType = chunk.length === 3 ? '3D' : '2D';
+
+            match = await this.getMapping(type, chunk);
+
+            if (match && match.keywords.length > 0) {
+                // Return all candidates (StoryService will shuffle them)
+                result.push({
+                    word: match.keywords[0],
+                    code: chunk,
+                    candidates: match.keywords
+                });
+            } else {
+                // Fallback for missing mapping
+                result.push({
+                    word: chunk,
+                    code: chunk,
+                    candidates: [chunk]
+                });
             }
-            if (remaining.length >= 2) {
-                const chunk = remaining.substring(0, 2);
-                match = await this.getMapping('2D', chunk);
-                if (match) {
-                    result.push(match.keywords[0]);
-                    remaining = remaining.substring(2);
-                    continue;
-                }
-            }
-            if (remaining.length === 1) {
-                const chunk = '0' + remaining;
-                match = await this.getMapping('2D', chunk);
-                if (match) {
-                    result.push(match.keywords[0]);
-                }
-                remaining = remaining.substring(1);
-                continue;
-            }
-            remaining = remaining.substring(1);
         }
         return result;
     }

@@ -133,10 +133,10 @@ export default function MobileMagicInput({
     return (
         <div
             className={`
-                relative rounded-2xl overflow-hidden transition-all duration-500
-                bg-white/50 dark:bg-[#1e1c30]/50 backdrop-blur-xl border
-                ${isFocused ? 'shadow-xl scale-[1.005] border-primary/50' : 'shadow-md border-slate-200 dark:border-white/5'}
-                group min-h-[180px] flex flex-col relative
+                relative rounded-[2.5rem] overflow-hidden transition-all duration-500
+                bg-white/40 dark:bg-slate-900/40 backdrop-blur-[20px] border
+                ${isFocused ? 'shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] scale-[1.01] border-primary/40' : 'shadow-lg border-slate-200/50 dark:border-white/5'}
+                group min-h-[200px] flex flex-col relative mx-1
             `}
             onClick={(mode as string) === 'number' ? handleContainerClick : undefined}
         >
@@ -155,12 +155,12 @@ export default function MobileMagicInput({
                 ${(mode as string) === 'number' ? 'bg-blue-500' : (mode as string) === 'password' ? 'bg-emerald-500' : 'bg-purple-500'}
             `}></div>
 
-            {/* Quantum Scanner Effect (Only when not focused or empty) */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
+            {/* Scanning Light Effect (Concept 3 Style) */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
                 <motion.div
-                    animate={{ top: ['-10%', '110%'] }}
-                    transition={{ repeat: Infinity, duration: 3, ease: "linear", repeatDelay: 1 }}
-                    className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent blur-[1px]"
+                    animate={{ top: ['-20%', '120%'] }}
+                    transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                    className="absolute left-0 right-0 h-[100px] bg-gradient-to-b from-transparent via-primary/20 to-transparent blur-[20px]"
                 />
             </div>
 
@@ -192,35 +192,34 @@ export default function MobileMagicInput({
                                 return (
                                     <motion.div
                                         key={index}
-                                        initial={{ scale: 0.5, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
+                                        initial={{ y: 20, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{ type: "spring", damping: 15, stiffness: 300 }}
                                         className={`
-                                        w-12 ${consonant ? 'h-[74px]' : 'h-16'} rounded-lg border-2 flex flex-col items-center justify-center shadow-sm
+                                        w-12 ${consonant ? 'h-[74px]' : 'h-16'} rounded-2xl border flex flex-col items-center justify-center shadow-sm
                                         bg-white dark:bg-slate-800 text-slate-800 dark:text-white
-                                        border-primary/30
+                                        ${index === value.length - 1 && isFocused ? 'border-primary shadow-[0_0_15px_rgba(79,70,229,0.3)] ring-2 ring-primary/20 scale-105' : 'border-slate-100 dark:border-slate-700'}
                                     `}
                                     >
                                         <span className="text-3xl font-mono font-bold leading-none">{char}</span>
                                         {consonant && (
-                                            <span className="text-[10px] font-bold text-primary/70 mt-0.5 leading-none">{consonant}</span>
+                                            <span className="text-[10px] font-bold text-primary/70 mt-1 leading-none">{consonant}</span>
                                         )}
                                     </motion.div>
                                 );
                             })}
 
                             {/* Cursor / Placeholder Box (Only if length < maxLength) */}
-                            {value.length < maxLength && (
-                                <motion.div
-                                    animate={{ opacity: [0.5, 1, 0.5] }}
-                                    transition={{ repeat: Infinity, duration: 1 }}
-                                    className={`
-                                        w-12 h-16 rounded-lg border-2 border-dashed flex items-center justify-center
-                                        border-slate-300 dark:border-slate-600 bg-white/10
+                            <motion.div
+                                animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
+                                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                                className={`
+                                        w-12 h-16 rounded-2xl border-2 border-dashed flex items-center justify-center
+                                        border-primary/30 bg-primary/5
                                     `}
-                                >
-                                    <div className="w-1 h-8 bg-primary/50"></div>
-                                </motion.div>
-                            )}
+                            >
+                                <div className="w-1 h-8 bg-primary rounded-full shadow-[0_0_10px_rgba(79,70,229,0.8)]"></div>
+                            </motion.div>
                         </div>
 
                         {/* Ghost Prompt for Number Mode */}
@@ -270,7 +269,7 @@ export default function MobileMagicInput({
             </div>
 
             {/* Bottom Info Bar */}
-            <div className={`absolute bottom-3 right-4 flex items-center gap-3 z-30 ${(mode as string) === 'number' ? 'opacity-50' : ''}`}>
+            <div className={`absolute bottom-4 right-5 flex items-center gap-3 z-30`}>
                 <button
                     onClick={async (e) => {
                         e.stopPropagation();
@@ -289,18 +288,18 @@ export default function MobileMagicInput({
                         }
                     }}
                     disabled={isScanning}
-                    className="p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all active:scale-90"
+                    className="p-2.5 bg-slate-900/80 dark:bg-white/10 text-white dark:text-slate-200 rounded-full backdrop-blur-md shadow-lg active:scale-90 transition-all"
                 >
                     <Scan className="w-4 h-4" />
                 </button>
-                <div className="flex flex-col items-end gap-0.5">
-                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-slate-500 transition-colors
-                        ${value.length > 0 ? 'opacity-100' : 'opacity-50'}
+                <div className="flex flex-col items-end gap-1">
+                    <span className={`text-[9px] font-bold uppercase tracking-[0.2em] px-3 py-1 rounded-full bg-slate-900/80 dark:bg-white/10 text-white/90 backdrop-blur-md shadow-sm transition-all
+                        ${value.length > 0 ? 'opacity-100' : 'opacity-40'}
                     `}>
                         {mode.toUpperCase()}
                     </span>
-                    <span className={`text-[9px] font-medium transition-colors ${value.length > maxLength * 0.9 ? 'text-rose-500' : 'text-slate-400'}`}>
-                        {value.length}/{maxLength}
+                    <span className={`text-[9px] font-bold px-1 transition-colors ${value.length > maxLength * 0.9 ? 'text-rose-500' : 'text-slate-400 opacity-60'}`}>
+                        {value.length} / {maxLength}
                     </span>
                 </div>
             </div>

@@ -13,15 +13,15 @@
   Running TypeScript ...
 Failed to compile.
 
-./src/lib/mnemonic-utils.ts:53:44
+./src/lib/openai-story-service.ts:259:40
 Type error: Type 'KeywordResult[]' is not assignable to type 'string[]'.
   Type 'KeywordResult' is not assignable to type 'string'.
 
-  51 |             try {
-  52 |                 const res = await supabaseMemoryService.convertNumberToKeywords(chunk);
-> 53 |                 if (res && res.length > 0) foundKeywords = res;
-     |                                            ^
-  54 |             } catch (e) {
-  55 |                 console.warn(`Supabase lookup failed for chunk ${chunk}:`, e);
-  56 |             }
+  257 |             let keywords: string[] = [];
+  258 |             const res = await supabaseMemoryService.convertNumberToKeywords(chunk);
+> 259 |             if (res && res.length > 0) keywords = res;
+      |                                        ^
+  260 |             else keywords = [chunk];
+  261 |
+  262 |             segments.push({
 Next.js build worker exited with code: 1 and signal: null

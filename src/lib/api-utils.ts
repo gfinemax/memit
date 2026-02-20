@@ -10,6 +10,7 @@ export function getApiUrl(path: string): string {
 }
 
 export function getApiCandidateUrls(path: string): string[] {
+    const localTunnelUrl = process.env.NEXT_PUBLIC_LOCAL_TUNNEL_URL?.trim()?.replace(/\/$/, '');
     const PRIMARY_FALLBACK_URL = 'https://memit-ai.vercel.app';
     const SECONDARY_FALLBACK_URL = 'https://memit.vercel.app';
     const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim()?.replace(/\/$/, '');
@@ -23,6 +24,7 @@ export function getApiCandidateUrls(path: string): string[] {
             configuredBaseUrl ? `${configuredBaseUrl}${cleanPath}` : null,
             `${PRIMARY_FALLBACK_URL}${cleanPath}`,
             `${SECONDARY_FALLBACK_URL}${cleanPath}`,
+            localTunnelUrl ? `${localTunnelUrl}${cleanPath}` : null,
         ].filter((v): v is string => Boolean(v));
 
         return Array.from(new Set(candidates));
