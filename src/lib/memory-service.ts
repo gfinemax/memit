@@ -31,6 +31,7 @@ export interface UserMemory {
     created_at?: string;
     authorName?: string;
     authorAvatar?: string;
+    likes?: number;
 }
 
 export interface MemoryService {

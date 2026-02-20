@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Quote, Heart, Loader2 } from 'lucide-react';
+import { Quote, Heart, Loader2, ArrowUpRight, Image } from 'lucide-react';
 import { supabaseMemoryService } from '@/lib/supabase-memory-service';
 import { UserMemory } from '@/lib/memory-service';
+import StoryText from '@/components/ui/StoryText';
 
 export default function MobileCoverFlow() {
     const [scenarios, setScenarios] = useState<UserMemory[]>([]);
@@ -43,66 +44,76 @@ export default function MobileCoverFlow() {
 
     return (
         <div className="w-full overflow-x-auto no-scrollbar pb-6 pt-2 pl-5 snap-x snap-mandatory">
-            <div className="flex gap-4 pr-5 min-w-max">
-                {scenarios.map((item, idx) => {
-                    const colors = ['bg-indigo-500', 'bg-rose-500', 'bg-emerald-500', 'bg-amber-500', 'bg-purple-500'];
-                    const color = colors[idx % colors.length];
-
-                    return (
-                        <div
-                            key={item.id}
-                            className="
-                                relative w-[85vw] max-w-[320px] h-48 rounded-2xl p-6 snap-center shrink-0
-                                bg-white dark:bg-[#1e1c30] border border-slate-100 dark:border-white/10
-                                shadow-lg shadow-slate-200/50 dark:shadow-black/50
-                                flex flex-col justify-between overflow-hidden group
-                                transform transition-transform active:scale-95
-                            "
-                        >
-                            {/* Decorative Gradient Background */}
-                            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-[50px] opacity-10 ${color}`}></div>
-
-                            {/* Quote Icon */}
-                            <div className="absolute top-4 right-4 text-slate-200 dark:text-slate-700 opacity-50">
-                                <Quote className="w-10 h-10 fill-current" />
-                            </div>
-
-                            {/* Top Content */}
-                            <div className="relative z-10">
-                                <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold text-white mb-2 ${color} bg-opacity-80`}>
-                                    {idx === 0 ? 'BEST MEMORY' : 'COMMUNITY'}
-                                </span>
-                                <h3 className="text-lg font-bold text-slate-800 dark:text-white leading-tight mb-2 pr-8 truncate">
-                                    {item.input_number}
-                                </h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                                    {item.story}
-                                </p>
-                            </div>
-
-                            {/* Bottom User Info */}
-                            <div className="relative z-10 flex items-center justify-between mt-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden ring-2 ring-white dark:ring-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                        {item.authorAvatar ? (
-                                            <img src={item.authorAvatar} alt={item.authorName} className="w-full h-full object-cover" />
-                                        ) : (
-                                            item.authorName?.substring(0, 1) || 'M'
-                                        )}
-                                    </div>
-                                    <div>
-                                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[100px]">{item.authorName || '익명의 메밋'}</div>
-                                        <div className="text-[10px] text-slate-400">{new Date(item.created_at!).toLocaleDateString()}</div>
-                                    </div>
+            <div className="flex gap-4 min-[390px]:gap-5 pb-6 px-1">
+                {scenarios.map((item, idx) => (
+                    <div
+                        key={item.id}
+                        className="flex-shrink-0 w-[280px] min-[390px]:w-[320px] group transition-all duration-500"
+                    >
+                        <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-slate-900 border border-white/10 shadow-2xl transition-all duration-500 group-hover:scale-[1.02] group-hover:border-primary/40">
+                            {/* Image with Overlay */}
+                            {item.image_url ? (
+                                <img
+                                    src={item.image_url}
+                                    alt={item.input_number}
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-slate-800">
+                                    <Image className="w-12 h-12 text-slate-700" />
                                 </div>
-                                <div className="flex items-center gap-1 text-rose-500 font-bold text-xs bg-rose-50 dark:bg-rose-900/20 px-2 py-1 rounded-full">
-                                    <Heart className="w-3 h-3 fill-current" />
-                                    {Math.floor(Math.random() * 50) + 1}
+                            )}
+
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80" />
+
+                            {/* Floating Badge: Protagonist Number */}
+                            <div className="absolute top-4 left-4 z-20">
+                                <div className="px-3 py-1 bg-black/50 backdrop-blur-xl rounded-full border border-white/20 shadow-xl">
+                                    <span className="text-xl font-black text-white tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">
+                                        {item.input_number}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Like Badge */}
+                            <div className="absolute top-4 right-4 z-20">
+                                <div className="px-3 py-1.5 bg-white/10 backdrop-blur-xl rounded-full border border-white/10 flex items-center gap-1.5">
+                                    <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+                                    <span className="text-[10px] font-black text-white">{item.likes || (idx * 7) % 50 + 5}</span>
+                                </div>
+                            </div>
+
+                            {/* Content Overlay */}
+                            <div className="absolute bottom-0 inset-x-0 p-6 z-20">
+                                <div className="flex flex-wrap gap-1.5 mb-3">
+                                    {item.keywords?.slice(0, 3).map((kw, i) => (
+                                        <span key={i} className="px-2 py-0.5 rounded-lg bg-primary/20 border border-primary/30 text-[10px] font-black text-primary tracking-tight">
+                                            {kw}
+                                        </span>
+                                    ))}
+                                </div>
+                                <StoryText
+                                    text={item.story}
+                                    className="text-white text-base font-bold leading-tight line-clamp-2 h-10 mb-4 tracking-tight drop-shadow-md block"
+                                />
+
+                                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white border border-white/10">
+                                            {item.authorAvatar ? (
+                                                <img src={item.authorAvatar} alt={item.authorName} className="w-full h-full object-cover" />
+                                            ) : (
+                                                item.authorName?.slice(0, 1).toUpperCase() || 'A'
+                                            )}
+                                        </div>
+                                        <span className="text-xs text-white/60 font-medium">@{item.authorName || '익명'}</span>
+                                    </div>
+                                    <ArrowUpRight className="w-4 h-4 text-white/40 group-hover:text-primary transition-colors" />
                                 </div>
                             </div>
                         </div>
-                    );
-                })}
+                    </div>
+                ))}
             </div>
         </div>
     );

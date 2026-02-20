@@ -13,6 +13,7 @@ import { KeywordItem, PasswordResult } from './MobileHome';
 import { generateVerificationHash } from '@/lib/password-generator';
 import { generateShareCardCanvas } from '@/lib/share-card-utils';
 import { getApiUrl } from '@/lib/api-utils';
+import StoryText from '@/components/ui/StoryText';
 
 interface ResultCardProps {
     input?: string;
@@ -265,7 +266,9 @@ export default function ResultCard({
                         <div className="space-y-4 mb-6">
                             <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 rounded-xl p-4">
                                 <h4 className="text-xs font-bold text-indigo-500 mb-2 uppercase flex items-center gap-1"><KeyRound className="w-3 h-3" /> 기억 힌트/문장</h4>
-                                <p className="text-slate-700 dark:text-slate-200 font-medium text-lg leading-snug break-keep">"{passwordResult.hints.sentence}"</p>
+                                <p className="text-slate-700 dark:text-slate-200 font-medium text-lg leading-snug break-keep">
+                                    "<StoryText text={passwordResult.hints.sentence} />"
+                                </p>
                             </div>
                             <div className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
                                 <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
@@ -302,9 +305,10 @@ export default function ResultCard({
                                     <div className="bg-indigo-50/50 dark:bg-indigo-950/10 p-4 rounded-xl border border-indigo-100/50 dark:border-indigo-900/20 relative overflow-hidden group">
                                         <div className="absolute top-0 left-0 w-1 h-full bg-primary/40" />
                                         <Quote className="absolute -top-1 -right-1 w-8 h-8 text-primary/5 opacity-20 rotate-12" />
-                                        <p className="text-[15px] text-slate-700 dark:text-slate-200 leading-relaxed break-keep font-medium relative z-10">
-                                            {displayStory.text}
-                                        </p>
+                                        <StoryText
+                                            text={displayStory.text}
+                                            className="text-[15px] text-slate-700 dark:text-slate-200 leading-relaxed break-keep font-medium relative z-10 block"
+                                        />
                                     </div>
                                 )}
 

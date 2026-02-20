@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, ArrowDown, Sparkles, Wand2 } from 'lucide-react'
 import { convertNumberAction } from '@/app/actions_v2';
 
 export default function MagicSection() {
-    const [input, setInput] = useState('27');
+    const [input, setInput] = useState('17');
     const [result, setResult] = useState<{ keywords: string[] } | null>({ keywords: ['기차'] }); // Default demo
     const [loading, setLoading] = useState(false);
 

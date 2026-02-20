@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Trash2, Brain, Zap, Image as ImageIcon, Star } from 'lucide-react';
 import { UserMemory } from '@/lib/memory-service';
+import StoryText from '@/components/ui/StoryText';
 
 interface MemoryModalProps {
     memory: UserMemory | null;
@@ -117,13 +118,12 @@ export default function MemoryModal({ memory, isOpen, onClose, onDelete, onToggl
                                 <div className="w-full space-y-3 bg-white/[0.03] border border-white/[0.05] rounded-3xl p-8 md:p-10 relative overflow-hidden group">
                                     <Brain className="absolute -top-6 -right-6 w-32 h-32 text-white/[0.02] group-hover:text-white/[0.04] transition-colors" />
                                     <h4 className="text-[10px] font-bold text-primary uppercase tracking-[0.4em] mb-4 text-center">MEMORY STORY</h4>
-                                    <p className="text-xl md:text-2xl text-slate-200 leading-relaxed font-medium text-center balance-text">
-                                        {memory.story.split(/(\*\*.*?\*\*)/).map((part, i) =>
-                                            part.startsWith('**') ? (
-                                                <span key={i} className="text-primary font-bold">{part.replace(/\*\*/g, '')}</span>
-                                            ) : part
-                                        )}
-                                    </p>
+                                    <div className="relative z-10 w-full text-center">
+                                        <StoryText
+                                            text={memory.story}
+                                            className="text-xl md:text-2xl text-slate-200 leading-relaxed font-medium balance-text"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Actions */}

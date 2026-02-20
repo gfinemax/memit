@@ -6,6 +6,7 @@ import { PasswordLevel } from './PasswordLevelSelector';
 import { wordToNumbers } from '@/lib/mnemonic-password';
 import { MNEMONIC_MAP } from '@/lib/mnemonic-map';
 import { getApiUrl } from '@/lib/api-utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // ─── Types ───────────────────────────────────────────
 type L1SubStep = 'LENGTH' | 'METHOD' | 'INPUT';
@@ -277,30 +278,41 @@ export default function PasswordInputStep({ level, onGenerate, onBack }: Passwor
     // ─── Render: Level 1 PIN Mode ─────────────────────
     if (isPinMode) {
         return (
-            <div className="space-y-5 animate-in fade-in slide-in-from-right-8 duration-500">
-                {/* Header */}
-                <div className="flex items-center gap-2 mb-1">
+            <div className="relative space-y-6 overflow-hidden">
+                {/* Soft Ambient Glows */}
+                <div className="absolute inset-0 pointer-events-none -z-10">
+                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-[60px]" />
+                    <div className="absolute -left-10 bottom-20 w-40 h-40 bg-primary/10 rounded-full blur-[60px]" />
+                </div>
+
+                {/* Header Area */}
+                <div className="flex flex-col gap-2">
                     <button
                         onClick={handleBackInL1}
-                        className="text-xs text-slate-500 hover:text-white transition-colors flex items-center gap-1"
+                        className="w-fit px-3 py-1.5 rounded-full bg-white/5 border border-white/5 text-[11px] font-bold text-slate-500 hover:text-white transition-all flex items-center gap-1.5 active:scale-95 mb-1"
                     >
                         <ArrowLeft className="w-3.5 h-3.5" />
                         {l1SubStep === 'LENGTH' ? '등급 변경' : '이전 단계'}
                     </button>
-                    <h3 className="text-lg font-bold text-white ml-auto">
+                    <h3 className="text-3xl font-black text-white font-display tracking-tight bg-gradient-to-br from-white via-white to-white/40 bg-clip-text text-transparent">
                         핀번호 생성
                     </h3>
                 </div>
 
                 {/* ── Sub-step 1: Length Selection ── */}
                 {l1SubStep === 'LENGTH' && (
-                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-400">
-                        <div className="text-center mb-2">
-                            <p className="text-sm text-slate-400">원하는 자릿수를 선택하세요</p>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-8"
+                    >
+                        <div className="flex flex-col gap-1">
+                            <p className="text-lg font-bold text-white/90">원하는 자릿수를 선택하세요</p>
+                            <p className="text-xs text-slate-500">보안 수준에 맞는 길이를 추천해 드립니다.</p>
                         </div>
 
-                        {/* Quick Select: 4, 6, 8 */}
-                        <div className="grid grid-cols-3 gap-2">
+                        {/* Quick Select Cards: 4, 6, 8 */}
+                        <div className="grid grid-cols-3 gap-3">
                             {[4, 6, 8].map(len => (
                                 <button
                                     key={len}
@@ -309,58 +321,80 @@ export default function PasswordInputStep({ level, onGenerate, onBack }: Passwor
                                         setL1SubStep('METHOD');
                                     }}
                                     className={`
-                                        py-4 rounded-xl font-bold text-xl transition-all border
+                                        relative group flex flex-col items-center justify-center aspect-[4/5] rounded-[2rem] transition-all duration-300 border
                                         ${pinLength === len
-                                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-lg shadow-emerald-500/10'
-                                            : 'bg-slate-900/50 border-white/10 text-slate-300 hover:border-white/30 hover:bg-white/5'
+                                            ? 'bg-emerald-500/20 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)]'
+                                            : 'bg-white/5 border-white/10 hover:border-white/20'
                                         }
                                     `}
                                 >
-                                    {len}자리
+                                    <div className={`text-4xl font-black mb-1 transition-all duration-500 ${pinLength === len ? 'text-emerald-400 scale-110' : 'text-slate-500 group-hover:text-slate-300'}`}>
+                                        {len}
+                                    </div>
+                                    <div className={`text-[11px] font-bold tracking-widest ${pinLength === len ? 'text-emerald-500/80' : 'text-slate-600'}`}>
+                                        DIGITS
+                                    </div>
+
+                                    {pinLength === len && (
+                                        <motion.div
+                                            layoutId="active-glow"
+                                            className="absolute inset-0 rounded-[2rem] shadow-[inset_0_0_20px_rgba(16,185,129,0.2)] pointer-events-none"
+                                        />
+                                    )}
                                 </button>
                             ))}
                         </div>
 
-                        {/* Custom Length Input */}
-                        <div className="flex items-center gap-2 pt-2 border-t border-white/5">
-                            <span className="text-xs text-slate-400 whitespace-nowrap">직접 입력:</span>
-                            <input
-                                type="number"
-                                min={1}
-                                max={20}
-                                value={pinLength || ''}
-                                onChange={(e) => {
-                                    const valStr = e.target.value;
-                                    if (valStr === '') {
-                                        setPinLength(0);
-                                        return;
-                                    }
-                                    const val = parseInt(valStr, 10);
-                                    if (!isNaN(val)) {
-                                        setPinLength(Math.min(val, 20));
-                                    }
-                                }}
-                                onBlur={() => {
-                                    if (pinLength < 1) setPinLength(1);
-                                    if (pinLength > 20) setPinLength(20);
-                                }}
-                                className="flex-1 bg-slate-900/50 border border-slate-700/50 rounded-lg px-3 py-2 text-white text-center font-mono text-lg focus:outline-none focus:ring-1 focus:ring-emerald-500/50 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            />
-                            <button
-                                onClick={() => {
-                                    if (pinLength >= 1 && pinLength <= 20) {
-                                        setL1SubStep('METHOD');
-                                    }
-                                }}
-                                className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-bold text-sm px-4 py-2 rounded-lg hover:bg-emerald-500/30 transition-all"
-                            >
-                                확인
-                            </button>
+                        {/* Manual Input Container */}
+                        <div className="relative pt-8 mt-2 border-t border-white/5">
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-950 px-4 text-[10px] font-black text-slate-600 tracking-[0.2em] uppercase">
+                                Custom Length
+                            </div>
+
+                            <div className="glass-panel p-2 rounded-[2rem] flex items-center gap-2 border border-white/5 bg-white/5 backdrop-blur-xl">
+                                <div className="flex-1 relative">
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={20}
+                                        value={pinLength || ''}
+                                        onChange={(e) => {
+                                            const valStr = e.target.value;
+                                            if (valStr === '') {
+                                                setPinLength(0);
+                                                return;
+                                            }
+                                            const val = parseInt(valStr, 10);
+                                            if (!isNaN(val)) {
+                                                setPinLength(Math.min(val, 20));
+                                            }
+                                        }}
+                                        className="w-full bg-transparent px-6 py-4 text-white text-center font-display text-2xl font-black focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-slate-700"
+                                        placeholder="1~20"
+                                    />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-500 uppercase tracking-widest pointer-events-none">
+                                        자리
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (pinLength >= 1 && pinLength <= 20) {
+                                            setL1SubStep('METHOD');
+                                        }
+                                    }}
+                                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm px-8 py-4 rounded-[1.5rem] transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
+                                >
+                                    확인
+                                </button>
+                            </div>
+                            <div className="mt-4 flex items-center justify-center gap-2">
+                                <Shield className="w-3 h-3 text-slate-600" />
+                                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                                    Up to 20 digits supported
+                                </p>
+                            </div>
                         </div>
-                        <p className="text-[10px] text-slate-500 text-center">
-                            1~20자리, 홀수/짝수 모두 가능
-                        </p>
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* ── Sub-step 2: Method Selection ── */}

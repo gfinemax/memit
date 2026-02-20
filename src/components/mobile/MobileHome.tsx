@@ -431,43 +431,64 @@ export default function MobileHome() {
             {/* Header removed: Now using Global MobileTopBar */}
             {showOnboarding && <WelcomeOnboarding onComplete={handleOnboardingComplete} />}
             <main>
-                {/* Hero Section */}
-                <section className="px-5 pt-1 pb-1">
-                    <div className="mb-4">
-                        {/* Line 1: Main Benefit (Staggered Up) */}
+                {/* Hero Section (Concept 3 Upgrade) */}
+                <section className="px-5 pt-2 pb-4 relative overflow-hidden">
+                    {/* 1. Luminous Aura Background Blobs */}
+                    <div className="absolute inset-0 pointer-events-none -z-10">
                         <motion.div
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="text-2xl min-[390px]:text-3xl font-bold italic text-slate-900 dark:text-white tracking-tight break-keep flex flex-wrap items-center gap-x-2"
-                            style={{ fontFamily: 'Pretendard Variable, Pretendard, sans-serif' }}
+                            animate={{
+                                scale: [1, 1.2, 1],
+                                opacity: [0.15, 0.25, 0.15],
+                                x: [0, 20, 0],
+                                y: [0, -20, 0]
+                            }}
+                            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute -top-10 -left-10 w-48 h-48 bg-cyan-400/30 blur-[60px] rounded-full"
+                        />
+                        <motion.div
+                            animate={{
+                                scale: [1.2, 1, 1.2],
+                                opacity: [0.1, 0.2, 0.1],
+                                x: [0, -30, 0],
+                                y: [0, 15, 0]
+                            }}
+                            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                            className="absolute top-10 -right-5 w-56 h-56 bg-purple-500/20 blur-[70px] rounded-full"
+                        />
+                    </div>
+
+                    <div className="flex flex-col items-start gap-1">
+                        {/* Line 1: Brand Capsule (Repositioned to Top) */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6, delay: 0.1 }}
+                            className="flex items-center gap-2 mb-3"
                         >
-                            <span>있는 그대로 기억하세요.</span>
-                            <div className="flex items-center gap-1.5">
-                                <motion.span
-                                    animate={{
-                                        textShadow: [
-                                            "0 0 0px rgba(99,102,241,0)",
-                                            "0 0 15px rgba(99,102,241,0.3)",
-                                            "0 0 0px rgba(99,102,241,0)"
-                                        ]
-                                    }}
-                                    transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                                    className="text-primary whitespace-nowrap"
-                                >
-                                    두뇌 OS
-                                </motion.span>
-                                <motion.span
-                                    initial={{ opacity: 1 }}
-                                    animate={{ opacity: [1, 0, 1] }}
-                                    transition={{ repeat: Infinity, duration: 0.8, times: [0, 0.5, 1] }}
-                                    className="text-primary font-bold mr-1"
-                                >
-                                    _
-                                </motion.span>
-                                <span className="text-primary font-bold tracking-widest opacity-90">메밋</span>
+                            <div className="px-3 py-1.5 rounded-full bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg shadow-indigo-500/5 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                                <span className="text-[10px] font-black tracking-[0.2em] text-slate-900 dark:text-white opacity-80 uppercase">두뇌 OS_</span>
+                                <span className="text-xs font-black tracking-widest bg-gradient-to-r from-cyan-400 to-indigo-500 bg-clip-text text-transparent">메밋</span>
                             </div>
+
+                            <motion.div
+                                animate={{ opacity: [0.4, 0.8, 0.4] }}
+                                transition={{ repeat: Infinity, duration: 2 }}
+                                className="px-1.5 py-0.5 rounded-md border border-cyan-400/20 text-[7px] font-bold text-cyan-400/60 uppercase tracking-tighter"
+                            >
+                                Beta
+                            </motion.div>
                         </motion.div>
+
+                        {/* Line 2: Main Copy with New Text */}
+                        <motion.h1
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ type: "spring", damping: 15, stiffness: 100, delay: 0.2 }}
+                            className="text-[28px] min-[390px]:text-3xl font-bold text-slate-900 dark:text-white leading-[1.2] tracking-tight mb-2 whitespace-nowrap"
+                        >
+                            잊지 마세요, <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary via-indigo-500 to-cyan-400 dark:from-white dark:to-slate-400">메밋하세요.</span>
+                        </motion.h1>
                     </div>
 
 

@@ -127,27 +127,46 @@ export default function ServicesPage() {
                 </div>
             </div>
 
-            {/* ─── Mobile View (기존 코드 유지) ─── */}
-            <div className="block md:hidden bg-background-dark min-h-screen pb-24">
-                <header className="pt-8 pb-4 px-6 flex flex-col items-start justify-end bg-background-dark sticky top-0 z-20 border-b border-white/5">
-                    <div className="flex w-full justify-between items-center mb-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors"
-                        >
-                            <ArrowLeft className="w-6 h-6 text-slate-300" />
-                        </button>
-                        <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border border-primary/20 cursor-pointer">
-                            <span className="text-primary font-bold">U</span>
+            {/* ─── Mobile View (Concept 3 Remake) ─── */}
+            <div className="block md:hidden bg-transparent min-h-screen pb-24">
+                <div className="sticky top-0 z-30 px-5 py-4 bg-gradient-to-b from-slate-950 via-slate-950/80 to-transparent pointer-events-none">
+                    <div className="pointer-events-auto space-y-4">
+                        {/* Header Area */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => router.back()}
+                                    className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-900/60 border border-slate-800 text-slate-300 backdrop-blur-md"
+                                >
+                                    <ArrowLeft className="w-5 h-5" />
+                                </button>
+                                <div>
+                                    <span className="text-primary font-bold text-[10px] uppercase tracking-widest block opacity-70">ASSISTANT</span>
+                                    <h1 className="text-xl font-black text-white leading-tight tracking-tight">기억 도우미</h1>
+                                </div>
+                            </div>
+                            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border border-primary/20">
+                                <span className="text-primary font-bold">U</span>
+                            </div>
+                        </div>
+
+                        {/* Search Bar (Floating Style) */}
+                        <div className="relative group">
+                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                                <Search className="w-4 h-4 text-slate-500 group-focus-within:text-primary transition-colors" />
+                            </div>
+                            <input
+                                type="text"
+                                className="w-full bg-white/5 border border-white/10 focus:border-primary/40 focus:bg-white/10 text-white rounded-2xl py-3.5 pl-11 pr-5 backdrop-blur-xl transition-all outline-none text-sm placeholder:text-slate-600 shadow-xl"
+                                placeholder="무엇을 기억하고 싶으신가요?"
+                            />
                         </div>
                     </div>
-                    <div className="space-y-1">
-                        <span className="text-primary font-semibold text-xs uppercase tracking-wider">MEMIT SERVICE</span>
-                        <h1 className="text-2xl font-bold text-white leading-tight">메밋 상황별 기억 도우미</h1>
-                        <p className="text-sm text-slate-400">MEMIT AI가 당신의 소중한 기억을 도와드립니다.</p>
-                    </div>
-                </header>
-                <MobileServiceCategories />
+                </div>
+
+                <div className="relative z-10 px-1">
+                    <MobileServiceCategories />
+                </div>
             </div>
         </>
     );

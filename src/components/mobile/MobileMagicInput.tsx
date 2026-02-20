@@ -36,8 +36,8 @@ export default function MobileMagicInput({
     // Define specific examples for each mode
     const getExamples = () => {
         switch (mode) {
-            case 'number': return ['3.141592', '010-1234-5678', '940505-1234567'];
-            case 'password': return ['naver_pw', 'google_login', 'my_wifi_password'];
+            case 'number': return ['3.141592', '010-1234-5678', '940505-1234567', 'TIP : . - 010 등 반복 제외, 숫자만 입력'];
+            case 'password': return ['naver_pw', 'google_login', 'my_wifi_password', 'TIP : . - 010 등 반복 제외, 숫자만 입력'];
             case 'speech': return ['발표 핵심 키워드', '결혼식 축사', '중요한 프레젠테이션 오프닝'];
             case 'study': return ['English Vocabulary', '한국사 연표', '주기율표 암기'];
             default: return ['기억하고 싶은 것', '무엇이든 입력하세요'];
@@ -185,7 +185,13 @@ export default function MobileMagicInput({
                         />
 
                         {/* Visual Segmented Grid */}
-                        <div className="flex flex-wrap gap-2 justify-center items-center z-10 pointer-events-none w-full">
+                        <div
+                            className={`grid gap-2 justify-center items-center z-10 pointer-events-none w-full transition-all duration-300 ${value.length === 0 ? 'flex justify-center' : ''}`}
+                            style={value.length > 0 ? {
+                                gridTemplateColumns: `repeat(${value.length >= 10 ? 5 : 4}, minmax(0, 1fr))`,
+                                display: 'grid'
+                            } : { display: 'flex' }}
+                        >
                             {/* Render Value Characters */}
                             {value.split('').map((char, index) => {
                                 const consonant = getConsonants(char);
@@ -196,7 +202,7 @@ export default function MobileMagicInput({
                                         animate={{ y: 0, opacity: 1 }}
                                         transition={{ type: "spring", damping: 15, stiffness: 300 }}
                                         className={`
-                                        w-12 ${consonant ? 'h-[74px]' : 'h-16'} rounded-2xl border flex flex-col items-center justify-center shadow-sm
+                                        w-full ${consonant ? 'h-[74px]' : 'h-16'} rounded-2xl border flex flex-col items-center justify-center shadow-sm
                                         bg-white dark:bg-slate-800 text-slate-800 dark:text-white
                                         ${index === value.length - 1 && isFocused ? 'border-primary shadow-[0_0_15px_rgba(79,70,229,0.3)] ring-2 ring-primary/20 scale-105' : 'border-slate-100 dark:border-slate-700'}
                                     `}
@@ -210,24 +216,25 @@ export default function MobileMagicInput({
                             })}
 
                             {/* Cursor / Placeholder Box (Only if length < maxLength) */}
-                            <motion.div
-                                animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
-                                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                                className={`
-                                        w-12 h-16 rounded-2xl border-2 border-dashed flex items-center justify-center
-                                        border-primary/30 bg-primary/5
-                                    `}
-                            >
-                                <div className="w-1 h-8 bg-primary rounded-full shadow-[0_0_10px_rgba(79,70,229,0.8)]"></div>
-                            </motion.div>
+                            {value.length < maxLength && (
+                                <motion.div
+                                    animate={{ opacity: [0.3, 0.8, 0.3], scale: [1, 1.05, 1] }}
+                                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                                    className={`
+                                            w-12 h-16 rounded-2xl border-2 border-dashed flex items-center justify-center
+                                            border-primary/30 bg-primary/5
+                                        `}
+                                >
+                                    <div className="w-1 h-8 bg-primary rounded-full shadow-[0_0_10px_rgba(79,70,229,0.8)]"></div>
+                                </motion.div>
+                            )}
                         </div>
 
-                        {/* Ghost Prompt for Number Mode */}
-                        {value.length === 0 && (
-                            <div className="mt-4 text-slate-400 text-sm animate-pulse font-mono">
-                                예: {ghostInput || "3.14"}
-                            </div>
-                        )}
+                        <div className="mt-4 text-slate-400 text-[10px] sm:text-xs animate-pulse font-mono text-center px-4 min-h-[1.5em] flex items-center justify-center overflow-hidden whitespace-nowrap">
+                            {!ghostInput.startsWith('TIP') && <span className="mr-1">예:</span>}
+                            {ghostInput}
+                            <span className="inline-block w-0.5 h-3 ml-0.5 bg-primary/40"></span>
+                        </div>
                     </div>
                 ) : (
                     // --- Other Modes: Standard Textarea ---
@@ -268,31 +275,9 @@ export default function MobileMagicInput({
                 )}
             </div>
 
-            {/* Bottom Info Bar */}
-            <div className={`absolute bottom-4 right-5 flex items-center gap-3 z-30`}>
-                <button
-                    onClick={async (e) => {
-                        e.stopPropagation();
-                        setIsScanning(true);
-                        try {
-                            const result = await ocrService.scanImage();
-                            if (result) {
-                                if (onOcrScan) {
-                                    onOcrScan(result.text, result.keywords);
-                                } else {
-                                    onChange(result.text);
-                                }
-                            }
-                        } finally {
-                            setIsScanning(false);
-                        }
-                    }}
-                    disabled={isScanning}
-                    className="p-2.5 bg-slate-900/80 dark:bg-white/10 text-white dark:text-slate-200 rounded-full backdrop-blur-md shadow-lg active:scale-90 transition-all"
-                >
-                    <Scan className="w-4 h-4" />
-                </button>
-                <div className="flex flex-col items-end gap-1">
+            {/* Centered Mode Badge - Only show when there is input */}
+            {value.length > 0 && (
+                <div className="mt-auto pb-4 flex flex-col items-center gap-1 z-30">
                     <span className={`text-[9px] font-bold uppercase tracking-[0.2em] px-3 py-1 rounded-full bg-slate-900/80 dark:bg-white/10 text-white/90 backdrop-blur-md shadow-sm transition-all
                         ${value.length > 0 ? 'opacity-100' : 'opacity-40'}
                     `}>
@@ -302,7 +287,35 @@ export default function MobileMagicInput({
                         {value.length} / {maxLength}
                     </span>
                 </div>
-            </div>
+            )}
+
+            {/* Float Action Buttons (Scan) */}
+            {!(mode === 'number' || mode === 'password') && (
+                <div className="absolute bottom-4 right-5 z-40">
+                    <button
+                        onClick={async (e) => {
+                            e.stopPropagation();
+                            setIsScanning(true);
+                            try {
+                                const result = await ocrService.scanImage();
+                                if (result) {
+                                    if (onOcrScan) {
+                                        onOcrScan(result.text, result.keywords);
+                                    } else {
+                                        onChange(result.text);
+                                    }
+                                }
+                            } finally {
+                                setIsScanning(false);
+                            }
+                        }}
+                        disabled={isScanning}
+                        className="p-2.5 bg-slate-900/80 dark:bg-white/10 text-white dark:text-slate-200 rounded-full backdrop-blur-md shadow-lg active:scale-90 transition-all"
+                    >
+                        <Scan className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

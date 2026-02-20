@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import MnemonicKey from './MnemonicKey';
-import { Sparkles, Brain, Info, Copy, Check, ChevronDown, ChevronUp, Lock, Unlock, Bookmark } from 'lucide-react';
+import { Zap, Brain, Save, Copy, Check, Info, LayoutGrid, List, Tag, Search, Clock, Star, ArrowLeft, Eye, EyeOff, KeyRound, ShieldCheck, Maximize2, Lock, Unlock, ChevronRight, Wand2, Sparkles, ChevronDown, ChevronUp, Bookmark, X } from 'lucide-react';
+import StoryText from '@/components/ui/StoryText';
 import { motion, AnimatePresence } from 'framer-motion';
 import { convertNumberAction, saveMemoryAction, generatePasswordFromStoryAction } from '@/app/actions_v2';
 import { openAIStoryService } from '@/lib/openai-story-service';
@@ -313,11 +314,11 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
     };
 
     return (
-        <section className="glass-panel p-8 rounded-3xl relative group h-full flex flex-col justify-center transition-all duration-500">
-            {/* Background Decorations Container - to prevent blobs from overflowing but allow popovers to show */}
-            <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
-                <div className="absolute -right-20 -top-20 w-80 h-80 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/30 transition-all duration-700"></div>
-                <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-[#8B5CF6]/20 rounded-full blur-3xl group-hover:bg-[#8B5CF6]/30 transition-all duration-700"></div>
+        <section className="relative bg-white/5 dark:bg-slate-900/40 backdrop-blur-[30px] p-8 rounded-[2.5rem] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.2)] group h-full flex flex-col justify-center transition-all duration-500 overflow-hidden">
+            {/* Soft Ambient Glows */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute -right-20 -top-20 w-80 h-80 bg-primary/10 rounded-full blur-[100px] group-hover:bg-primary/20 transition-all duration-700" />
+                <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-[100px] group-hover:bg-indigo-500/20 transition-all duration-700" />
             </div>
 
             <div className="relative z-10 w-full flex flex-col h-full">
@@ -327,8 +328,9 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
                             <Sparkles className="w-3 h-3" />
                             AI MEMORY GEN
                         </span>
-                        <h2 className="text-3xl lg:text-4xl font-bold leading-tight text-white font-display">
-                            {activeTab === 'memory' ? '오늘의 기억을 메밋할 시간입니다' : '강력한 암호를 생성하세요'}
+                        <h2 className="text-3xl lg:text-4xl font-bold leading-tight text-white font-display flex flex-wrap items-center gap-x-3">
+                            <span>잊지 마세요,</span>
+                            <span className="text-primary-light">메밋하세요.</span>
                         </h2>
                     </div>
                 </div>
@@ -360,8 +362,8 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
 
                             <div className="flex flex-col gap-3 mb-8">
                                 <div className="lighting-border group p-[4px] rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.15)]">
-                                    <div className="relative z-10 bg-white rounded-2xl p-2 flex flex-col md:flex-row items-center gap-2 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)] transition-all overflow-hidden focus-within:shadow-[inset_0_2px_15px_rgba(168,85,247,0.15)]">
-                                        <div className="flex-1 w-full relative min-h-[140px] flex items-center justify-center">
+                                    <div className="relative z-10 bg-white/10 dark:bg-slate-950/40 rounded-[2rem] p-3 flex flex-col md:flex-row items-center gap-3 backdrop-blur-2xl border border-white/10 shadow-2xl transition-all focus-within:border-primary/40">
+                                        <div className="flex-1 w-full relative min-h-[160px] flex items-center justify-center">
                                             {/* Hidden but functional textarea */}
                                             <textarea
                                                 className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-text focus:outline-none"
@@ -378,24 +380,24 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
                                                 autoFocus
                                             ></textarea>
 
-                                            {/* Visual Segmented Slots */}
+                                            {/* Visual Segmented Slots (Concept 3 Style) */}
                                             <div className="flex flex-nowrap items-center justify-center gap-2 md:gap-4 z-10 pointer-events-none w-full overflow-hidden">
                                                 <AnimatePresence mode="wait">
                                                     {input.length === 0 && showPlaceholder ? (
                                                         <motion.div
                                                             key="placeholder"
-                                                            initial={{ opacity: 0, y: 0 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            exit={{ opacity: 0, filter: 'blur(8px)', scale: 1.05 }}
-                                                            transition={{ duration: 1.2, ease: "easeInOut" }}
-                                                            className="flex items-center gap-2"
+                                                            initial={{ opacity: 0, scale: 0.95 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            exit={{ opacity: 0, filter: 'blur(10px)', scale: 1.05 }}
+                                                            transition={{ duration: 1 }}
+                                                            className="flex flex-col items-center"
                                                         >
-                                                            <span className="text-slate-400 text-2xl md:text-4xl font-medium tracking-tight">
-                                                                기억할 숫자를 입력해주세요
+                                                            <span className="text-slate-400 text-xl md:text-3xl font-black tracking-tight opacity-50">
+                                                                숫자를 입력해주세요
                                                             </span>
                                                         </motion.div>
                                                     ) : input.length === 0 ? (
-                                                        // Ghost Prompt Mode (Typing)
+                                                        // Ghost Prompt Mode
                                                         <motion.div
                                                             key="ghost-typing"
                                                             initial={{ opacity: 0 }}
@@ -405,18 +407,13 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
                                                             {ghostInput.split('').map((char, i) => (
                                                                 <div
                                                                     key={`ghost-${i}`}
-                                                                    className="w-10 h-14 md:w-16 md:h-24 bg-white/50 border-2 border-primary/10 rounded-2xl flex items-center justify-center text-2xl md:text-5xl font-black text-slate-300 transition-all duration-300 animate-pulse shrink-0"
-                                                                    style={{
-                                                                        filter: 'blur(0.8px)',
-                                                                        opacity: 0.3 + (i * 0.05), // Increased base opacity
-                                                                        boxShadow: '0 0 10px rgba(168, 85, 247, 0.05)',
-                                                                    }}
+                                                                    className="w-10 h-14 md:w-16 md:h-24 bg-slate-900/20 border border-white/5 rounded-[1.2rem] flex items-center justify-center text-2xl md:text-5xl font-black text-slate-500 opacity-20"
                                                                 >
                                                                     {char}
                                                                 </div>
                                                             ))}
-                                                            {/* Animated Cursor (Ghost) */}
-                                                            <div className="w-1 h-6 md:h-10 bg-primary/30 rounded-full animate-bounce shadow-[0_0_10px_rgba(168,85,247,0.2)] ml-1 self-center translate-y-[8px]" />
+                                                            {/* Pulsing Ghost Cursor */}
+                                                            <div className="w-1 h-8 md:h-12 bg-primary/20 rounded-full animate-pulse ml-1 self-center" />
                                                         </motion.div>
                                                     ) : (
                                                         // Real Input Mode
@@ -427,17 +424,16 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
                                                             {input.split('').map((char, i) => (
                                                                 <div
                                                                     key={i}
-                                                                    className="w-10 h-14 md:w-16 md:h-24 bg-white border-2 border-primary/20 rounded-2xl flex items-center justify-center text-2xl md:text-5xl font-black text-slate-900 shadow-[0_8px_20px_rgba(168,85,247,0.06)] animate-in zoom-in-95 slide-in-from-bottom-2 duration-200 shrink-0"
+                                                                    className="w-11 h-16 md:w-20 md:h-28 bg-white/95 dark:bg-slate-800/80 rounded-[1.5rem] flex items-center justify-center text-3xl md:text-6xl font-black text-slate-900 dark:text-white shadow-2xl border border-white/10 transition-all"
                                                                     style={{
-                                                                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02), 0 10px 15px -3px rgba(168, 85, 247, 0.1)',
-                                                                        borderColor: 'rgba(168, 85, 247, 0.25)'
+                                                                        boxShadow: '0 20px 40px rgba(0,0,0,0.1), inset 0 2px 5px rgba(255,255,255,0.5)',
                                                                     }}
                                                                 >
                                                                     {char}
                                                                 </div>
                                                             ))}
-                                                            {/* Animated Cursor (Real) */}
-                                                            <div className="w-1.5 h-8 md:h-12 bg-primary/60 rounded-full animate-pulse shadow-[0_0_10px_rgba(168,85,247,0.4)] ml-1 self-center translate-y-[8px]" />
+                                                            {/* Neon Pulsing Cursor */}
+                                                            <div className="w-1.5 h-10 md:h-16 bg-primary rounded-full animate-pulse shadow-[0_0_15px_rgba(79,70,229,0.8)] ml-1 self-center" />
                                                         </motion.div>
                                                     )}
                                                 </AnimatePresence>
@@ -459,14 +455,10 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
                                 </div>
 
                                 <div className="mb-4">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Brain className="w-3 h-3 text-primary" />
-                                        <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Mnemonic Strategy</span>
-                                    </div>
-                                    <div className="bg-slate-900/40 p-1 rounded-xl flex gap-1 border border-slate-700/50 backdrop-blur-sm">
-                                        <button onClick={() => setStrategy('SCENE')} className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${strategy === 'SCENE' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>장면 카드</button>
-                                        <button onClick={() => setStrategy('PAO')} className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${strategy === 'PAO' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>PAO 모드</button>
-                                        <button onClick={() => setStrategy('STORY_BEAT')} className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${strategy === 'STORY_BEAT' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}>스토리 비트</button>
+                                    <div className="bg-slate-900/60 p-1.5 rounded-2xl flex gap-1 border border-white/5 backdrop-blur-xl shadow-lg">
+                                        <button onClick={() => setStrategy('SCENE')} className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${strategy === 'SCENE' ? 'bg-primary text-white shadow-lg scale-100 z-10' : 'text-slate-500 hover:text-slate-300'}`}>장면 카드</button>
+                                        <button onClick={() => setStrategy('PAO')} className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${strategy === 'PAO' ? 'bg-primary text-white shadow-lg scale-100 z-10' : 'text-slate-500 hover:text-slate-300'}`}>PAO 모드</button>
+                                        <button onClick={() => setStrategy('STORY_BEAT')} className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${strategy === 'STORY_BEAT' ? 'bg-primary text-white shadow-lg scale-100 z-10' : 'text-slate-500 hover:text-slate-300'}`}>스토리 비트</button>
                                     </div>
                                 </div>
 
@@ -915,24 +907,9 @@ function TypewriterText({ text }: { text: string }) {
         }
     }, [index, text]);
 
-    const renderStory = (content: string) => {
-        if (!content) return null;
-        const parts = content.split(/(\*\*.*?\*\*)/g);
-        return parts.map((part, i) => {
-            if (part.startsWith('**') && part.endsWith('**')) {
-                return (
-                    <span key={i} className="text-primary-light font-bold drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]">
-                        {part.slice(2, -2)}
-                    </span>
-                );
-            }
-            return part;
-        });
-    };
-
     return (
-        <p className="relative">
-            {renderStory(displayedText)}
+        <div className="relative">
+            <StoryText text={displayedText} className="text-xl md:text-2xl text-slate-200 leading-relaxed font-medium" />
             {index < text.length && (
                 <motion.span
                     animate={{ opacity: [1, 0] }}
@@ -940,6 +917,6 @@ function TypewriterText({ text }: { text: string }) {
                     className="inline-block w-1.5 h-4 bg-primary align-middle ml-1"
                 />
             )}
-        </p>
+        </div>
     );
 }
