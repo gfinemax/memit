@@ -120,8 +120,11 @@ export function useMemoryGenerator({ category = 'general', onMemorySaved, active
                 });
 
                 const finalKeywords = Array(currentCandidates.length).fill('').map((_, idx) => {
+                    // 1. If we have a locked/manual keyword from previous result, and it matches the current input logic, prioritize it
                     if (lockedIndices.includes(idx) && result && result[idx]) return result[idx];
+                    // 2. If the AI returned a set of keywords, use the one for this specific index
                     if (data.keywords && data.keywords[idx]) return data.keywords[idx];
+                    // 3. Fallback to the first word in the candidate list
                     return currentCandidates[idx].words[0] || '???';
                 });
 

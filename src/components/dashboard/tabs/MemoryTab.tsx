@@ -205,8 +205,8 @@ export function MemoryTab({ memoryProps }: { memoryProps: any }) {
 
                     <div className="flex flex-wrap gap-3 mb-6 min-h-[60px] justify-center items-center">
                         <AnimatePresence mode="popLayout" initial={false}>
-                            {result.slice(0, Math.max(revealedCount, isSelecting ? result.length : 0)).map((word: string, i: number) => {
-                                const isRevealed = i < revealedCount;
+                            {result.slice(0, !isSelecting ? result.length : Math.max(revealedCount, 0)).map((word: string, i: number) => {
+                                const isRevealed = !isSelecting || i < revealedCount;
                                 const isMenuOpen = activePopoverIndex === i;
                                 const isLocked = lockedIndices.includes(i);
 
