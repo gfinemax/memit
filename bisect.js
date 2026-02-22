@@ -1,0 +1,1 @@
+const fs = require('fs'); const lines = fs.readFileSync('test_jsx.tsx', 'utf-8').split('\n'); lines.splice(1042, 1676 - 1043 + 1, '                            <div className=\"test\">TEST</div>'); fs.writeFileSync('src/components/dashboard/MemoryGenerator.tsx', lines.join('\n'));

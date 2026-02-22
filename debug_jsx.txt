@@ -1,0 +1,645 @@
+                            ) : (
+                            <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-500 z-10">
+
+                                {/* Main Input Structure mimicking Number Memorization */}
+                                <div className="flex flex-col gap-3 mb-8">
+                                    <div className="lighting-border group p-[4px] rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.15)]">
+                                        <div className="relative z-10 bg-white/10 dark:bg-slate-950/40 rounded-[2rem] p-4 flex flex-col md:flex-row items-center gap-3 backdrop-blur-2xl border border-white/10 shadow-2xl transition-all focus-within:border-[#8B5CF6]/40">
+                                            {/* Centered Main Input Area */}
+                                            <div className="flex-1 w-full relative min-h-[120px] md:min-h-[160px] flex items-center justify-center py-4">
+                                                <div className="flex flex-col md:flex-row items-center justify-center gap-4 w-full">
+                                                    {/* Ghost Prompt Implementation for Password Generator */}
+                                                    <div className="relative flex-1 flex items-center justify-center min-w-[200px] min-h-[100px]">
+                                                        {/* Hidden but functional textarea */}
+                                                        <textarea
+                                                            className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-text focus:outline-none resize-none"
+                                                            rows={1}
+                                                            value={coreNumber}
+                                                            onChange={(e) => setCoreNumber(e.target.value)}
+                                                            maxLength={15}
+                                                        ></textarea>
+
+                                                        <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 z-10 pointer-events-none w-full">
+                                                            <AnimatePresence mode="wait">
+                                                                {coreNumber.length === 0 ? (
+                                                                    <div className="flex flex-col items-center">
+                                                                        <AnimatePresence mode="wait">
+                                                                            {(() => {
+                                                                                const scenes = passwordScenes[passwordLevel];
+                                                                                const scene = scenes?.[currentSceneIndex];
+                                                                                if (!scene) return null;
+
+                                                                                if (scene.type === 'text') {
+                                                                                    return (
+                                                                                        <motion.div
+                                                                                            key={`scene-${currentSceneIndex}`}
+                                                                                            initial={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
+                                                                                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                                                                            exit={{ opacity: 0, y: -10, filter: 'blur(10px)' }}
+                                                                                            transition={{ duration: 0.5 }}
+                                                                                            className="flex flex-col items-center max-w-lg text-center"
+                                                                                        >
+                                                                                            <span className="text-slate-400 text-base md:text-xl font-bold tracking-tight opacity-70 leading-relaxed max-w-[80%] mx-auto">
+                                                                                                {scene.content}
+                                                                                            </span>
+                                                                                        </motion.div>
+                                                                                    );
+                                                                                }
+
+                                                                                if (scene.type === 'text-highlight') {
+                                                                                    return (
+                                                                                        <motion.div
+                                                                                            key={`scene-${currentSceneIndex}`}
+                                                                                            initial={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
+                                                                                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                                                                            exit={{ opacity: 0, y: -10, filter: 'blur(10px)' }}
+                                                                                            transition={{ duration: 0.5 }}
+                                                                                            className="flex flex-col items-center max-w-lg text-center"
+                                                                                        >
+                                                                                            <span className="text-[#8B5CF6]/90 text-lg md:text-2xl font-black tracking-tight">
+                                                                                                {scene.content}
+                                                                                            </span>
+                                                                                        </motion.div>
+                                                                                    );
+                                                                                }
+
+                                                                                if (scene.type === 'example-simple') {
+                                                                                    return (
+                                                                                        <motion.div
+                                                                                            key={`scene-${currentSceneIndex}`}
+                                                                                            initial={{ opacity: 0, scale: 0.9 }}
+                                                                                            animate={{ opacity: 1, scale: 1 }}
+                                                                                            exit={{ opacity: 0, scale: 1.1 }}
+                                                                                            transition={{ duration: 0.4 }}
+                                                                                            className="flex justify-center"
+                                                                                        >
+                                                                                            <div className="flex flex-wrap flex-row items-center justify-center gap-1.5 md:gap-2.5">
+                                                                                                {scene.content?.split('').map((char, i) => (
+                                                                                                    <div
+                                                                                                        key={i}
+                                                                                                        className="w-8 h-12 md:w-12 md:h-16 bg-slate-900/40 border border-white/10 rounded-xl flex items-center justify-center text-xl md:text-3xl font-black text-slate-400 opacity-60"
+                                                                                                    >
+                                                                                                        {char}
+                                                                                                    </div>
+                                                                                                ))}
+                                                                                                <div className="w-1 h-6 md:h-10 bg-[#8B5CF6]/30 rounded-full animate-pulse self-center ml-1" />
+                                                                                            </div>
+                                                                                        </motion.div>
+                                                                                    );
+                                                                                }
+
+                                                                                if (scene.type === 'example-word') {
+                                                                                    return (
+                                                                                        <motion.div
+                                                                                            key={`scene-${currentSceneIndex}`}
+                                                                                            initial={{ opacity: 0, y: 10 }}
+                                                                                            animate={{ opacity: 1, y: 0 }}
+                                                                                            exit={{ opacity: 0, y: -10 }}
+                                                                                            transition={{ duration: 0.5 }}
+                                                                                            className="flex flex-col items-center gap-4"
+                                                                                        >
+                                                                                            <div className="flex flex-wrap justify-center items-center gap-2 md:gap-4 text-slate-300">
+                                                                                                <div className="px-3 py-1.5 md:px-4 md:py-2 bg-slate-800 rounded-xl border border-white/5 font-bold text-sm md:text-base whitespace-nowrap">"{scene.wordData?.word}" 입력</div>
+                                                                                                <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-primary opacity-50 animate-pulse" />
+                                                                                                <div className="px-4 py-2 md:px-5 md:py-2.5 bg-primary/20 text-primary-light rounded-xl border border-primary/30 font-black tracking-wider text-base md:text-lg shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                                                                                                    {scene.wordData?.result}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </motion.div>
+                                                                                    );
+                                                                                }
+
+                                                                                if (scene.type === 'complex-horizontal-input') {
+                                                                                    return (
+                                                                                        <motion.div
+                                                                                            key={`scene-${currentSceneIndex}`}
+                                                                                            initial={{ opacity: 0, y: 10, filter: 'blur(5px)' }}
+                                                                                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                                                                            exit={{ opacity: 0, scale: 0.95, filter: 'blur(5px)' }}
+                                                                                            transition={{ duration: 0.4 }}
+                                                                                        >
+                                                                                            <div className="text-slate-300 font-bold text-base md:text-xl text-center bg-slate-800/80 px-6 py-3 rounded-2xl border border-white/10 shadow-lg">"{scene.complexData?.input}" 입력</div>
+                                                                                        </motion.div>
+                                                                                    );
+                                                                                }
+
+                                                                                if (scene.type === 'complex-horizontal-breakdown') {
+                                                                                    return (
+                                                                                        <motion.div
+                                                                                            key={`scene-${currentSceneIndex}`}
+                                                                                            initial={{ opacity: 0, y: 10, filter: 'blur(5px)' }}
+                                                                                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                                                                            exit={{ opacity: 0, scale: 0.95, filter: 'blur(5px)' }}
+                                                                                            transition={{ duration: 0.4 }}
+                                                                                        >
+                                                                                            <div className="text-primary/90 font-mono text-base md:text-xl tracking-widest text-center">
+                                                                                                {scene.complexData?.breakdown}
+                                                                                            </div>
+                                                                                        </motion.div>
+                                                                                    );
+                                                                                }
+
+                                                                                if (scene.type === 'complex-horizontal-result') {
+                                                                                    return (
+                                                                                        <motion.div
+                                                                                            key={`scene-${currentSceneIndex}`}
+                                                                                            initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+                                                                                            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                                                                                            exit={{ opacity: 0, scale: 1.1, filter: 'blur(5px)' }}
+                                                                                            transition={{ duration: 0.5, type: 'spring', stiffness: 200 }}
+                                                                                        >
+                                                                                            <div className="px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-indigo-500/30 to-purple-500/30 rounded-2xl border border-purple-500/40 font-black text-3xl md:text-5xl text-white tracking-widest shadow-[0_0_40px_rgba(168,85,247,0.4)] font-mono">
+                                                                                                {scene.complexData?.result}
+                                                                                            </div>
+                                                                                        </motion.div>
+                                                                                    );
+                                                                                }
+
+                                                                                if (scene.type === 'complex-horizontal-full') {
+                                                                                    return (
+                                                                                        <motion.div
+                                                                                            key={`scene-${currentSceneIndex}`}
+                                                                                            initial={{ opacity: 0 }}
+                                                                                            animate={{ opacity: 1 }}
+                                                                                            exit={{ opacity: 0 }}
+                                                                                            transition={{ duration: 0.6 }}
+                                                                                            className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-4 w-full px-2"
+                                                                                        >
+                                                                                            <div className="text-slate-400 font-medium text-xs md:text-sm bg-slate-800/40 px-3 py-1.5 rounded-full border border-white/5 whitespace-nowrap">"{scene.complexData?.input}" 입력</div>
+                                                                                            <ArrowRight className="w-4 h-4 text-slate-500 opacity-50 rotate-90 md:rotate-0 flex-shrink-0" />
+                                                                                            <div className="text-primary/70 font-mono text-[10px] md:text-xs tracking-wider whitespace-nowrap">
+                                                                                                {scene.complexData?.breakdown}
+                                                                                            </div>
+                                                                                            <ArrowRight className="w-4 h-4 text-primary/40 rotate-90 md:rotate-0 flex-shrink-0" />
+                                                                                            <div className="px-4 py-2 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl border border-purple-500/30 font-bold text-base md:text-lg text-white font-mono shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                                                                                                {scene.complexData?.result}
+                                                                                            </div>
+                                                                                        </motion.div>
+                                                                                    );
+                                                                                }
+                                                                                return null;
+                                                                            })()}
+                                                                        </AnimatePresence>
+                                                                    </div>
+                                                                ) : (
+                                                                    // Real Input Mode
+                                                                    <motion.div
+                                                                        key="real-input"
+                                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                                        animate={{ opacity: 1, scale: 1 }}
+                                                                        className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2"
+                                                                    >
+                                                                        {Array.from({ length: passwordLevel === 'L1_PIN' ? pinLength : 8 }).map((_, i) => {
+                                                                            const char = coreNumber[i];
+                                                                            const isFilled = char !== undefined;
+                                                                            return (
+                                                                                <div
+                                                                                    key={i}
+                                                                                    className={`w-9 h-14 md:w-14 md:h-20 rounded-xl flex items-center justify-center text-2xl md:text-4xl font-black shadow-xl border transition-all font-mono
+                                                                                    ${isFilled
+                                                                                            ? 'bg-white/95 dark:bg-slate-800/80 text-slate-900 dark:text-white border-white/10'
+                                                                                            : 'bg-white/5 dark:bg-slate-800/30 text-slate-500/50 dark:text-slate-500/50 border-white/5'}
+                                                                                `}
+                                                                                    style={isFilled ? {
+                                                                                        boxShadow: '0 10px 20px rgba(0,0,0,0.1), inset 0 2px 5px rgba(255,255,255,0.5)',
+                                                                                    } : {}}
+                                                                                >
+                                                                                    {isFilled ? char : '*'}
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                        {/* Neon Pulsing Cursor - Only show if not full */}
+                                                                        {coreNumber.length < (passwordLevel === 'L1_PIN' ? pinLength : 8) && (
+                                                                            <div className="w-1.5 h-8 md:h-12 bg-[#8B5CF6] rounded-full animate-pulse shadow-[0_0_15px_rgba(139,92,246,0.8)] self-center ml-1" />
+                                                                        )}
+                                                                    </motion.div>
+                                                                )}
+                                                            </AnimatePresence>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => {
+                                                    const isPinComplete = coreNumber.length === (passwordLevel === 'L1_PIN' ? pinLength : 8);
+                                                    if (isPinComplete) {
+                                                        setAutoGenerateImage(true);
+                                                    }
+                                                    generatePassword();
+                                                }}
+                                                disabled={loading || generatingImage || !coreNumber}
+                                                className="w-full md:w-auto flex-shrink-0 px-8 py-4 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 active:scale-95"
+                                            >
+                                                {loading || generatingImage ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin relative z-10" /> : (coreNumber.length === (passwordLevel === 'L1_PIN' ? pinLength : 8) ? <Sparkles className="w-5 h-5 relative z-10" /> : <Brain className="w-5 h-5 relative z-10" />)}
+                                                <span className="relative z-10 text-lg">
+                                                    {coreNumber.length === (passwordLevel === 'L1_PIN' ? pinLength : 8) ? '이미지 생성' : '비밀번호 생성'}
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Level Selector Chips */}
+                                <div className="bg-slate-900/50 p-1.5 rounded-2xl flex items-center justify-between shadow-inner border border-white/5 mb-6 max-w-2xl mx-auto mt-[-10px] z-20 relative">
+                                    {(['L1_PIN', 'L2_WEB', 'L3_MASTER'] as const).map(level => {
+                                        const isActive = passwordLevel === level;
+                                        const labels: any = {
+                                            'L1_PIN': 'Lv.1 핀번호',
+                                            'L2_WEB': 'Lv.2 웹사이트',
+                                            'L3_MASTER': 'Lv.3 마스터',
+                                        };
+                                        return (
+                                            <button
+                                                key={level}
+                                                onClick={() => {
+                                                    setPasswordLevel(level);
+                                                    setCoreNumber(''); // Reset number when level changes to enforce new length
+                                                }}
+                                                className={`flex-1 py-3 px-2 rounded-xl text-sm font-bold transition-all ${isActive ? 'bg-[#8B5CF6] text-white shadow-lg shadow-[#8B5CF6]/25 border border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                                            >
+                                                {labels[level]}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* PIN Length Selector (Only for Lv.1) */}
+                                <AnimatePresence>
+                                    {passwordLevel === 'L1_PIN' && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                            animate={{ opacity: 1, height: 'auto', marginTop: -8 }}
+                                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                            className="max-w-xl mx-auto mb-6 overflow-hidden"
+                                        >
+                                            <div className="flex flex-col items-center gap-3 py-2">
+                                                <div className="flex justify-center items-center gap-3">
+                                                    {([4, 6, 8] as const).map((len) => (
+                                                        <div key={len} className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setPinLength(len);
+                                                                    setCoreNumber(''); // Reset on length change
+                                                                }}
+                                                                className={`
+                                                                px-4 py-2 rounded-full text-sm font-bold transition-all
+                                                                ${pinLength === len
+                                                                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                                                                        : 'bg-slate-800 text-slate-400 border border-transparent hover:bg-slate-700 hover:text-slate-200'}
+                                                            `}
+                                                            >
+                                                                {len}자리
+                                                            </button>
+
+                                                            {/* Optional split option for 8 digits */}
+                                                            {len === 8 && pinLength === 8 && (
+                                                                <div className="flex bg-slate-900/80 rounded-full border border-white/10 p-1 animate-in fade-in slide-in-from-left-2 ml-1 shadow-inner">
+                                                                    {(['4+4', '6+2', '4+2+2', '자유'] as const).map(mode => (
+                                                                        <button
+                                                                            key={mode}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setPin8SplitMode(mode);
+                                                                            }}
+                                                                            className={`
+                                                                            px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap
+                                                                            ${pin8SplitMode === mode
+                                                                                    ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-300 border border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
+                                                                                    : 'text-slate-400 border border-transparent hover:text-slate-200 hover:bg-white/5'
+                                                                                }
+                                                                        `}
+                                                                        >
+                                                                            {mode}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* Context & Theme Area */}
+                                <div className="flex flex-col gap-4 mt-8">
+                                    <div className="relative group">
+                                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                                            <Tag className="w-5 h-5 text-slate-500 group-focus-within:text-[#8B5CF6] transition-colors" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={hintKeyword}
+                                            onChange={handleHintChange}
+                                            placeholder={(() => {
+                                                if (passwordLevel !== 'L1_PIN') return "힌트 키워드를 입력하거나 아래 테마를 고르면 난수로 바꿔드려요 (예: 사과, 바다)";
+                                                if (pinLength === 4) return "💡 기억하기 쉬운 1~2개의 단어나 의미있는 숫자를 입력해주세요!";
+                                                if (pinLength === 6) return "💡 6자리 숫자 생성을 위해 1~3개의 단어를 자유롭게 섞어보세요!";
+                                                if (pinLength === 8) {
+                                                    if (pin8SplitMode === '4+4') return "💡 4자리 단어 2개를 추천합니다. 8자리 스토리를 만들어볼까요?";
+                                                    if (pin8SplitMode === '6+2') return "💡 6자리 단어 1개 + 2자리 단어 1개를 추천합니다. 8자리 스토리를 만들어볼까요?";
+                                                    if (pin8SplitMode === '4+2+2') return "💡 4자리 단어 1개 + 2자리 단어 2개를 추천합니다.";
+                                                    return "💡 2~4가지 단어를 조합하여 8자리 핀번호 스토리를 만들어 드립니다.";
+                                                }
+                                                return "원하는 단어나 숫자를 자유롭게 입력하세요";
+                                            })()}
+                                            className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-slate-300 placeholder-slate-500 focus:outline-none focus:border-[#8B5CF6]/50 focus:ring-1 focus:ring-[#8B5CF6]/50 transition-all font-medium sm:text-sm text-xs"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                                        {['🎬 영화', '🐶 동물', '🍕 음식', '✈️ 여행', '🎲 랜덤'].map(theme => (
+                                            <button
+                                                key={theme}
+                                                onClick={() => handleThemeClick(theme)}
+                                                className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all border ${activeTheme === theme ? 'bg-[#8B5CF6] text-white border-transparent shadow-[0_0_15px_rgba(139,92,246,0.4)]' : 'bg-slate-800/80 text-slate-300 border-white/5 hover:bg-slate-700 hover:text-white'}`}
+                                            >
+                                                {theme}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Result Display for Password (using existing mnemonic result structures for consistency) */}
+                                {passwordResult && result && !loading && (
+                                    <div className="animate-in fade-in slide-in-from-top-4 duration-500 mt-12 mb-8 relative">
+                                        <div className="absolute -inset-4 bg-[#8B5CF6]/5 rounded-[2rem] blur-xl pointer-events-none" />
+
+                                        <div className="p-8 rounded-3xl bg-slate-900 border border-[#8B5CF6]/20 shadow-2xl relative z-10 text-center">
+                                            <div className="flex items-center justify-between gap-4 mb-6">
+                                                <div className="flex flex-col text-left">
+                                                    <span className="text-xs font-bold text-[#8B5CF6] uppercase tracking-widest mb-2 flex items-center gap-2">
+                                                        <Lock className="w-3.5 h-3.5" /> Generated Password
+                                                    </span>
+                                                    <div className="font-mono text-3xl md:text-5xl text-white font-black tracking-tight" style={{ wordBreak: 'break-all' }}>
+                                                        {passwordResult}
+                                                    </div>
+                                                </div>
+                                                <button onClick={copyPassword} className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all active:scale-90 border border-white/5 group relative">
+                                                    {passwordCopied ? <Check className="w-6 h-6 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]" /> : <Copy className="w-6 h-6 group-hover:text-[#8B5CF6] transition-colors" />}
+                                                    {passwordCopied && <span className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-green-400 whitespace-nowrap bg-black/50 px-2 py-1 rounded backdrop-blur-md">Copied!</span>}
+                                                </button>
+                                            </div>
+
+                                            {/* Leverage Existing Mnemonic Results UI */}
+                                            <div className="border-t border-white/10 pt-8 mt-4">
+                                                <div className="flex items-center justify-center gap-2 mb-6">
+                                                    <Brain className="w-4 h-4 text-[#8B5CF6]" />
+                                                    <span className="text-sm font-bold text-slate-300 uppercase tracking-widest">Memory Guide</span>
+                                                </div>
+
+                                                {/* Reuse the existing result card structure visually */}
+                                                <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+                                                    {result.map((word, index) => {
+                                                        const numberChunk = coreNumber.replace(/[^0-9]/g, '').slice(index * 2, (index * 2) + 2);
+                                                        return (
+                                                            <React.Fragment key={index}>
+                                                                <div
+                                                                    className="lighting-border group rounded-xl p-[2px] cursor-pointer hover:shadow-lg transition-all"
+                                                                >
+                                                                    <div className="bg-slate-900 px-5 md:px-6 py-4 rounded-[10px] flex flex-col items-center justify-center gap-2 h-[80px] md:h-[90px] w-[80px] md:w-[100px] border border-white/5">
+                                                                        <div className="font-mono text-primary font-bold text-lg leading-none tracking-widest">{numberChunk}</div>
+                                                                        <div className="font-bold text-slate-200 text-sm md:text-base leading-none font-display text-center break-keep w-full whitespace-nowrap overflow-hidden text-ellipsis">{word}</div>
+                                                                    </div>
+                                                                </div>
+                                                                {index < result.length - 1 && (
+                                                                    <ArrowRight className="w-4 h-4 text-slate-600 hidden md:block" />
+                                                                )}
+                                                            </React.Fragment>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Action Buttons for AI Story */}
+                                        <div className="mt-8 flex flex-col gap-3">
+                                            <button
+                                                onClick={handleSaveMemory}
+                                                disabled={saving || !result || isSaved}
+                                                className="w-full py-4 px-6 bg-[#8B5CF6] hover:bg-[#7c4dff] text-white rounded-xl font-bold shadow-lg shadow-[#8B5CF6]/20 transition-all flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {saving ? (
+                                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                ) : isSaved ? (
+                                                    <Check className="w-5 h-5" />
+                                                ) : (
+                                                    <Save className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+                                                )}
+                                                {isSaved ? '저장 완료!' : '내 암기장에 저장하기'}
+                                            </button>
+
+                                            {!story ? (
+                                                <button
+                                                    onClick={() => {
+                                                        handleConvert();
+                                                    }}
+                                                    className="w-full py-4 px-6 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 group"
+                                                >
+                                                    <Sparkles className="w-5 h-5 text-yellow-300 group-hover:rotate-12 transition-transform" />
+                                                    이 이야기로 그림 만들기
+                                                </button>
+                                            ) : (
+                                                <div className="w-full animate-in fade-in slide-in-from-top-4 duration-500">
+                                                    <div className="pt-4 border-t border-primary/20">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <Sparkles className={`w-3 h-3 ${story.includes('⚠️') ? 'text-red-400' : 'text-yellow-300'}`} />
+                                                                <span className={`text-xs font-bold ${story.includes('⚠️') ? 'text-red-400' : 'text-yellow-300'}`}>
+                                                                    {story.includes('⚠️') ? 'SYSTEM NOTICE' : 'AI Story'}
+                                                                </span>
+                                                            </div>
+
+                                                            {!isSelecting && !story.includes('⚠️') && (
+                                                                <button
+                                                                    onClick={() => setIsEditingStory(!isEditingStory)}
+                                                                    className={`text-[10px] font-bold px-2 py-0.5 rounded transition-all flex items-center gap-1 ${isEditingStory ? 'bg-primary text-white' : 'text-slate-500 hover:text-primary hover:bg-primary/10'}`}
+                                                                >
+                                                                    {isEditingStory ? '수정 완료' : '스토리 수정'}
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        <div className={`text-sm leading-relaxed font-medium ${story.includes('⚠️') ? 'text-red-300' : 'text-white/90'} text-left`}>
+                                                            {isSelecting ? (
+                                                                <div className="flex gap-1 justify-start">
+                                                                    <motion.div initial={{ opacity: 0.3 }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }} className="w-2 h-4 bg-primary/40 rounded-sm" />
+                                                                    <motion.div initial={{ opacity: 0.3 }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }} className="w-2 h-4 bg-primary/40 rounded-sm" />
+                                                                    <motion.div initial={{ opacity: 0.3 }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }} className="w-2 h-4 bg-primary/40 rounded-sm" />
+                                                                </div>
+                                                            ) : isEditingStory ? (
+                                                                <textarea
+                                                                    value={story}
+                                                                    onChange={(e) => setStory(e.target.value)}
+                                                                    className="w-full bg-slate-900/60 border border-primary/30 rounded-xl p-4 text-sm text-white/90 focus:outline-none focus:ring-1 focus:ring-primary/50 min-h-[100px] resize-none leading-relaxed transition-all"
+                                                                    placeholder="나만의 스토리로 수정해 보세요..."
+                                                                />
+                                                            ) : (
+                                                                <TypewriterText text={story} />
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="mt-4 pt-4 border-t border-primary/20">
+                                                        {!imageUrl && !generatingImage ? (
+                                                            <div className="space-y-4">
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        onClick={() => setImageType('single')}
+                                                                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all border ${imageType === 'single' ? 'bg-primary/20 border-primary text-white' : 'bg-slate-900/40 border-slate-700/50 text-slate-500'}`}
+                                                                    >
+                                                                        1컷 요약
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setImageType('quad')}
+                                                                        className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all border ${imageType === 'quad' ? 'bg-primary/20 border-primary text-white' : 'bg-slate-900/40 border-slate-700/50 text-slate-500'}`}
+                                                                    >
+                                                                        4컷 스토리
+                                                                    </button>
+                                                                </div>
+                                                                <button
+                                                                    onClick={handleGenerateImage}
+                                                                    className="w-full py-3 bg-gradient-to-r from-purple-600/50 to-pink-600/50 hover:from-purple-600 hover:to-pink-600 border border-white/10 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2 group active:scale-[0.98]"
+                                                                >
+                                                                    <span className="text-lg group-hover:scale-110 transition-transform">🎨</span>
+                                                                    <span>이 장면을 {imageType === 'quad' ? '4컷 ' : ''}그림으로 보기 (DALL-E 3)</span>
+                                                                </button>
+                                                            </div>
+                                                        ) : generatingImage ? (
+                                                            <div className="space-y-4 animate-in fade-in duration-500">
+                                                                <div className="relative h-64 w-full bg-slate-900/60 rounded-2xl border border-primary/20 overflow-hidden flex flex-col items-center justify-center p-6 text-center">
+                                                                    {/* Scanning Effect */}
+                                                                    <motion.div
+                                                                        animate={{ top: ['0%', '100%', '0%'] }}
+                                                                        transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                                                                        className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent z-10"
+                                                                        style={{ top: '0%' }}
+                                                                    />
+
+                                                                    <div className="relative z-20 space-y-4">
+                                                                        <div className="flex justify-center flex-wrap gap-2">
+                                                                            <motion.div
+                                                                                animate={{ rotate: 360 }}
+                                                                                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                                                                                className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full mb-2"
+                                                                            />
+                                                                        </div>
+
+                                                                        <AnimatePresence mode="wait">
+                                                                            <motion.div
+                                                                                key={generatingMessageIndex}
+                                                                                initial={{ opacity: 0, y: 10 }}
+                                                                                animate={{ opacity: 1, y: 0 }}
+                                                                                exit={{ opacity: 0, y: -10 }}
+                                                                                className="h-12 flex flex-col items-center justify-center"
+                                                                            >
+                                                                                <p className="text-sm font-bold text-white/90 drop-shadow-sm">
+                                                                                    {generationMessages[generatingMessageIndex]}
+                                                                                </p>
+                                                                                <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest animate-pulse">
+                                                                                    Processing Memory Frame...
+                                                                                </p>
+                                                                            </motion.div>
+                                                                        </AnimatePresence>
+                                                                    </div>
+
+                                                                    <div className="absolute bottom-6 left-6 right-6 space-y-2">
+                                                                        <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                                                                            <span>Developing Image</span>
+                                                                            <span>{Math.round(generationProgress)}%</span>
+                                                                        </div>
+                                                                        <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden border border-white/5">
+                                                                            <motion.div
+                                                                                className="h-full bg-gradient-to-r from-primary via-[#8B5CF6] to-pink-500"
+                                                                                initial={{ width: 0 }}
+                                                                                animate={{ width: `${generationProgress}%` }}
+                                                                                transition={{ duration: 0.3 }}
+                                                                            />
+                                                                        </div>
+                                                                        <p className="text-[10px] text-primary/60 font-medium">최신 DALL-E 3 모델을 사용하여 약 30초가 소요됩니다.</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="relative rounded-xl overflow-hidden shadow-2xl border border-white/10 group animate-in zoom-in-95 duration-700">
+                                                                <img src={imageUrl!} alt="AI Generated Mnemonic" className="w-full h-auto" />
+                                                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity flex justify-between items-end">
+                                                                    <div className="flex flex-col text-left">
+                                                                        <span className="text-[10px] text-white/60 font-bold tracking-widest uppercase">Generated Artwork</span>
+                                                                        <span className="text-xs text-white font-medium">By DALL-E 3 (High Quality)</span>
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => setImageUrl(null)}
+                                                                        className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white/80 transition-colors text-xs"
+                                                                    >
+                                                                        다시 그리기
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Share Banner Area */}
+                                            <AnimatePresence>
+                                                {imageUrl && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                                                        className="w-full mt-4"
+                                                    >
+                                                        <div className="bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl p-6 border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.15)] relative overflow-hidden group/share">
+                                                            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay"></div>
+                                                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl group-hover/share:bg-blue-500/30 transition-all duration-500"></div>
+
+                                                            <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                                                <div className="flex items-center gap-4 text-left">
+                                                                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-400/30 shrink-0">
+                                                                        <Share2 className="w-6 h-6 text-blue-300" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <h3 className="text-white font-bold text-lg leading-tight mb-1 flex items-center gap-2">
+                                                                            기억의 창고를 넓혀보세요
+                                                                            <Sparkles className="w-4 h-4 text-yellow-400" />
+                                                                        </h3>
+                                                                        <p className="text-blue-200/80 text-sm font-medium">
+                                                                            나만의 암기 카드를 주변과 공유해볼까요?
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={handleOpenShareModal}
+                                                                    disabled={isCapturing}
+                                                                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 shrink-0 shadow-lg shadow-blue-500/25 active:scale-95 whitespace-nowrap"
+                                                                >
+                                                                    {isCapturing ? (
+                                                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                                    ) : (
+                                                                        <ArrowRight className="w-4 h-4" />
+                                                                    )}
+                                                                    공유 카드 만들기
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {previewUrl && typeof document !== 'undefined' && createPortal(
+                <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-slate-900 rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl flex flex-col max-h-[90vh] border border-white/10">
+                        <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                            <h3 className="font-bold text-white">공유 카드 미리보기</h3>

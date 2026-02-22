@@ -1,0 +1,43 @@
+
+> my-app@0.1.0 build
+> next build
+
+??Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\workspace\bun.lock as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\workspace\antigravity\memit\pnpm-lock.yaml
+
+??Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./antigravity/memit/src/components/dashboard/MemoryGenerator.tsx:1678:22
+Parsing ecmascript source code failed
+  1676 |                             </div>
+  1677 |                         </div>
+> 1678 |                     )}
+       |                      ^
+  1679 |                 </div>
+  1680 |             </div>
+  1681 |
+
+Expected '</', got '}'
+
+Import traces:
+  Client Component Browser:
+    ./antigravity/memit/src/components/dashboard/MemoryGenerator.tsx [Client Component Browser]
+    ./antigravity/memit/src/app/memit/page.tsx [Client Component Browser]
+    ./antigravity/memit/src/app/memit/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./antigravity/memit/src/components/dashboard/MemoryGenerator.tsx [Client Component SSR]
+    ./antigravity/memit/src/app/memit/page.tsx [Client Component SSR]
+    ./antigravity/memit/src/app/memit/page.tsx [Server Component]
+
+
+    at <unknown> (./antigravity/memit/src/components/dashboard/MemoryGenerator.tsx:1678:22)

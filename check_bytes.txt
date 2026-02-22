@@ -1,0 +1,34 @@
+L1674: "                                    </div>\r"
+  Hidden chars: [{"pos":42,"code":13,"char":"\r"}]
+  Length: 43, Trimmed: "</div>"
+L1675: "                                )}\r"
+  Hidden chars: [{"pos":34,"code":13,"char":"\r"}]
+  Length: 35, Trimmed: ")}"
+L1676: "                            </div>\r"
+  Hidden chars: [{"pos":34,"code":13,"char":"\r"}]
+  Length: 35, Trimmed: "</div>"
+L1677: "                    )}\r"
+  Hidden chars: [{"pos":22,"code":13,"char":"\r"}]
+  Length: 23, Trimmed: ")}"
+L1678: "                        </div>\r"
+  Hidden chars: [{"pos":30,"code":13,"char":"\r"}]
+  Length: 31, Trimmed: "</div>"
+L1679: "            </div>\r"
+  Hidden chars: [{"pos":18,"code":13,"char":"\r"}]
+  Length: 19, Trimmed: "</div>"
+L1680: "\r"
+  Hidden chars: [{"pos":0,"code":13,"char":"\r"}]
+  Length: 1, Trimmed: ""
+L1681: "                {previewUrl && typeof document !== 'undefined' && createPortal(\r"
+  Hidden chars: [{"pos":79,"code":13,"char":"\r"}]
+  Length: 80, Trimmed: "{previewUrl && typeof document !== 'undefined' && createPortal("
+
+=== INDENTATION COMPARISON ===
+L640 indent:20 tabs:false | "{activeTab === 'memory' ? ("
+L641 indent:24 tabs:false | "<div className="relative animate-in fade-in slide-in-from-bo"
+L1042 indent:28 tabs:false | ") : ("
+L1043 indent:28 tabs:false | "<div className="relative animate-in fade-in slide-in-from-bo"
+L1676 indent:28 tabs:false | "</div>"
+L1677 indent:20 tabs:false | ")}"
+L1678 indent:24 tabs:false | "</div>"
+L1679 indent:12 tabs:false | "</div>"

@@ -1,0 +1,178 @@
+--- Nesting Tracker ---
+L1401: D[0] B[0] P[0] | {theme}
+L1403: D[0] B[-1] P[-2] | ))}
+L1404: D[-1] B[-1] P[-2] | </div>
+L1405: D[-2] B[-1] P[-2] | </div>
+L1408: D[-2] B[0] P[-1] | {passwordResult && result && !loading && (
+L1409: D[-1] B[0] P[-1] | <div className="animate-in fade-in slide-in-from-top-4 duration-500 mt-12 mb-8 relative">
+L1410: D[0] B[0] P[-1] | <div className="absolute -inset-4 bg-[#8B5CF6]/5 rounded-[2rem] blur-xl pointer-events-none" />
+L1412: D[1] B[0] P[-1] | <div className="p-8 rounded-3xl bg-slate-900 border border-[#8B5CF6]/20 shadow-2xl relative z-10 text-center">
+L1413: D[2] B[0] P[-1] | <div className="flex items-center justify-between gap-4 mb-6">
+L1414: D[3] B[0] P[-1] | <div className="flex flex-col text-left">
+L1418: D[4] B[0] P[-1] | <div className="font-mono text-3xl md:text-5xl text-white font-black tracking-tight" style={{ wordBreak: 'break-all' }}>
+L1419: D[4] B[0] P[-1] | {passwordResult}
+L1420: D[3] B[0] P[-1] | </div>
+L1421: D[2] B[0] P[-1] | </div>
+L1422: D[2] B[0] P[-1] | <button onClick={copyPassword} className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all active:scale-90 border border-white/5 group relative">
+L1423: D[2] B[0] P[-1] | {passwordCopied ? <Check className="w-6 h-6 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]" /> : <Copy className="w-6 h-6 group-hover:text-[#8B5CF6] transition-colors" />}
+L1424: D[2] B[0] P[-1] | {passwordCopied && <span className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-green-400 whitespace-nowrap bg-black/50 px-2 py-1 rounded backdrop-blur-md">Copied!</span>}
+L1426: D[1] B[0] P[-1] | </div>
+L1429: D[2] B[0] P[-1] | <div className="border-t border-white/10 pt-8 mt-4">
+L1430: D[3] B[0] P[-1] | <div className="flex items-center justify-center gap-2 mb-6">
+L1433: D[2] B[0] P[-1] | </div>
+L1436: D[3] B[0] P[-1] | <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+L1437: D[3] B[2] P[0] | {result.map((word, index) => {
+L1438: D[3] B[2] P[0] | const numberChunk = coreNumber.replace(/[^0-9]/g, '').slice(index * 2, (index * 2) + 2);
+L1439: D[3] B[2] P[1] | return (
+L1440: D[3] B[2] P[1] | <React.Fragment key={index}>
+L1441: D[4] B[2] P[1] | <div
+L1444: D[5] B[2] P[1] | <div className="bg-slate-900 px-5 md:px-6 py-4 rounded-[10px] flex flex-col items-center justify-center gap-2 h-[80px] md:h-[90px] w-[80px] md:w-[100px] border border-white/5">
+L1445: D[5] B[2] P[1] | <div className="font-mono text-primary font-bold text-lg leading-none tracking-widest">{numberChunk}</div>
+L1446: D[5] B[2] P[1] | <div className="font-bold text-slate-200 text-sm md:text-base leading-none font-display text-center break-keep w-full whitespace-nowrap overflow-hidden text-ellipsis">{word}</div>
+L1447: D[4] B[2] P[1] | </div>
+L1448: D[3] B[2] P[1] | </div>
+L1449: D[3] B[3] P[2] | {index < result.length - 1 && (
+L1451: D[3] B[2] P[1] | )}
+L1453: D[3] B[2] P[0] | );
+L1454: D[3] B[0] P[-1] | })}
+L1455: D[2] B[0] P[-1] | </div>
+L1456: D[1] B[0] P[-1] | </div>
+L1457: D[0] B[0] P[-1] | </div>
+L1460: D[1] B[0] P[-1] | <div className="mt-8 flex flex-col gap-3">
+L1462: D[1] B[0] P[-1] | onClick={handleSaveMemory}
+L1463: D[1] B[0] P[-1] | disabled={saving || !result || isSaved}
+L1466: D[1] B[1] P[0] | {saving ? (
+L1467: D[2] B[1] P[0] | <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+L1468: D[2] B[1] P[0] | ) : isSaved ? (
+L1470: D[2] B[1] P[0] | ) : (
+L1472: D[2] B[0] P[-1] | )}
+L1473: D[2] B[0] P[-1] | {isSaved ? '저장 완료!' : '내 암기장에 저장하기'}
+L1476: D[2] B[1] P[0] | {!story ? (
+L1478: D[2] B[3] P[0] | onClick={() => {
+L1479: D[2] B[3] P[0] | handleConvert();
+L1480: D[2] B[1] P[0] | }}
+L1486: D[2] B[1] P[0] | ) : (
+L1487: D[3] B[1] P[0] | <div className="w-full animate-in fade-in slide-in-from-top-4 duration-500">
+L1488: D[4] B[1] P[0] | <div className="pt-4 border-t border-primary/20">
+L1489: D[5] B[1] P[0] | <div className="flex items-center justify-between mb-2">
+L1490: D[6] B[1] P[0] | <div className="flex items-center gap-2">
+L1491: D[6] B[1] P[0] | <Sparkles className={`w-3 h-3 ${story.includes('⚠️') ? 'text-red-400' : 'text-yellow-300'}`} />
+L1492: D[6] B[1] P[0] | <span className={`text-xs font-bold ${story.includes('⚠️') ? 'text-red-400' : 'text-yellow-300'}`}>
+L1493: D[6] B[1] P[0] | {story.includes('⚠️') ? 'SYSTEM NOTICE' : 'AI Story'}
+L1495: D[5] B[1] P[0] | </div>
+L1497: D[5] B[2] P[1] | {!isSelecting && !story.includes('⚠️') && (
+L1499: D[5] B[2] P[1] | onClick={() => setIsEditingStory(!isEditingStory)}
+L1500: D[5] B[2] P[1] | className={`text-[10px] font-bold px-2 py-0.5 rounded transition-all flex items-center gap-1 ${isEditingStory ? 'bg-primary text-white' : 'text-slate-500 hover:text-primary hover:bg-primary/10'}`}
+L1502: D[5] B[2] P[1] | {isEditingStory ? '수정 완료' : '스토리 수정'}
+L1504: D[5] B[1] P[0] | )}
+L1505: D[4] B[1] P[0] | </div>
+L1507: D[5] B[1] P[0] | <div className={`text-sm leading-relaxed font-medium ${story.includes('⚠️') ? 'text-red-300' : 'text-white/90'} text-left`}>
+L1508: D[5] B[2] P[1] | {isSelecting ? (
+L1509: D[6] B[2] P[1] | <div className="flex gap-1 justify-start">
+L1510: D[6] B[2] P[1] | <motion.div initial={{ opacity: 0.3 }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5 }} className="w-2 h-4 bg-primary/40 rounded-sm" />
+L1511: D[6] B[2] P[1] | <motion.div initial={{ opacity: 0.3 }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }} className="w-2 h-4 bg-primary/40 rounded-sm" />
+L1512: D[6] B[2] P[1] | <motion.div initial={{ opacity: 0.3 }} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }} className="w-2 h-4 bg-primary/40 rounded-sm" />
+L1513: D[5] B[2] P[1] | </div>
+L1514: D[5] B[2] P[1] | ) : isEditingStory ? (
+L1516: D[5] B[2] P[1] | value={story}
+L1517: D[5] B[2] P[1] | onChange={(e) => setStory(e.target.value)}
+L1521: D[5] B[2] P[1] | ) : (
+L1522: D[5] B[2] P[1] | <TypewriterText text={story} />
+L1523: D[5] B[1] P[0] | )}
+L1524: D[4] B[1] P[0] | </div>
+L1525: D[3] B[1] P[0] | </div>
+L1527: D[4] B[1] P[0] | <div className="mt-4 pt-4 border-t border-primary/20">
+L1528: D[4] B[2] P[1] | {!imageUrl && !generatingImage ? (
+L1529: D[5] B[2] P[1] | <div className="space-y-4">
+L1530: D[6] B[2] P[1] | <div className="flex gap-2">
+L1532: D[6] B[2] P[1] | onClick={() => setImageType('single')}
+L1533: D[6] B[2] P[1] | className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all border ${imageType === 'single' ? 'bg-primary/20 border-primary text-white' : 'bg-slate-900/40 border-slate-700/50 text-slate-500'}`}
+L1538: D[6] B[2] P[1] | onClick={() => setImageType('quad')}
+L1539: D[6] B[2] P[1] | className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all border ${imageType === 'quad' ? 'bg-primary/20 border-primary text-white' : 'bg-slate-900/40 border-slate-700/50 text-slate-500'}`}
+L1543: D[5] B[2] P[1] | </div>
+L1545: D[5] B[2] P[1] | onClick={handleGenerateImage}
+L1549: D[5] B[2] P[1] | <span>이 장면을 {imageType === 'quad' ? '4컷 ' : ''}그림으로 보기 (DALL-E 3)</span>
+L1551: D[4] B[2] P[1] | </div>
+L1552: D[4] B[2] P[1] | ) : generatingImage ? (
+L1553: D[5] B[2] P[1] | <div className="space-y-4 animate-in fade-in duration-500">
+L1554: D[6] B[2] P[1] | <div className="relative h-64 w-full bg-slate-900/60 rounded-2xl border border-primary/20 overflow-hidden flex flex-col items-center justify-center p-6 text-center">
+L1557: D[6] B[2] P[1] | animate={{ top: ['0%', '100%', '0%'] }}
+L1558: D[6] B[2] P[1] | transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+L1560: D[6] B[2] P[1] | style={{ top: '0%' }}
+L1563: D[7] B[2] P[1] | <div className="relative z-20 space-y-4">
+L1564: D[8] B[2] P[1] | <div className="flex justify-center flex-wrap gap-2">
+L1566: D[8] B[2] P[1] | animate={{ rotate: 360 }}
+L1567: D[8] B[2] P[1] | transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+L1570: D[7] B[2] P[1] | </div>
+L1574: D[7] B[2] P[1] | key={generatingMessageIndex}
+L1575: D[7] B[2] P[1] | initial={{ opacity: 0, y: 10 }}
+L1576: D[7] B[2] P[1] | animate={{ opacity: 1, y: 0 }}
+L1577: D[7] B[2] P[1] | exit={{ opacity: 0, y: -10 }}
+L1581: D[7] B[2] P[1] | {generationMessages[generatingMessageIndex]}
+L1588: D[6] B[2] P[1] | </div>
+L1590: D[7] B[2] P[1] | <div className="absolute bottom-6 left-6 right-6 space-y-2">
+L1591: D[8] B[2] P[1] | <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+L1593: D[8] B[2] P[1] | <span>{Math.round(generationProgress)}%</span>
+L1594: D[7] B[2] P[1] | </div>
+L1595: D[8] B[2] P[1] | <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden border border-white/5">
+L1598: D[8] B[2] P[1] | initial={{ width: 0 }}
+L1599: D[8] B[2] P[1] | animate={{ width: `${generationProgress}%` }}
+L1600: D[8] B[2] P[1] | transition={{ duration: 0.3 }}
+L1602: D[7] B[2] P[1] | </div>
+L1604: D[6] B[2] P[1] | </div>
+L1605: D[5] B[2] P[1] | </div>
+L1606: D[4] B[2] P[1] | </div>
+L1607: D[4] B[2] P[1] | ) : (
+L1608: D[5] B[2] P[1] | <div className="relative rounded-xl overflow-hidden shadow-2xl border border-white/10 group animate-in zoom-in-95 duration-700">
+L1609: D[5] B[2] P[1] | <img src={imageUrl!} alt="AI Generated Mnemonic" className="w-full h-auto" />
+L1610: D[6] B[2] P[1] | <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity flex justify-between items-end">
+L1611: D[7] B[2] P[1] | <div className="flex flex-col text-left">
+L1613: D[7] B[2] P[1] | <span className="text-xs text-white font-medium">By DALL-E 3 (High Quality)</span>
+L1614: D[6] B[2] P[1] | </div>
+L1616: D[6] B[2] P[1] | onClick={() => setImageUrl(null)}
+L1621: D[5] B[2] P[1] | </div>
+L1622: D[4] B[2] P[1] | </div>
+L1623: D[4] B[1] P[0] | )}
+L1624: D[3] B[1] P[0] | </div>
+L1625: D[2] B[1] P[0] | </div>
+L1626: D[2] B[0] P[-1] | )}
+L1630: D[2] B[1] P[0] | {imageUrl && (
+L1632: D[2] B[1] P[0] | initial={{ opacity: 0, scale: 0.95, y: -20 }}
+L1633: D[2] B[1] P[0] | animate={{ opacity: 1, scale: 1, y: 0 }}
+L1634: D[2] B[1] P[0] | exit={{ opacity: 0, scale: 0.95, y: -20 }}
+L1637: D[3] B[1] P[0] | <div className="bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-2xl p-6 border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.15)] relative overflow-hidden group/share">
+L1638: D[3] B[1] P[0] | <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay"></div>
+L1639: D[3] B[1] P[0] | <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl group-hover/share:bg-blue-500/30 transition-all duration-500"></div>
+L1641: D[4] B[1] P[0] | <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+L1642: D[5] B[1] P[0] | <div className="flex items-center gap-4 text-left">
+L1643: D[6] B[1] P[0] | <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-400/30 shrink-0">
+L1645: D[5] B[1] P[0] | </div>
+L1646: D[6] B[1] P[0] | <div>
+L1654: D[5] B[1] P[0] | </div>
+L1655: D[4] B[1] P[0] | </div>
+L1657: D[4] B[1] P[0] | onClick={handleOpenShareModal}
+L1658: D[4] B[1] P[0] | disabled={isCapturing}
+L1661: D[4] B[2] P[1] | {isCapturing ? (
+L1662: D[5] B[2] P[1] | <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+L1663: D[5] B[2] P[1] | ) : (
+L1665: D[5] B[1] P[0] | )}
+L1668: D[4] B[1] P[0] | </div>
+L1669: D[3] B[1] P[0] | </div>
+L1671: D[3] B[0] P[-1] | )}
+L1673: D[2] B[0] P[-1] | </div>
+L1674: D[1] B[0] P[-1] | </div>
+L1675: D[1] B[-1] P[-2] | )}
+L1676: D[0] B[-1] P[-2] | </div>
+L1677: D[0] B[-2] P[-3] | )}
+L1678: D[-1] B[-2] P[-3] | </div>
+L1679: D[-2] B[-2] P[-3] | </div>
+L1681: D[-2] B[-1] P[-2] | {previewUrl && typeof document !== 'undefined' && createPortal(
+L1682: D[-1] B[-1] P[-2] | <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+L1683: D[0] B[-1] P[-2] | <div className="bg-slate-900 rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl flex flex-col max-h-[90vh] border border-white/10">
+L1684: D[1] B[-1] P[-2] | <div className="p-4 border-b border-white/5 flex items-center justify-between">
+L1687: D[1] B[-1] P[-2] | onClick={() => { setPreviewUrl(null); setSharePrefix010(false); setShareLabel(''); }}
+L1692: D[0] B[-1] P[-2] | </div>
+L1693: D[1] B[-1] P[-2] | <div className="flex-1 overflow-y-auto custom-scrollbar">
+L1694: D[2] B[-1] P[-2] | <div className="border-b border-white/5 bg-slate-900 transition-all duration-300">
+L1696: D[2] B[-1] P[-2] | onClick={() => setIsOptionsOpen(!isOptionsOpen)}
+L1699: D[3] B[-1] P[-2] | <div className="flex items-center gap-2">

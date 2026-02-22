@@ -1,0 +1,6 @@
+Cut at L758. Lines: before=757, middle=3, after=172
+BUILD FAILED:
+> Build error occurred
+Error: Turbopack build failed with 2 errors:
+Parsing ecmascript source code failed
+Parsing ecmascript source code failed

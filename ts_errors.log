@@ -1,0 +1,8 @@
+src/components/dashboard/MemoryGenerator.tsx(17,59): error TS2554: Expected 1 arguments, but got 2.
+src/components/dashboard/tabs/PasswordTab.tsx(151,135): error TS7006: Parameter 'char' implicitly has an 'any' type.
+src/components/dashboard/tabs/PasswordTab.tsx(151,141): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/components/dashboard/tabs/PasswordTab.tsx(246,143): error TS2607: JSX element class does not support attributes because it does not have a 'props' property.
+src/components/dashboard/tabs/PasswordTab.tsx(246,144): error TS2786: 'Lock' cannot be used as a JSX component.
+  Its type '{ new (): Lock; prototype: Lock; }' is not a valid JSX element type.
+    Type '{ new (): Lock; prototype: Lock; }' is not assignable to type 'new (props: any, context: any) => Component<any, any, any>'.
+      Type 'Lock' is missing the following properties from type 'Component<any, any, any>': context, setState, forceUpdate, render, and 2 more.

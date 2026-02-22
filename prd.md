@@ -53,6 +53,8 @@ Mode 2: 스토리 → 숫자 (Story to Number) = 강력한 비밀번호 생성
 - **핀번호 길이 보정 로직**: AI 생성 불일치 또는 에러 발생 시에도 사용자가 선택한 길이를 엄격히 준수하도록 클라이언트 측 패딩 및 대체 로직(Fallback Logic)이 구현되어 있다.
 - **테두리 라이팅 (Lighting Border)**: 입력창 테두리에만 회전하는 광원 효과를 적용하여 시각적 피드백을 강화했다. CSS Mask를 활용해 배경 번짐 없이 테두리 라인에만 빛이 맺히도록 구현되었다.
 - **Concept 3 UI Refinement**: PIN 길이 선택 화면에 고밀도 글래스모피즘 카드, 에메랄드 셀렉션 글로우, `framer-motion` 기반의 애니메이션을 적용하여 프리미엄한 사용자 경험 제공.
+- **Scene-based Animation System**: Password Generator 입력부의 온보딩 시뮬레이션을 위해 `framer-motion`과 `AnimatePresence`를 활용한 무한 루프 씬(Scene) 시스템 구현. 이를 통해 입력 대기 중에도 각 레벨(PIN, WEB, MASTER)에 최적화된 기억 가이드를 동적으로 제공한다.
+- **Modular Component Architecture**: `MemoryGenerator.tsx` 대형 컴포넌트를 기능별 커스텀 훅(`useMemoryGenerator`, `usePasswordGenerator`)과 UI 컴포넌트(`MemoryTab`, `PasswordTab`, `ShuffleSlot`)로 완전히 분리하여 코드의 유지보수성과 확장성을 극대화했다.
 
 Mode 3: 게스트 로그인 (Demo Mode)
 - **Guest Auto-Login**: 시연 편의를 위해 'Guest Login' 버튼 클릭 시 `test@memit.ai` 계정으로 자동 로그인되며, 실제 Supabase 세션을 생성하여 데이터 저장 기능을 활성화한다.
