@@ -76,7 +76,7 @@ export class OpenAIStoryService {
         const data = await this.postOpenAIDirect('/chat/completions', {
             model: 'gpt-4o-mini',
             messages: [
-                { role: 'system', content: 'You are a mnemonic expert. Return JSON.' },
+                { role: 'system', content: 'You are a creative memory mnemonist. Return only JSON: { story: string, keywords: string[] }' },
                 { role: 'user', content: prompt },
             ],
             response_format: { type: 'json_object' },
@@ -316,8 +316,14 @@ export class OpenAIStoryService {
                         keywords: data.keywords || []
                     };
                 } catch (error: any) {
-                    console.error('[API] Story generation failed:', error);
-                    throw error;
+                    console.error('[API] Story generation failed, trying direct fallback:', error);
+                    // Fallback to direct OpenAI call if the API proxy fails
+                    try {
+                        return await this.generateStoryDirect(prompt);
+                    } catch (fallbackError: any) {
+                        console.error('[API] Direct fallback also failed:', fallbackError);
+                        throw error; // Throw the original API error if fallback also fails
+                    }
                 }
             } else {
                 const client = this.getOpenAIClient();

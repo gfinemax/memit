@@ -36,14 +36,28 @@ export async function POST(req: Request) {
             return jsonWithCors({ error: 'Prompt is required' }, 400, origin);
         }
 
-        const completion = await openai.chat.completions.create({
-            messages: [
-                { role: "system", content: "You are a creative memory mnemonist. Return only JSON: { story: string, keywords: string[] }" },
-                { role: "user", content: prompt }
-            ],
-            model: "gpt-4o", // Stronger model for better instruction adherence
-            response_format: { type: "json_object" }
-        });
+        let completion;
+        try {
+            completion = await openai.chat.completions.create({
+                messages: [
+                    { role: "system", content: "You are a creative memory mnemonist. Return only JSON: { story: string, keywords: string[] }" },
+                    { role: "user", content: prompt }
+                ],
+                model: "gpt-4o", // Stronger model for better instruction adherence
+                response_format: { type: "json_object" }
+            });
+        } catch (error: any) {
+            console.warn("gpt-4o failed, falling back to gpt-4o-mini:", error.message);
+            // Fallback to gpt-4o-mini if gpt-4o is unavailable or quota exceeded
+            completion = await openai.chat.completions.create({
+                messages: [
+                    { role: "system", content: "You are a creative memory mnemonist. Return only JSON: { story: string, keywords: string[] }" },
+                    { role: "user", content: prompt }
+                ],
+                model: "gpt-4o-mini",
+                response_format: { type: "json_object" }
+            });
+        }
 
         const content = completion.choices[0].message.content;
         if (!content) throw new Error("No content generated");
