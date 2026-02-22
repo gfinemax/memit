@@ -194,7 +194,7 @@ export class OpenAIStoryService {
                 console.log(`[API] Success @ ${url}`);
                 return parsed;
             } catch (error) {
-                console.warn(`[API] Failed to fetch @ ${url}:`, error);
+                console.warn(`[API] Attempt failed @ ${url}:`, error);
                 if (error instanceof Error) {
                     lastError = new Error(`${error.message} @ ${url}`);
                 } else {
@@ -204,14 +204,10 @@ export class OpenAIStoryService {
         }
 
         if (lastError instanceof Error) {
-            // Preserve browser-native fetch errors while adding context for debugging.
-            if (lastError.name === 'AbortError') {
-                throw new Error(`API request timed out for ${path}`);
-            }
-            console.error(`[API] All candidates failed. Last error:`, lastError);
+            console.error(`[API] All candidates failed. Final error:`, lastError);
             throw lastError;
         }
-        throw new Error(`API request failed for ${path} after trying all fallback URLs.`);
+        throw new Error(`API request failed for ${path} after trying all available endpoints.`);
     }
 
     private getOpenAIClient() {
@@ -307,9 +303,9 @@ export class OpenAIStoryService {
                         story: data.story || "스토리 생성 실패",
                         keywords: data.keywords || []
                     };
-                } catch {
-                    console.warn('[API] Story route fallback exhausted, trying direct OpenAI.');
-                    return await this.generateStoryDirect(prompt);
+                } catch (error: any) {
+                    console.error('[API] Story generation failed:', error);
+                    throw error;
                 }
             } else {
                 const client = this.getOpenAIClient();
@@ -342,9 +338,9 @@ export class OpenAIStoryService {
                     const data = await this.postJsonWithFallback('/api/ai/generate-image', { story, context, isQuad, keywords });
                     if (data.error === "SAFETY_FILTER_TRIGGERED") throw new Error("SAFETY_FILTER_TRIGGERED");
                     return data.imageUrl;
-                } catch {
-                    console.warn('[API] Image route fallback exhausted, trying direct OpenAI.');
-                    return await this.generateImageDirect(story, context, isQuad, keywords);
+                } catch (error: any) {
+                    console.error('[API] Image generation failed:', error);
+                    throw error;
                 }
             } else {
                 const client = this.getOpenAIClient();

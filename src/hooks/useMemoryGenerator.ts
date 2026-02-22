@@ -139,7 +139,8 @@ export function useMemoryGenerator({ category = 'general', onMemorySaved, active
             } catch (error) {
                 console.error("AI Story generation failed:", error);
                 setResult(res.data as string[]);
-                setStory("스토리 생성 중 오류가 발생했습니다.");
+                const errorDetail = error instanceof Error ? error.message : String(error);
+                setStory(`스토리 생성 중 오류가 발생했습니다. (${errorDetail})`);
                 setRevealedCount((res.data as string[]).length);
                 setIsSelecting(false);
                 setLoading(false);
