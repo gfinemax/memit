@@ -282,17 +282,29 @@ export class OpenAIStoryService {
         }
 
         const prompt = `
-      You are a creative memory expert using the 'Major System'.
-      Number: ${inputNumber}.
-      Keywords: ${wordsInfo}
-      ${context ? `Context: "${context}"` : ''}
-      Strategy: ${strategy}
+      You are a creative memory mnemonist. Your goal is to create a short, vivid, and highly memorable story to help me remember a number using specific keywords.
       
-      Instructions:
-      1. Sequence Order must be kept.
-      2. Highlight keywords with **double asterisks**.
-      3. Return JSON: { "keywords": [], "story": "" }
-      4. Language: Korean.
+      Number to remember: ${inputNumber}
+      Selected Keywords to use (MANDATORY): ${manualKeywords && manualKeywords.length > 0 ? manualKeywords.join(', ') : 'Will be provided in the candidate list below'}
+      ${context ? `Context/Topic: "${context}"` : ''}
+      Strategy: ${strategy} (SCENE = single vivid image, STORY_BEAT = sequence of events)
+      
+      ### CANDIDATE DATA (Reference Only)
+      ${wordsInfo}
+      
+      ### STRICT INSTRUCTIONS:
+      1. Use ONLY the selected keywords. If keywords are explicitly provided in "Selected Keywords", ignore all other words in the candidate chunks.
+      2. If no "Selected Keywords" are provided, pick exactly ONE word from each candidate chunk's list.
+      3. Do NOT use any other words from the candidate lists that were not chosen.
+      4. The story must be SHORT (max 3-4 sentences), impactful, and slightly surreal or funny to aid memory.
+      5. MAINTAIN THE SEQUENCE: The keywords MUST appear in the story in the exact order they are listed.
+      6. HIGHLIGHT each keyword by wrapping it in **double asterisks**.
+      7. LANGUAGE: Write the final story in Korean.
+      8. RESPONSE FORMAT: Return ONLY a valid JSON object:
+         {
+           "keywords": ["the", "keywords", "you", "used"],
+           "story": "Your vivid Korean story here"
+         }
     `;
 
         try {
@@ -352,7 +364,7 @@ export class OpenAIStoryService {
                     size: "1024x1024",
                     response_format: "b64_json"
                 });
-                return `data:image/png;base64,${response.data?.[0]?.b64_json}`;
+                return `data: image / png; base64, ${response.data?.[0]?.b64_json} `;
             }
         } catch (error) {
             console.error("Image Generation Error:", error);

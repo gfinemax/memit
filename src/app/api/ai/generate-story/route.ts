@@ -41,7 +41,7 @@ export async function POST(req: Request) {
                 { role: "system", content: "You are a creative memory mnemonist. Return only JSON: { story: string, keywords: string[] }" },
                 { role: "user", content: prompt }
             ],
-            model: "gpt-4o-mini", // Faster model to reduce timeout risk
+            model: "gpt-4o", // Stronger model for better instruction adherence
             response_format: { type: "json_object" }
         });
 
