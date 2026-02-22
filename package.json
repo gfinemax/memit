@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "android:dev": "pnpm build && cross-env NODE_ENV=production npx cap sync android && npx cap open android",
-    "android:build": "pnpm build && cross-env NODE_ENV=production pnpm cap sync && pnpm cap open android"
+    "android:dev": "cross-env IS_STATIC=true pnpm build && cross-env NODE_ENV=production npx cap sync android && npx cap open android",
+    "android:build": "cross-env IS_STATIC=true pnpm build && cross-env NODE_ENV=production pnpm cap sync && pnpm cap open android"
   },
   "dependencies": {
     "@capacitor-community/image-to-text": "^8.0.0",
