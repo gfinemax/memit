@@ -103,7 +103,7 @@ export function usePasswordGenerator(pinLength: number, handleConvert: (customWo
             { type: 'example-simple', duration: 1500, content: "1004" },
             { type: 'example-simple', duration: 1500, content: "828255" },
             { type: 'example-simple', duration: 1500, content: "01234567" },
-            { type: 'text', duration: 3500, content: "10자리 숫자부터 최대 20자리 숫자까지 비밀번호 생성이 가능합니다." }
+            { type: 'text', duration: 3500, content: "최대 20자리 숫자까지 비밀번호 생성이 가능합니다." }
         ],
         'L2_WEB': [
             { type: 'text', duration: 2500, content: "기억하기 쉬운 단어나 의미 있는 숫자를 입력하세요." },

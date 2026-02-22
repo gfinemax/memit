@@ -186,7 +186,7 @@ export class OpenAIStoryService {
                         parsed?.error ||
                         parsed?.message ||
                         `HTTP ${response.status}`;
-                    console.error(`[API] Failed @ ${url}: ${errorMessage}`);
+                    console.error(`[API] Failed @ ${url}:`, { status: response.status, message: errorMessage, parsed });
                     lastError = new Error(`[${response.status}] ${errorMessage} @ ${url}`);
                     continue; // Try next fallback URL
                 }
@@ -208,6 +208,7 @@ export class OpenAIStoryService {
             if (lastError.name === 'AbortError') {
                 throw new Error(`API request timed out for ${path}`);
             }
+            console.error(`[API] All candidates failed. Last error:`, lastError);
             throw lastError;
         }
         throw new Error(`API request failed for ${path} after trying all fallback URLs.`);

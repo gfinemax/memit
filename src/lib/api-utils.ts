@@ -33,6 +33,7 @@ export function getApiCandidateUrls(path: string): string[] {
     // Web environment should use relative paths first.
     const webCandidates = [
         cleanPath,
+        'https://memit-ai.vercel.app' + cleanPath,
         configuredBaseUrl ? `${configuredBaseUrl}${cleanPath}` : null,
     ].filter((v): v is string => Boolean(v));
 
