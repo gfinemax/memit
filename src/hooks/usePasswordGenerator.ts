@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
 import { generatePinFromWord, wordToNumbers } from '@/lib/mnemonic-password';
 
-export function usePasswordGenerator(pinLength: number, handleConvert: (customWords?: string[] | null) => void) {
+export function usePasswordGenerator(
+    pinLength: 4 | 6 | 8,
+    handleConvert: (customWords?: string[] | null, forcedInput?: string, theme?: string, onInputUpdate?: (val: string) => void, onResultUpdate?: (res: string) => void) => void,
+    setPinLength: (len: 4 | 6 | 8) => void,
+    pin8SplitMode: '4+4' | '6+2' | '4+2+2' | '자유',
+    setPin8SplitMode: (mode: '4+4' | '6+2' | '4+2+2' | '자유') => void
+) {
     // Password State
-    const [passwordLevel, setPasswordLevel] = useState<'L1_PIN' | 'L2_WEB' | 'L3_MASTER'>('L2_WEB');
+    const [passwordLevel, setPasswordLevel] = useState<'L1_PIN' | 'L2_WEB' | 'L3_MASTER'>('L1_PIN');
     const [serviceName, setServiceName] = useState('');
     const [coreNumber, setCoreNumber] = useState('');
     const [specialSymbol, setSpecialSymbol] = useState('!');
@@ -11,29 +17,42 @@ export function usePasswordGenerator(pinLength: number, handleConvert: (customWo
     const [activeTheme, setActiveTheme] = useState<string | null>(null);
     const [passwordResult, setPasswordResult] = useState('');
     const [passwordCopied, setPasswordCopied] = useState(false);
+    const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
+
+    const themeDatasets: Record<string, string[]> = {
+        '🎬 영화': ['감독', '배우', '극장', '영화', '액션', '멜로', '공포', '주연', '자막', '명작'],
+        '🐶 동물': ['사자', '토끼', '여우', '기린', '하마', '고래', '나비', '오리', '늑대', '백조'],
+        '🍕 음식': ['피자', '김밥', '초밥', '라면', '만두', '우유', '커피', '콜라', '순대', '튀김'],
+        '✈️ 여행': ['파리', '런던', '뉴욕', '도쿄', '부산', '제주', '서울', '바다', '공항', '캠핑'],
+        '🎲 랜덤': ['하늘', '노래', '나무', '선물', '사랑', '친구', '시간', '시계', '편지', '행복']
+    };
+
+    const handleSuggestionClick = (word: string) => {
+        setHintKeyword(word);
+        setActiveTheme(null);
+        if (word.trim()) {
+            const rawDigits = wordToNumbers(word.trim());
+            const maxLength = passwordLevel === 'L1_PIN' ? pinLength : 8;
+            setCoreNumber(rawDigits.slice(0, maxLength));
+        } else {
+            setCoreNumber('');
+        }
+    };
+
+    const [isCustomLength, setIsCustomLength] = useState(false);
 
     const getLengthForLevel = (level: string) => {
-        if (level === 'L1_PIN') return 4;
+        if (level === 'L1_PIN') return pinLength;
         if (level === 'L2_WEB') return 6;
         return 8; // L3_MASTER
     };
 
     const handleThemeClick = (theme: string) => {
-        setActiveTheme(theme);
-        setHintKeyword('');
-        const themeKeywords: Record<string, string[]> = {
-            '🎬 영화': ['팝콘', '감독', '배우', '상영관', '필름', '티켓'],
-            '🐶 동물': ['강아지', '고양이', '호랑이', '독수리', '돌고래', '기린'],
-            '🍕 음식': ['사과', '피자', '햄버거', '치킨', '파스타', '김밥'],
-            '✈️ 여행': ['비행기', '여권', '티켓', '바다', '캐리어', '호텔'],
-            '🎲 랜덤': ['비밀', '보안', '해킹', '방패', '안전', '열쇠']
-        };
-        const words = themeKeywords[theme] || themeKeywords['🎲 랜덤'];
-        const randomWord = words[Math.floor(Math.random() * words.length)];
-
-        const targetLength = passwordLevel === 'L1_PIN' ? pinLength : getLengthForLevel(passwordLevel);
-        const generatedNum = generatePinFromWord(randomWord, targetLength);
-        setCoreNumber(generatedNum);
+        if (activeTheme === theme) {
+            setActiveTheme(null);
+        } else {
+            setActiveTheme(theme);
+        }
     };
 
     const handleHintChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,7 +141,6 @@ export function usePasswordGenerator(pinLength: number, handleConvert: (customWo
         ]
     };
 
-    const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
 
     // Reset index on level change to prevent out-of-bounds
     useEffect(() => {
@@ -160,10 +178,16 @@ export function usePasswordGenerator(pinLength: number, handleConvert: (customWo
         passwordCopied, setPasswordCopied,
         currentSceneIndex, setCurrentSceneIndex,
         passwordScenes,
+        pinLength, setPinLength,
+        pin8SplitMode, setPin8SplitMode,
+        isCustomLength, setIsCustomLength,
+        themeDatasets,
+        handleSuggestionClick,
         getLengthForLevel,
         handleThemeClick,
         handleHintChange,
         generatePassword,
-        copyPassword
+        copyPassword,
+        handleConvert
     };
 }

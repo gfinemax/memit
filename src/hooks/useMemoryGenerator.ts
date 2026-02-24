@@ -3,7 +3,23 @@ import { generateShareCardCanvas, ShareKeywordItem } from '@/lib/share-card-util
 import { openAIStoryService } from '@/lib/openai-story-service';
 import { convertNumberAction, saveMemoryAction } from '@/app/actions_v2';
 
-export function useMemoryGenerator({ category = 'general', onMemorySaved, activeTab }: { category?: string, onMemorySaved?: () => void, activeTab: 'memory' | 'password' }) {
+export function useMemoryGenerator({
+    category = 'general',
+    onMemorySaved,
+    activeTab,
+    pinLength,
+    setPinLength,
+    pin8SplitMode,
+    setPin8SplitMode
+}: {
+    category?: string,
+    onMemorySaved?: () => void,
+    activeTab: 'memory' | 'password',
+    pinLength: 4 | 6 | 8,
+    setPinLength: (len: 4 | 6 | 8) => void,
+    pin8SplitMode: '4+4' | '6+2' | '4+2+2' | '자유',
+    setPin8SplitMode: (mode: '4+4' | '6+2' | '4+2+2' | '자유') => void
+}) {
     // Memory State
     const [input, setInput] = useState('');
     const [context, setContext] = useState('');
@@ -33,11 +49,7 @@ export function useMemoryGenerator({ category = 'general', onMemorySaved, active
 
     const [autoGenerateImage, setAutoGenerateImage] = useState(false);
 
-    // PIN Length State
-    const [pinLength, setPinLength] = useState<4 | 6 | 8>(4);
-    const [pin8SplitMode, setPin8SplitMode] = useState<'4+4' | '6+2' | '4+2+2' | '자유'>('4+4');
-
-    const ghostExamplesMap = {
+    const ghostExamplesMap: Record<number, string[]> = {
         4: ['3755', '1004', '8282'],
         6: ['100482', '828255', '123456'],
         8: ['24681357', '10048282', '87654321']
@@ -58,42 +70,55 @@ export function useMemoryGenerator({ category = 'general', onMemorySaved, active
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 
-    const handleConvert = async (customWords?: string[] | null) => {
-        if (!input.trim() || loading) return;
-        const isSameInput = input.trim() === lastConvertedInput;
+    const handleConvert = async (
+        customWords?: string[] | null,
+        forcedInput?: string,
+        theme?: string,
+        onInputUpdate?: (val: string) => void,
+        onResultUpdate?: (res: string) => void
+    ) => {
+        const targetInput = forcedInput || input;
+        if (!targetInput.trim() || loading) return;
+
+        // Word selection is now handled by the calling component (PasswordTab)
+        // handleConvert receives the complete keyword list and full numeric input
+        let finalCustomWords = customWords;
+        let finalInput = targetInput;
+
+        const isSameInput = finalInput.trim() === lastConvertedInput;
 
         setLoading(true);
-        setIsSelecting(true);
-        setRevealedCount(0);
 
         if (!isSameInput) {
+            setIsSelecting(true);
+            setRevealedCount(0);
             setResult(null);
             setCandidates([]);
             setIsModified(false);
             setLockedIndices([]);
+            setStory(null);
+            setImageUrl(null);
         }
 
-        setStory(null);
-        setImageUrl(null);
         setActivePopoverIndex(null);
         setIsEditingStory(false);
 
-        if (customWords && customWords.length > 0) {
+        if (finalCustomWords && finalCustomWords.length > 0) {
             // Bypass number conversion if we already have the exact words mapped
-            const customCandidates = customWords.map((word, index) => {
-                const chunk = input.replace(/[^0-9]/g, '').slice(index * 2, (index * 2) + 2);
+            const customCandidates = finalCustomWords.map((word, index) => {
+                const chunk = finalInput.replace(/[^0-9]/g, '').slice(index * 2, (index * 2) + 2);
                 return { chunk: chunk || '00', words: [word] };
             });
             setCandidates(customCandidates);
-            setResult(customWords);
-            setRevealedCount(customWords.length);
+            setResult(finalCustomWords);
+            setRevealedCount(finalCustomWords.length);
 
             try {
-                const data = await openAIStoryService.generateStory(input, {
+                const data = await openAIStoryService.generateStory(finalInput, {
                     candidates: customCandidates,
-                    context,
+                    context: context || (finalCustomWords ? finalCustomWords.join(', ') : ''), // Use keywords as context if empty
                     strategy,
-                    manualKeywords: customWords
+                    manualKeywords: finalCustomWords || undefined
                 });
                 setStory(data.story);
             } catch (error) {
@@ -102,11 +127,12 @@ export function useMemoryGenerator({ category = 'general', onMemorySaved, active
             }
             setIsSelecting(false);
             setLoading(false);
-            setLastConvertedInput(input.trim());
+            setLastConvertedInput(finalInput.trim());
+            if (onResultUpdate) onResultUpdate(finalInput);
             return;
         }
 
-        const res = await convertNumberAction(input);
+        const res = await convertNumberAction(finalInput);
         if (res.success && res.data) {
             const currentCandidates = res.candidates || [];
             setCandidates(currentCandidates as { chunk: string, words: string[] }[]);

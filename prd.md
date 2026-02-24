@@ -53,6 +53,9 @@ Mode 2: 스토리 → 숫자 (Story to Number) = 강력한 비밀번호 생성
 - **핀번호 길이 보정 로직**: AI 생성 불일치 또는 에러 발생 시에도 사용자가 선택한 길이를 엄격히 준수하도록 클라이언트 측 패딩 및 대체 로직(Fallback Logic)이 구현되어 있다.
 - **테두리 라이팅 (Lighting Border)**: 입력창 테두리에만 회전하는 광원 효과를 적용하여 시각적 피드백을 강화했다. CSS Mask를 활용해 배경 번짐 없이 테두리 라인에만 빛이 맺히도록 구현되었다.
 - **Concept 3 UI Refinement**: PIN 길이 선택 화면에 고밀도 글래스모피즘 카드, 에메랄드 셀렉션 글로우, `framer-motion` 기반의 애니메이션을 적용하여 프리미엄한 사용자 경험 제공.
+- **Smart PIN Auto-completion**: 사용자가 키워드를 하나만 선택하거나 직접 입력해도, 선택한 PIN 길이(4, 6, 8자리)에 맞춰 테마 내 단어들이 자동으로 보충됩니다. 로컬 테마 데이터셋을 활용한 결정론적(Deterministic) 알고리즘으로 AI API 호출 없이 신속하고 정확하게 자릿수를 채웁니다.
+- **Intelligent Theme Detection**: 특정 키워드가 클릭되면 해당 키워드가 속한 테마(예: 영화, 스포츠 등)를 자동으로 감지하여 일관성 있는 추가 단어를 추천합니다. 테마 정보가 없는 경우에도 전체 데이터셋 탐색 및 랜덤 테마 폴백 시스템을 통해 끊김 없는 경험을 제공합니다.
+- **Keyword Highlighting & Status Display**: 생성 결과 화면에 선택된 키워드들을 시안색 고대비 칩으로 표시하며, 대응하는 숫자 2자리를 함께 보여줍니다 (예: `극장(16)`). 또한 AI Story 내의 마크다운 강조(`**keyword**`)를 파싱하여 텍스트 내에서도 동일한 하이라이트 스타일을 적용합니다.
 - **Scene-based Animation System**: Password Generator 입력부의 온보딩 시뮬레이션을 위해 `framer-motion`과 `AnimatePresence`를 활용한 무한 루프 씬(Scene) 시스템 구현. 이를 통해 입력 대기 중에도 각 레벨(PIN, WEB, MASTER)에 최적화된 기억 가이드를 동적으로 제공한다.
 - **Modular Component Architecture**: `MemoryGenerator.tsx` 대형 컴포넌트를 기능별 커스텀 훅(`useMemoryGenerator`, `usePasswordGenerator`)과 UI 컴포넌트(`MemoryTab`, `PasswordTab`, `ShuffleSlot`)로 완전히 분리하여 코드의 유지보수성과 확장성을 극대화했다.
 

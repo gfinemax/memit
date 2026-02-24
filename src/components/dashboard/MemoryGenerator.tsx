@@ -12,12 +12,28 @@ import { createPortal } from 'react-dom';
 
 export default function MemoryGenerator({ onMemorySaved, category = 'general' }: { onMemorySaved?: () => void, category?: string }) {
     const [activeTab, setActiveTab] = useState<'memory' | 'password'>('memory');
+    const [pinLength, setPinLength] = useState<4 | 6 | 8>(4);
+    const [pin8SplitMode, setPin8SplitMode] = useState<'4+4' | '6+2' | '4+2+2' | '자유'>('4+4');
 
     // Memory Hook Initialization
-    const memoryProps = useMemoryGenerator({ onMemorySaved, category, activeTab });
+    const memoryProps = useMemoryGenerator({
+        onMemorySaved,
+        category,
+        activeTab,
+        pinLength,
+        setPinLength,
+        pin8SplitMode,
+        setPin8SplitMode
+    });
 
     // Password Hook Initialization (Needs Memory's handleConvert callback)
-    const passwordProps = usePasswordGenerator(memoryProps.pinLength, memoryProps.handleConvert);
+    const passwordProps = usePasswordGenerator(
+        pinLength,
+        memoryProps.handleConvert,
+        setPinLength,
+        pin8SplitMode,
+        setPin8SplitMode
+    );
 
     return (
         <section className="relative bg-white/5 dark:bg-slate-900/40 backdrop-blur-[30px] p-8 rounded-[2.5rem] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.2)] group h-full flex flex-col justify-center transition-all duration-500 overflow-hidden">
@@ -51,7 +67,7 @@ export default function MemoryGenerator({ onMemorySaved, category = 'general' }:
                             </motion.div>
                         ) : (
                             <motion.div key="password" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                                <PasswordTab passwordProps={passwordProps} />
+                                <PasswordTab passwordProps={passwordProps} memoryProps={memoryProps} />
                             </motion.div>
                         )}
                     </AnimatePresence>

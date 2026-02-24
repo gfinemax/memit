@@ -160,7 +160,9 @@ export class OpenAIStoryService {
                 }
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 25000);
+                // 이미지 생성은 DALL-E 호출로 오래 걸릴 수 있으므로 타임아웃을 늘림
+                const isImageRequest = url.includes('generate-image');
+                const timeoutId = setTimeout(() => controller.abort(), isImageRequest ? 60000 : 25000);
                 let response: Response;
                 try {
                     response = await fetch(url, {
@@ -394,6 +396,20 @@ export class OpenAIStoryService {
             }
         } catch (error) {
             console.error("JSON Generation Error:", error);
+            throw error;
+        }
+    }
+    async smartCompleteWords(baseWord: string, theme: string, neededCount: number): Promise<{ additionalWords: string[], story: string }> {
+        const prompt = `Base keyword: '${baseWord}'. Theme: '${theme}'. I need exactly ${neededCount} more 2-character Korean nouns that create a vivid, surreal, and memorable scene with '${baseWord}'. HIGHLIGHT each keyword (including baseWord) by wrapping in **. The story must be in Korean.`;
+
+        try {
+            const data = await this.generateStoryResponse(prompt);
+            return {
+                additionalWords: data.additionalWords || [],
+                story: data.story || "스토리 생성 실패"
+            };
+        } catch (error) {
+            console.error("Smart Completion Error:", error);
             throw error;
         }
     }
