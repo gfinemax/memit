@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import {
     Search,
-    Filter,
     LayoutGrid,
     List,
     Search as SearchIcon,
@@ -14,9 +13,7 @@ import {
     ShoppingCart,
     Brain,
     Grid3X3,
-    Calendar,
     Image as ImageIcon,
-    Play,
     Trash2,
     Clock,
     Tag,
@@ -24,7 +21,6 @@ import {
     Download,
     LucideIcon,
     ShieldAlert,
-    ChevronRight,
     ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -54,6 +50,7 @@ export default function StoragePage() {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [selectedMemory, setSelectedMemory] = useState<UserMemory | null>(null);
     const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+    type ActionResult = { success: boolean; error?: string };
 
     const { data: memories = [], isLoading: loading } = useQuery({
         queryKey: ['memories'],
@@ -83,7 +80,8 @@ export default function StoragePage() {
                 m.input_number.includes(query) ||
                 m.keywords.some((k: string) => k.toLowerCase().includes(query)) ||
                 m.story.toLowerCase().includes(query) ||
-                (m.context && m.context.toLowerCase().includes(query))
+                (m.context && m.context.toLowerCase().includes(query)) ||
+                (m.label && m.label.toLowerCase().includes(query))
             );
         }
 
@@ -92,7 +90,7 @@ export default function StoragePage() {
 
     const deleteMutation = useMutation({
         mutationFn: deleteMemoryAction,
-        onSuccess: (res: any) => {
+        onSuccess: (res: ActionResult) => {
             if (res.success) {
                 queryClient.invalidateQueries({ queryKey: ['memories'] });
                 setSelectedMemory(null);
@@ -148,6 +146,32 @@ export default function StoragePage() {
 
     const handleToggleFavorite = async (id: string, currentStatus: boolean) => {
         favoriteMutation.mutate({ id, status: !currentStatus });
+    };
+
+    const updateLabelMutation = useMutation({
+        mutationFn: ({ id, label }: { id: string; label: string }) => updateMemoryLabelAction(id, label),
+        onMutate: async ({ id, label }: { id: string; label: string }) => {
+            await queryClient.cancelQueries({ queryKey: ['memories'] });
+            const previousMemories = queryClient.getQueryData<UserMemory[]>(['memories']);
+            queryClient.setQueryData<UserMemory[]>(['memories'], (old = []) =>
+                old.map((m) => (m.id === id ? { ...m, label } : m))
+            );
+            setSelectedMemory((prev) => (prev?.id === id ? { ...prev, label } : prev));
+            return { previousMemories };
+        },
+        onError: (_err, _variables, context) => {
+            if (context?.previousMemories) {
+                queryClient.setQueryData(['memories'], context.previousMemories);
+            }
+            alert("라벨 저장에 실패했습니다.");
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['memories'] });
+        },
+    });
+
+    const handleUpdateLabel = (id: string, label: string) => {
+        updateLabelMutation.mutate({ id, label: label.trim().slice(0, 20) });
     };
 
     const handleCategoryClick = async (categoryId: string) => {
@@ -404,6 +428,11 @@ export default function StoragePage() {
                                             <div className="px-2 py-0.5 rounded bg-primary/20 text-primary text-[10px] font-bold tracking-widest">
                                                 {memory.input_number}
                                             </div>
+                                            {memory.label && (
+                                                <span className="px-2 py-0.5 rounded bg-white/10 text-slate-200 text-[9px] font-semibold">
+                                                    {memory.label}
+                                                </span>
+                                            )}
                                             {(() => {
                                                 const cat = CATEGORIES.find(c => c.id === memory.category);
                                                 return <span className={`text-[10px] font-bold uppercase tracking-wider ${cat?.color || 'text-slate-500'}`}>{cat?.label || '기타'}</span>;
@@ -416,6 +445,11 @@ export default function StoragePage() {
                                             <h3 className="text-xl font-black text-white mb-2 group-hover:text-primary transition-colors line-clamp-1 tracking-tight">
                                                 {memory.keywords.join(' · ')}
                                             </h3>
+                                            {memory.label && (
+                                                <div className="inline-flex mb-3 px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-[10px] font-semibold text-slate-300">
+                                                    {memory.label}
+                                                </div>
+                                            )}
                                             <StoryText
                                                 text={memory.story}
                                                 className="text-slate-400 text-sm leading-snug line-clamp-2 mb-5 h-10 opacity-80 block"
@@ -494,6 +528,7 @@ export default function StoragePage() {
                 onClose={() => setSelectedMemory(null)}
                 onDelete={handleDelete}
                 onToggleFavorite={handleToggleFavorite}
+                onUpdateLabel={handleUpdateLabel}
             />
         </div>
     );

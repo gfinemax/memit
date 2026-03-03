@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Trash2, Brain, Zap, Image as ImageIcon, Star } from 'lucide-react';
+import { X, Calendar, Trash2, Brain, Zap, Image as ImageIcon, Star, Pencil, Check } from 'lucide-react';
 import { UserMemory } from '@/lib/memory-service';
 import StoryText from '@/components/ui/StoryText';
 
@@ -11,20 +11,31 @@ interface MemoryModalProps {
     onClose: () => void;
     onDelete?: (id: string) => void;
     onToggleFavorite?: (id: string, current: boolean) => void;
+    onUpdateLabel?: (id: string, label: string) => void;
 }
 
-export default function MemoryModal({ memory, isOpen, onClose, onDelete, onToggleFavorite }: MemoryModalProps) {
-    const [imageError, setImageError] = useState(false);
-    const [mounted, setMounted] = useState(false);
+export default function MemoryModal({ memory, isOpen, onClose, onDelete, onToggleFavorite, onUpdateLabel }: MemoryModalProps) {
+    const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+    const [isEditingLabel, setIsEditingLabel] = useState(false);
+    const [labelDraft, setLabelDraft] = useState('');
 
-    useEffect(() => {
-        setMounted(true);
-        if (isOpen) {
-            setImageError(false);
-        }
-    }, [isOpen, memory?.image_url]);
+    if (!memory || typeof document === 'undefined') return null;
 
-    if (!memory || !mounted) return null;
+    const submitLabel = () => {
+        if (!memory.id) return;
+        onUpdateLabel?.(memory.id, labelDraft);
+        setIsEditingLabel(false);
+    };
+
+    const startEditLabel = () => {
+        setLabelDraft(memory.label || '');
+        setIsEditingLabel(true);
+    };
+
+    const handleClose = () => {
+        setIsEditingLabel(false);
+        onClose();
+    };
 
     const modalContent = (
         <AnimatePresence>
@@ -35,7 +46,7 @@ export default function MemoryModal({ memory, isOpen, onClose, onDelete, onToggl
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
                     />
 
@@ -48,7 +59,7 @@ export default function MemoryModal({ memory, isOpen, onClose, onDelete, onToggl
                     >
                         {/* Close Button */}
                         <button
-                            onClick={onClose}
+                            onClick={handleClose}
                             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-md transition-all z-50 shadow-lg border border-white/10"
                         >
                             <X className="w-6 h-6" />
@@ -68,11 +79,14 @@ export default function MemoryModal({ memory, isOpen, onClose, onDelete, onToggl
                         <div className="overflow-y-auto custom-scrollbar flex-1">
                             {/* Header Image or Placeholder */}
                             <div className="relative w-full bg-[#161826] flex items-center justify-center overflow-hidden border-b border-slate-800/50 min-h-[300px]">
-                                {memory.image_url && !imageError ? (
+                                {memory.image_url && !imageErrors[memory.id || ''] ? (
                                     <img
                                         src={memory.image_url}
                                         alt="Mnemonic Visual"
-                                        onError={() => setImageError(true)}
+                                        onError={() => {
+                                            if (!memory.id) return;
+                                            setImageErrors((prev) => ({ ...prev, [memory.id!]: true }));
+                                        }}
                                         className="w-full h-auto max-h-[60vh] object-contain shadow-2xl"
                                     />
                                 ) : (
@@ -90,6 +104,44 @@ export default function MemoryModal({ memory, isOpen, onClose, onDelete, onToggl
                                         <div className="px-5 py-2 rounded-2xl bg-primary/20 text-primary text-2xl font-bold tracking-[0.2em] shadow-lg shadow-primary/5">
                                             {memory.input_number}
                                         </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {isEditingLabel ? (
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={labelDraft}
+                                                    onChange={(e) => setLabelDraft(e.target.value)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') submitLabel();
+                                                        if (e.key === 'Escape') {
+                                                            setLabelDraft(memory.label || '');
+                                                            setIsEditingLabel(false);
+                                                        }
+                                                    }}
+                                                    maxLength={20}
+                                                    autoFocus
+                                                    className="w-44 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-sm text-slate-100 outline-none focus:border-primary"
+                                                    placeholder="라벨 입력 (최대 20자)"
+                                                />
+                                                <button
+                                                    onClick={submitLabel}
+                                                    className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center hover:brightness-110 transition"
+                                                    title="라벨 저장"
+                                                >
+                                                    <Check className="w-4 h-4" />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                onClick={startEditLabel}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900/60 text-xs text-slate-300 hover:border-primary/50 hover:text-primary transition"
+                                                title="라벨 편집"
+                                            >
+                                                <Pencil className="w-3.5 h-3.5" />
+                                                {memory.label ? memory.label : '라벨 추가'}
+                                            </button>
+                                        )}
                                     </div>
                                     <div className="flex flex-col items-center">
                                         <span className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-bold mb-1">기억 태그</span>
@@ -137,7 +189,7 @@ export default function MemoryModal({ memory, isOpen, onClose, onDelete, onToggl
                                     </button>
 
                                     <button
-                                        onClick={onClose}
+                                        onClick={handleClose}
                                         className="px-8 py-3 rounded-2xl bg-slate-100 text-slate-900 font-bold text-sm hover:bg-white active:scale-95 transition-all shadow-xl shadow-white/5"
                                     >
                                         확인
